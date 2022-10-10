@@ -1,4 +1,4 @@
-# CtClass
+# CtView
 
 Ce projet a pour but de créer différentes vues opérateurs pour différents contrôles de classification. 
 
