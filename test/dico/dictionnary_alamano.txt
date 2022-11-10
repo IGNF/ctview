@@ -1,0 +1,9 @@
+# QGIS Generated Color Map Export File
+1 255 255 255 255 Non_classes
+2 255 128 0 255 Sol
+3 0 255 0 255 Vegetation_basse
+4 0 255 0 255 Vegetation_intermediaire
+5 0 255 0 255 Vegetation_haute
+6 255 0 0 255 Batiment
+9 0 255 255 255 Eau
+17 255 255 0 255 Pont
