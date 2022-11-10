@@ -11,7 +11,7 @@ import numpy as np
 # VARIABLES
 
 FILENAME = 'LAS/pont_route_OK.las'
-LIST_CLASS = [1,2,3,4,5,6,9,17,64,65,66,202]
+LIST_CLASS = [1,2,3,4,5,6,9,17,64,65,66,202] #classes contrôlées dans ctClass
 VERBOSE = False
 
 
@@ -74,6 +74,16 @@ def filter_las(points,i):
     return pipeline.arrays[0]
 
 
+def merge_file(File1, File2):
+    file1 = File1
+    file2=File2
+    pipeline = pdal.Filter.merge().pipeline(points)
+    pipeline.execute()
+
+    return pipeline.arrays[0]
+
+
+
 
 def write(points,i):
 
@@ -83,7 +93,16 @@ def write(points,i):
     pipeline = pdal.Writer.las(filename=RESULT_FILENAME, extra_dims="all").pipeline(points)
     pipeline.execute()
     if VERBOSE :
-        print("Success")   
+        print("Success") 
+
+
+def write_single(points,c1,c2):
+
+
+    RESULT_FILENAME = f"LAS_create/pont_route_OK_merge_{c1}_{c2}.las"
+
+    pipeline = pdal.Writer.las(filename=RESULT_FILENAME, extra_dims="all").pipeline(points)
+    pipeline.execute()  
 
 
 # MAIN
@@ -113,13 +132,22 @@ if __name__ == "__main__":
         if VERBOSE :
             print(f'Out write classe {k}\n')
 
-            
-        
-    
+    # Merge LAS -> fonctionne pas encore
+    class_1 = 6
+    class_2 = 17
+    merge_las = merge_file(filter_las(points,17), filter_las(points,6) )   
+    write_single(merge_las, class_1, class_2)
+
+    # Merge raster -> fonctionne pas encore
+    merge_raster = merge_file("doc/dtm_classif6.tif","doc/dtm_classif17.tif")
+    print(merge_raster)
 
 
-        """ | pdal.Filter.colorization(
-        dimensions="Red:1:255.0, Blue, Green::256.0",
-        raster=f"raster/color_classif.tif",
+
+
+
+    """ | pdal.Filter.colorization(
+    dimensions="Red:1:255.0, Blue, Green::256.0",
+    raster=f"raster/color_classif.tif",
     ) """
 
