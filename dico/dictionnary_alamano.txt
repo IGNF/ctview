@@ -7,3 +7,7 @@
 6 255 0 0 255 Batiment
 9 0 255 255 255 Eau
 17 255 255 0 255 Pont
+64 128 0 64 255 Sursol_perenne
+65 64 0 128 255 Artefact
+66 255 0 255 255 Points_virtuels
+202 255 128 128 255 Candidats_bati
