@@ -16,7 +16,9 @@ from numbers import Real
 #FONCTION
 
 def fill_gaps(input_raster):
-    """Fill selected raster regions by interpolation from the edges.
+    """
+    NO FONKTIONIERT
+    Fill selected raster regions by interpolation from the edges.
     This algorithm will interpolate values for all designated nodata pixels.
     The default mask band used is the one returned by GDALGetMaskBand(hTargetBand).
     """
