@@ -1,138 +1,88 @@
-import pdal
+
+
+import fnmatch
+import re
+import os
 import tempfile
+import geojson
 
-from shapely.geometry import shape
+from osgeo import gdal, osr, ogr
 
-#from ctclass import utils_geometry, utils_gdal
+import lidarutils.geometry_utils as gu
+import lidarutils.gdal_utils as lu_gdal_utils
 
-
-def read_las_file(input_las: str):
-    """Read a las file and put it in an array"""
-    pipeline = pdal.Pipeline() | pdal.Reader.las(filename=input_las)
-    pipeline.execute()
-    return pipeline.arrays[0]
-
-
-def get_info_from_las(points):
-    """get info from a las to put it in an array"""
-    pipeline = pdal.Filter.stats().pipeline(points)
-    pipeline.execute()
-    return pipeline.metadata
+def add_epsg_to_raster(raster: str, epsg: int):
+    """add epsg to raster"""
+    gdal_image = gdal.Open(raster)
+    srs = osr.SpatialReference()
+    srs.ImportFromEPSG(epsg)
+    gdal_image.SetProjection(srs.ExportToWkt())
 
 
-def calc_boundary(points, size_hexbin_edge):
-    """Calcul approximate boundary of points with hexbin"""
-    if len(points) == 0:
-        return None
-    pipeline = pdal.Filter.hexbin(smooth=False, edge_size=size_hexbin_edge).pipeline(
-        points
-    )
-    pipeline.execute()
-    metadata_hexbin = pipeline.metadata["metadata"]["filters.hexbin"]
-    if not "boundary_json" in metadata_hexbin:
-        print(metadata_hexbin["error"])
-        return None
-    area = metadata_hexbin["boundary_json"]
-    return shape(area)
-
-
-def assign_classification(points):
-    """assign classification to the entire las"""
-    pipeline = pdal.Filter.assign(value="Classification = 0").pipeline(points)
-    pipeline.execute()
-    return pipeline.arrays[0]
-
-
-def tab_class_to_str_pdal_class(class_filtre: [int]):
-    """Build a string list for range filter classification"""
-    tab_class = ""
-    for c in class_filtre:
-        tab_class += "Classification[" + str(c) + ":" + str(c) + "],"
-    return tab_class[:-1]
-
-
-def range_classification_points(points_ini, class_filtre: [int]):
-    """range points with some class"""
-    pipeline = pdal.Filter.range(
-        limits=tab_class_to_str_pdal_class(class_filtre)
-    ).pipeline(points_ini)
-    pipeline.execute()
-    return pipeline.arrays[0]
-
-
-def filter_points_within_geom(points, geom: shape, class_filtre: [int]):
-    def build_multipolygon_from_polygon_or_multipolygon(geo: shape):
-        """Build a list of polygones from a geometry (polygon or multipolygon)"""
-        poly_tab = []
-        if geo.geom_type == "Polygon":
-            poly_tab.append(geo)
-        if geo.geom_type == "MultiPolygon":
-            for poly in geo.geoms:
-                poly_tab.append(poly)
-        return poly_tab
-
-    """filter points on a geometry"""
-    poly_tab = build_multipolygon_from_polygon_or_multipolygon(geom)
-    poly_tab_wkt = []
-    for poly in poly_tab:
-        poly_tab_wkt.append(poly.wkt)
-    pipeline = pdal.Filter.range(
-        limits=tab_class_to_str_pdal_class(class_filtre)
-    ).pipeline(points) | pdal.Filter.crop(polygon=poly_tab_wkt)
-    pipeline.execute()
-    return pipeline.arrays[0]
-
-
-def get_geom_non_open_ground(input_las: str):
-    """Calcul geometry of non open area"""
-    tab_ground_class = [
-        1,
-        2,
-        17,
-        66,
-    ]  # classe d'objets au sol [unclassified, ground, ponts, points virtuel]
-    tab_non_ground_class = []
-    for i in range(1, 255):
-        if i not in tab_ground_class:
-            tab_non_ground_class.append(i)
-
-    pipeline_non_ground = pdal.Reader.las(filename=input_las) | pdal.Filter.range(
-        limits=tab_class_to_str_pdal_class(tab_non_ground_class)
-    )
-    pipeline_non_ground.execute()
-    return calc_boundary(pipeline_non_ground.arrays[0], 1)
-
-
-def get_ground_points_pipeline(input_las: str):
-    """get ground or non classified with a height lower than 0.5"""
-    tab_ground_class = [1, 2, 17, 66]
-    pipeline = (
-        pdal.Reader.las(filename=input_las)
-        | pdal.Filter.range(limits=tab_class_to_str_pdal_class(tab_ground_class))
-        | pdal.Filter.hag_nn()
-        | pdal.Filter.range(limits="HeightAboveGround[0:0.5]")
-    )
-    return pipeline
-
-
-def build_dtm_from_points(
-    points, output_dtm: str, epsg: int, dtm_type: str, resolution: float
+def build_vrt(
+    vrt: str, input_images_dir: str, format_image: str, epsg: int, force_if_exists: bool
 ):
-    """build a dtm from points - dtm_type (min, max, mean)"""
-    pipeline = pdal.Writer.gdal(
-        filename=output_dtm,
-        resolution=resolution,
-        output_type=dtm_type,
-        where="(Classification == 2 || Classification == 66)",
-        data_type="Float32",
-    ).pipeline(points)
-    pipeline.execute()
-    utils_gdal.add_epsg_to_raster(output_dtm, epsg)
+    """build a vrt if non exists"""
+    if not force_if_exists and os.path.exists(vrt):
+        return
+
+    # scan des fichiers
+    images = []
+    reobj = re.compile(fnmatch.translate("*." + format_image), re.IGNORECASE)
+    for file in os.listdir(input_images_dir):
+        if reobj.match(file):
+            add_epsg_to_raster(input_images_dir + "/" + file, epsg)
+            images.append(input_images_dir + "/" + file)
+
+    vrt_options = gdal.BuildVRTOptions(resampleAlg="bilinear", addAlpha=False)
+    my_vrt = gdal.BuildVRT(vrt, images, options=vrt_options)
+    my_vrt = None
 
 
-def build_dtm_from_las(
-    input_las: str, output_dtm: str, epsg: int, dtm_type: str, resolution: float
-):
-    """build a dtm from las - dtm_type (min, max, mean)"""
-    points_ini = read_las_file(input_las)
-    return build_dtm_from_points(points_ini, output_dtm, epsg, dtm_type, resolution)
+def extract_from_vrt(in_vrt: str, out_put_image: str, bbox: gu.Bbox):
+    """extract part of DTM"""
+    gdal.Translate(
+        out_put_image, in_vrt, projWin=[bbox.xmin, bbox.ymax, bbox.xmax, bbox.ymin]
+    )
+
+
+def get_box_from_image(input_raster: str):
+    """get image bbox"""
+    src = gdal.Open(input_raster)
+    ulx, x_res, _, uly, _, y_res = src.GetGeoTransform()
+    lrx = ulx + (src.RasterXSize * x_res)
+    lry = uly + (src.RasterYSize * y_res)
+    return gu.Bbox(ulx, lrx, lry, uly)
+
+
+def rasterise(image_out: str, geo: str, image_ref_georef: str, type : gdal, options = None):
+    """rasterise a geometry"""
+    data_src = gdal.Open(image_ref_georef)
+    drv_tiff = gdal.GetDriverByName("GTiff")
+    ds_out = drv_tiff.Create(
+        image_out, data_src.RasterXSize, data_src.RasterYSize, 1, type
+    )
+    ds_out.SetGeoTransform(data_src.GetGeoTransform())
+    if geo is not None and os.path.exists(geo):
+        source_ds = ogr.Open(geo)
+        source_layer = source_ds.GetLayer()
+        if options:
+            gdal.RasterizeLayer(ds_out, [1], source_layer, options=options)
+        else:
+            gdal.RasterizeLayer(ds_out, [1], source_layer, None)
+    data_src, ds_out = None, None
+
+
+def polygonize_and_add_field_name(raster_unvalide: str, epsg: int, field_name: str):
+    unvalide_area = []
+    out_json_density_ground = tempfile.NamedTemporaryFile(suffix="_polygonize_and_add_field_name.json")
+    lu_gdal_utils.gdal_polygonize(
+        raster_unvalide, out_json_density_ground.name, epsg)
+    with open(out_json_density_ground.name) as file:
+        geo_json = geojson.load(file)
+        features = geo_json["features"]
+        for fea in features:
+            fea["properties"]["type erreur"] = field_name
+            unvalide_area.append(fea)
+    return unvalide_area
+
