@@ -12,6 +12,10 @@ def get_zmin_zmax_from_MNT(
     input_MNT: str,
     verbose=False
 ):
+    """
+    Get zmin and zmax of an DTM.
+    input_MNT : path of the DTM
+    """
     recupStat = subprocess.getstatusoutput("gdalinfo -stats "+input_MNT)
     
     info = recupStat[1]
@@ -44,6 +48,13 @@ def generate_LUT_X_cycle(
     nb_cycle: int,
     verbose=False
 ):
+    """
+    Generate a LUT in link with a DTM.
+    file_las : points cloud 
+    file_MTN : DTM originate from the points cloud
+    nb_cycle : the number of cycle that allows to generate the LUT
+    return   : path of the LUT
+    """
 
     if verbose :
         print(f"\n\nGenerate LUT of file {file_MNT}")
