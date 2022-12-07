@@ -29,3 +29,7 @@ Cela va créer dans le dossier /test_raster/DTM :
 - 1 MNT brut
 - 1 MNT ombragé
 - 1 ou plusieurs MNT ombragé colorisé
+
+Reste à faire :
+- combler les trous (interpolation?)
+- découpage puis assemblage de dalles

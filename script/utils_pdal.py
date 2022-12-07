@@ -114,6 +114,17 @@ def get_ground_points_pipeline(input_las: str):
     )
     return pipeline
 
+def get_ground_points_only(input_las: str):
+    """get ground or non classified with a height lower than 0.5"""
+    tab_ground_class = [2]
+    pipeline = (
+        pdal.Reader.las(filename=input_las)
+        | pdal.Filter.range(limits=tab_class_to_str_pdal_class(tab_ground_class))
+        | pdal.Filter.hag_nn()
+        | pdal.Filter.range(limits="HeightAboveGround[0:0.5]")
+    )
+    return pipeline
+
 
 def build_dtm_from_points(
     points, output_dtm: str, epsg: int, dtm_type: str, resolution: float

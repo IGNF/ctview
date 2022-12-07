@@ -59,7 +59,7 @@ def generate_LUT_X_cycle(
     if verbose :
         print(f"\n\nGenerate LUT of file {file_MNT}")
 
-    path = f"../LUT/LUT_{nb_cycle}_{file_las[7:-4]}.txt"
+    path = f"../LUT/LUT_{nb_cycle}cycle_{file_las[7:-4]}.txt"
 
     zmin, zmax = get_zmin_zmax_from_MNT(input_MNT=file_MNT, verbose=verbose)
 
