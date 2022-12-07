@@ -116,27 +116,6 @@ def color_raster_with_LUT(input_raster, output_raster, LUT) :
         )
 
 
-def build_dtm_from_points(
-    points, output_dtm: str, epsg: int, dtm_type: str, resolution: float
-):
-    """build a dtm from points - dtm_type (min, max, mean)"""
-    pipeline = pdal.Writer.gdal(
-        filename=output_dtm,
-        resolution=resolution,
-        output_type=dtm_type,
-        where="(Classification == 2 || Classification == 66)",
-        data_type="Float32",
-    ).pipeline(points)
-    pipeline.execute()
-    utils_gdal.add_epsg_to_raster(output_dtm, epsg)
-
-
-def build_dtm_from_las(
-    input_las: str, output_dtm: str, epsg: int, dtm_type: str, resolution: float
-):
-    """build a dtm from las - dtm_type (min, max, mean)"""
-    points_ini = read_las_file(input_las)
-    return build_dtm_from_points(points_ini, output_dtm, epsg, dtm_type, resolution)
 
 
 

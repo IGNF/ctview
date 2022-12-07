@@ -35,6 +35,16 @@ def build_dtm_from_las(
     return build_dtm_from_points(points_ini, output_dtm, epsg, dtm_type, resolution)
 
 
+def hillshade_from_raster(
+    input_raster: str, output_raster: str
+):
+    """Add hillshade to raster"""
+    gdal.DEMProcessing(
+        destName=output_raster,
+        srcDS=input_raster,
+        processing = "hillshade",
+        )
+
 # TEST
 
 if __name__ == "__main__":
@@ -58,4 +68,12 @@ if __name__ == "__main__":
         epsg = EPSG,
         dtm_type = DTM_TYPE,
         resolution = RESOLUTION,
+    )
+
+    # Ajout ombrage
+    in_file = out_dtm_raster
+    out_file = f"../test_raster/DTM/{in_las[7:-4]}_DTM_hillshade.tif"
+    hillshade_from_raster(
+        input_raster = in_file,
+        output_raster = out_file,
     )
