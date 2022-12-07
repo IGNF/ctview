@@ -7,6 +7,8 @@ import pdal
 from osgeo import gdal
 import tools
 import utils_gdal
+import numpy
+import subprocess
 
 
 
@@ -44,6 +46,19 @@ def hillshade_from_raster(
         srcDS=input_raster,
         processing = "hillshade",
         )
+
+
+
+
+def create_LUT_X_cycles(
+    cycle: int
+):
+
+
+def color_MNT_with_cycles(
+    input_raster: str, output_raster: str, nb_cycle: int
+):
+
 
 # TEST
 
