@@ -77,7 +77,7 @@ def color_MNT_with_cycles(
     )
 
     # Path MNT colorised
-    file_MNT_color = f'../test_raster/DTM/{file_las[7:-4]}_DTM_hillshade_color{nb_cycle}c.tif'
+    file_MNT_color = f'../test_raster/DTM/{file_las[-31:-4]}_DTM_hillshade_color{nb_cycle}c.tif'
 
 
     if verbose :
@@ -100,7 +100,7 @@ def generate_DTM_hs_color(verbose=False) :
     in_las = sys.argv[1:][0]
 
     # Fichier de sortie
-    out_dtm_raster = f"../test_raster/DTM/{in_las[7:-4]}_DTM.tif"
+    out_dtm_raster = f"../test_raster/DTM/{in_las[-31:-4]}_DTM.tif"
 
     # Paramètres
     EPSG = 2154
@@ -127,7 +127,7 @@ def generate_DTM_hs_color(verbose=False) :
         print("Add hillshade...")
 
     dtm_file = out_dtm_raster
-    dtm_hs_file = f"../test_raster/DTM/{in_las[7:-4]}_DTM_hillshade.tif"
+    dtm_hs_file = f"../test_raster/DTM/{in_las[-31:-4]}_DTM_hillshade.tif"
     hillshade_from_raster(
         input_raster = dtm_file,
         output_raster = dtm_hs_file,

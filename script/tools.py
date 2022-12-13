@@ -73,6 +73,37 @@ def filter_las(points, classif):
     return pipeline.arrays[0]
 
 
+def filter_las_version2(lasFile, outFile):
+    fpath = lasFile
+    FileOutput = outFile
+    information = {}
+    information = {
+    "pipeline": [
+            {
+                "type":"readers.las",
+                "filename":fpath,
+                "override_srs": "EPSG:2154",
+                "nosrs": True
+            },
+            {
+                "type":"filters.range",
+                "limits":"Classification[2:2],Classification[66:66]"
+            },
+            {
+                "type": "writers.las",
+                "a_srs": "EPSG:2154",
+                # "minor_version": 4,
+                # "dataformat_id": 6,
+                "filename": FileOutput
+            }
+        ]
+    }
+    ground = json.dumps(information, sort_keys=True, indent=4)
+    print(ground)
+    pipeline = pdal.Pipeline(ground)
+    pipeline.execute()
+
+
 def color_points_by_class(input_points) :
     "Color las points by class."
  #   classif = "Classification[6:6]"  # classif 6 = batiments
