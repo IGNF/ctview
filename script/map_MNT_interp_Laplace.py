@@ -13,6 +13,9 @@ import startinpy
 import os
 from sys import argv
 from multiprocessing import Pool, cpu_count
+import json
+import laspy
+import math
 
 
 def main():    
@@ -62,16 +65,14 @@ def start_pool(target_folder, src, filetype = 'las', postprocess = 0,
 
 
 
-def filter_las_ground(fpath: str, src: str, file: str):
+def filter_las_ground(fpath: str, file: str):
     """ Reads the LAS file and filter only grounds from LIDAR.
 
     Args:
         fpath (str) : directory of projet who contains LIDAR (Ex. "data")
-        src (str): directory of work who contains the output files
         file (str): name of LIDAR tiles
     """
-    dst = str("DTM".join([src, '/']))
-    FileOutput = "".join([dst, "_".join([file[:-4], 'ground.las'])])
+
     information = {}
     information = {
     "pipeline": [
@@ -84,7 +85,36 @@ def filter_las_ground(fpath: str, src: str, file: str):
             {
                 "type":"filters.range",
                 "limits":"Classification[2:2],Classification[66:66]"
-            },
+            }
+        ]
+    }
+    ground = json.dumps(information, sort_keys=True, indent=4)
+    print(ground)
+    pipeline = pdal.Pipeline(ground)
+    pipeline.execute()
+    return pipeline.arrays[0]
+
+def write_las(input_points, file: str, src: str, name: str):
+    """Write a las file
+    Args:
+        file (str): name of LIDAR tiles
+        src (str): directory of work who contains the output files
+        """
+    print("src : "+src)
+    dst = str("DTM".join([src, '/']))
+    print("dts : "+dst)
+    FileOutput = "".join([dst, "_".join([file[:-4], f'{name}.las'])])
+    print("filename : "+FileOutput)
+    pipeline = pdal.Writer.las(filename = FileOutput, a_srs="EPSG:2154").pipeline(input_points)
+    pipeline.execute()
+
+    NameFileOutput = "_".join([file[:-4], f'{name}.las'])
+    return NameFileOutput
+
+def write_las2(pts):
+    information = {}
+    information = {
+    "pipeline": [
             {
                 "type": "writers.las",
                 "a_srs": "EPSG:2154",
@@ -138,6 +168,37 @@ def execute_startin(pts, res, origin, size):
         yi += 1
     return ras
 
+
+def write_geotiff_withbuffer(raster, origin, size, fpath):
+    """Writes the interpolated TIN-linear and Laplace rasters
+    to disk using the GeoTIFF format with buffer (100 m). The header is based on
+    the raster array and a manual definition of the coordinate
+    system and an identity affine transform.
+
+    Args:
+        raster(array) : Z interpolation
+        origin(list): coordinate location of the relative origin (bottom left)
+        size (float): raster cell size
+        fpath(str): target folder "_tmp"
+
+    Returns:
+        bool: If the output "DTM" in the folder "_tmp" is okay or not
+    """
+    import rasterio
+    from rasterio.transform import Affine
+    transform = (Affine.translation(origin[0], origin[1])
+                 * Affine.scale(size, size))
+    with rasterio.Env():
+        with rasterio.open(fpath, 'w', driver = 'GTiff',
+                           height = raster.shape[0],
+                           width = raster.shape[1],
+                           count = 1,
+                           dtype = rasterio.float32,
+                           crs='EPSG:2154',
+                           transform = transform
+                           ) as out_file:
+            out_file.write(raster.astype(rasterio.float32), 1)
+
 def get_origin(las: str):
     """
     Returns the North-West coordinates of the las.
@@ -156,17 +217,80 @@ def get_origin(las: str):
     # réécrire plus proprement en considérant ce qu'il y a entre chaque _ (tiret du 8)    
     return int(las[11:15]), int(las[16:20]), str(las[21:25]), str(las[26:31])
 
+def give_name_resolution_raster(size):
+    """
+    Give a resolution from raster
 
+    Args:
+        size (int): raster cell size
+
+    Return:
+        _size(str): resolution from raster for output's name
+    """
+    if float(size) == 1.0:
+        _size = str('_1M')
+    elif float(size) == 0.5:
+        _size = str('_50CM')
+    elif float(size) == 5.0:
+        _size = str('_5M')
+    else:
+        _size = str(size)
+    return _size
+
+
+def las_prepare_1_file(target_file: str, src: str, fname: str, size: float):
+    """Severals steps :
+        1- Merge LIDAR tiles
+        2- Crop tiles 
+        3- Takes the filepath to an input LAS (crop) file and the desired output raster cell size. Reads the LAS file and outputs
+    the ground points as a numpy array. Also establishes some
+    basic raster parameters:
+        - the extents
+        - the resolution in coordinates
+        - the coordinate location of the relative origin (bottom left)
+
+    Args:
+        target_folder (str): directory of pointclouds
+        src (str): directory folder for saving the outputs
+        fname (str): name of LIDAR tile
+        size (int): raster cell size
+    
+    Returns:
+        extents(array) : extents
+        res(list): resolution in coordinates
+        origin(list): coordinate location of the relative origin (bottom left)
+    """
+    # Parameters
+    Fileoutput = target_file
+    # STEP 3 : Reads the LAS file and outputs the ground points as a numpy array.
+    in_file = laspy.read(Fileoutput)
+    header = in_file.header
+    in_np = np.vstack((in_file.classification,
+                           in_file.x, in_file.y, in_file.z)).transpose()
+    in_np = in_np[in_np[:,0] == 2].copy()[:,1:]
+    extents = [[header.min[0], header.max[0]],
+               [header.min[1], header.max[1]]]
+    res = [math.ceil((extents[0][1] - extents[0][0]) / size),
+           math.ceil((extents[1][1] - extents[1][0]) / size)]
+    origin = [np.mean(extents[0]) - (size / 2) * res[0],
+              np.mean(extents[1]) - (size / 2) * res[1]]
+    return in_np, res, origin
+    
 
 def do(verbose=False):
 
     import sys
+
+    # Paramètres
+    size = 1000 #km
+    _size = give_name_resolution_raster(size)
+
     # Pour tester ce fichier de création de raster colorisé par classe après une interpolation
     in_las = sys.argv[1:][0]
     # Dossier dans lequel seront créés les fichiers
     path_workfolder = sys.argv[1:][1]
 
-    in_las_name = in_las[-35:-4]
+    in_las_name = in_las[-35:]
 
 
 
@@ -177,21 +301,65 @@ def do(verbose=False):
     origin_x, origin_y, ProjSystem, AltiSystem = get_origin(in_las_name)
 
     if verbose :
+        print(f"Dalle name : {in_las_name}")
+
         print(f"North-West X coordinate : {origin_x} km")
-        print(f"North-West Y coordinate : {origin_x} km")
+        print(f"North-West Y coordinate : {origin_y} km")
         print(f"System of projection : {ProjSystem}")
         print(f"Altimetric system : {AltiSystem}")
 
-    # # Filtre les points sol de classif 2 et 66
+    if verbose :
+        print("\nFiltrage points sol et virtuels...")
+    # Filtre les points sol de classif 2 et 66
     # tools.filter_las_version2(las,las_pts_ground)
+    ground_pts = filter_las_ground(
+        fpath = in_las, 
+        file = in_las_name)
 
-    # # Interpole avec la méthode de Laplace
-    # resolution = # in meters
-    # origine = 
-    # size = 1.0 # résolution du raster (raster cell size)
-    # execute_startin(pts=las_pts_ground, res=resolution, origin=origin, size=size)
+    if verbose :
+        print("Build las...")
+    # LAS points sol non interpolés
+    FileLasGround = write_las(input_points=ground_pts, file=in_las_name , src=path_workfolder, name="ground")
 
 
+
+    if verbose :
+        print("\nInterpolation méthode de Laplace...")
+
+    if verbose :
+        print("\n           Extraction liste des coordonnées du nuage de points...")
+    # Extraction coord nuage de points
+    extents_calc, res_calc, origin_calc = las_prepare_1_file(target_file=in_las, src=path_workfolder, fname=in_las_name, size=1000)
+    if verbose :
+        print(f"Extents {extents_calc}")
+        print(f"Resolution in coordinates {res_calc}")
+        print(f"Loc of the relative origin {origin_calc}")
+
+
+
+    if verbose :
+        print("\n           Interpolation...")
+    # Interpole avec la méthode de Laplace
+    resolution = 1.0 # in meters
+    origine = [origin_x, origin_y]
+    size = 10000 # taille du raster (raster cell size) 1000km
+    ras = execute_startin(pts=extents_calc, res=resolution, origin=origine, size=size)
+    print(ras)
+
+    if verbose :
+        print("Build raster...")
+    
+
+    write_geotiff_withbuffer(raster=ras, origin=origine, size=size, fpath=in_las + _size + '_Laplace.tif')
+
+    if verbose :
+        print("Build las...")
+    # LAS points sol interpolés
+    write_las(input_points=ground_pts, file=in_las_name ,src=path_workfolder, name="ground_interp")
+
+
+    if verbose :
+        print("End.")
 
 if __name__ == '__main__':
     
