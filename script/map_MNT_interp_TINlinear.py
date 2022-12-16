@@ -38,7 +38,7 @@ def create_folder(dest_folder: str):
         os.makedirs(tmp_new_dir)
 
 def start_pool(target_folder, src, filetype = 'las', postprocess = 0,
-               size = 1, method = 'startin-Laplace'):
+               size = 1, method = 'startin-TINlinear'):
     """Assembles and executes the multiprocessing pool.
     The interpolation variants/export formats are handled
     by the worker function (ip_worker(mapped)).
@@ -103,7 +103,7 @@ def write_las(input_points, file: str, src: str, name: str):
         src (str): directory of work who contains the output files
         """
     print("src : "+src)
-    dst = str("DTM".join([src, '/']))
+    dst = src
     print("dts : "+dst)
     FileOutput = "".join([dst, "_".join([file[:-4], f'{name}.las'])])
     print("filename : "+FileOutput)
@@ -134,7 +134,7 @@ def write_las2(pts):
 
 def execute_startin(pts, res, origin, size):
     """Takes the grid parameters and the ground points. Interpolates
-    either using the TIN-linear or the Laplace method. Uses a -9999 no-data value. 
+    either using the TIN-linear method. Uses a -9999 no-data value. 
     Fully based on the startin package (https://startinpy.readthedocs.io/en/latest/api.html)
 
     Args:
@@ -150,8 +150,8 @@ def execute_startin(pts, res, origin, size):
     # # Startin 
     tin = startinpy.DT(); tin.insert(pts) # # Insert each points in the array of points (a 2D array)
     ras = np.zeros([res[1], res[0]]) # # returns a new array of given shape and type, filled with zeros
-    # # Interpolate method Laplace
-    def interpolant(x, y): return tin.interpolate_laplace(x, y)
+    # # Interpolate method TIN Linear
+    def interpolant(x, y): return tin.interpolate_tin_linear(x, y)
 
     yi = 0
     for y in np.arange(origin[1], origin[1] + res[1] * size, size):
@@ -171,7 +171,7 @@ def execute_startin(pts, res, origin, size):
 
 
 def write_geotiff_withbuffer(raster, origin, size, fpath):
-    """Writes the interpolated TIN-linear and Laplace rasters
+    """Writes the interpolated TIN-linear rasters
     to disk using the GeoTIFF format with buffer (100 m). The header is based on
     the raster array and a manual definition of the coordinate
     system and an identity affine transform.
@@ -337,7 +337,7 @@ def do(verbose=False):
 
 
     # Fichier de sortie MNT brut
-    out_dtm_raster = f"{path_workfolder}{in_las_name}_DTM.tif"
+    out_dtm_raster = f"{path_workfolder}DTM/{in_las_name}_DTM.tif"
 
     # Extraction infos du las
     origin_x, origin_y, ProjSystem, AltiSystem = get_origin(in_las_name)
@@ -361,12 +361,12 @@ def do(verbose=False):
     if verbose :
         print("Build las...")
     # LAS points sol non interpolés
-    FileLasGround = write_las(input_points=ground_pts, file=in_las_name , src=path_workfolder, name="ground")
+    FileLasGround = write_las(input_points=ground_pts, file=in_las_name , src=f"{path_workfolder}LAS/", name="ground")
 
 
 
     if verbose :
-        print("\nInterpolation méthode de Laplace...")
+        print("\nInterpolation méthode de TIN Linéaire...")
 
     if verbose :
         print("\n           Extraction liste des coordonnées du nuage de points...")
@@ -381,7 +381,7 @@ def do(verbose=False):
 
     if verbose :
         print("\n           Interpolation...")
-    # Interpole avec la méthode de Laplace
+    # Interpole avec la méthode de TIN Linéaire
     resolution = res_calc # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
     origine = origin_calc
     ras = execute_startin(pts=extents_calc, res=resolution, origin=origine, size=size)
@@ -392,13 +392,13 @@ def do(verbose=False):
         print(ras)
         print("\nBuild raster...")
     
-    raster_dtm_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, fpath=path_workfolder + in_las_name[:-4] + _size + '_Laplace.tif')
+    raster_dtm_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, fpath=path_workfolder + "DTM/" + in_las_name[:-4] + _size + '_TINlinear.tif')
 
     if verbose :
-        print(f"{path_workfolder}{_size}_Laplace.tif")
+        print(f"{path_workfolder}{_size}_TINlinear.tif")
         print("\nBuild las...")
     # LAS points sol interpolés
-    las_dtm_interp = write_las(input_points=ground_pts, file=in_las_name ,src=path_workfolder, name="ground_interp")
+    las_dtm_interp = write_las(input_points=ground_pts, file=in_las_name ,src=f"{path_workfolder}LAS/", name="ground_interp")
 
 
     # Ajout ombrage
@@ -408,7 +408,7 @@ def do(verbose=False):
         print("\n")
 
     dtm_file = raster_dtm_interp
-    dtm_hs_file = f"../test_raster/DTM_Laplace/{in_las_name[:-4]}_DTM_hillshade.tif"
+    dtm_hs_file = f"{path_workfolder}DTM_shade/{in_las_name[:-4]}_DTM_hillshade.tif"
     hillshade_from_raster(
         input_raster = dtm_file,
         output_raster = dtm_hs_file,
@@ -432,7 +432,7 @@ def do(verbose=False):
 
         color_MNT_with_cycles(
         file_las=in_las_name,
-        scr=path_workfolder,
+        scr=f"{path_workfolder}DTM_color/",
         file_MNT=dtm_hs_file,
         nb_cycle=cycle,
         verbose=verbose

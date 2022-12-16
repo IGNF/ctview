@@ -1,0 +1,31 @@
+name: ctview
+channels:
+  - conda-forge
+dependencies:
+  - python=3.8
+  - gdal
+  - geojson
+  - pyproj
+  - pysimplegui
+  - geopandas
+  - pyshp
+  - laspy
+  - pandas
+  - opencv
+  - psycopg2
+  - python-pdal
+  - scipy
+  - requests
+  - pytest
+  - pytest-dependency
+  - black
+  - isort
+  - fiona
+  - filelock
+  - pip
+  - pip:
+    - --extra-index-url=https://qlf-nexus.ign.fr/repository/pypi-lidarhd-hosted/simple
+    - ign-gpao-project-builder
+    - ign-gpao-client
+    - ign-lidarutils
+    - startinpy

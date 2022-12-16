@@ -3,7 +3,7 @@ import tempfile
 
 from shapely.geometry import shape
 
-from ctclass import utils_geometry, utils_gdal
+# from ctclass import utils_geometry, utils_gdal
 
 
 def read_las_file(input_las: str):

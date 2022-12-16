@@ -57,7 +57,7 @@ def generate_LUT_X_cycle(
     """
 
     if verbose :
-        print(f"\n\nGenerate LUT of file {file_MNT}")
+        print(f"Generate LUT of file {file_MNT}")
 
     path = f"../LUT/LUT_{nb_cycle}cycle_{file_las[-31:-4]}.txt"
 

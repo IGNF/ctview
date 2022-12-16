@@ -8,8 +8,8 @@ import geojson
 
 from osgeo import gdal, osr, ogr
 
-import lidarutils.geometry_utils as gu
-import lidarutils.gdal_utils as lu_gdal_utils
+# import lidarutils.geometry_utils as gu
+# import lidarutils.gdal_utils as lu_gdal_utils
 
 def add_epsg_to_raster(raster: str, epsg: int):
     """add epsg to raster"""
@@ -39,11 +39,11 @@ def build_vrt(
     my_vrt = None
 
 
-def extract_from_vrt(in_vrt: str, out_put_image: str, bbox: gu.Bbox):
-    """extract part of DTM"""
-    gdal.Translate(
-        out_put_image, in_vrt, projWin=[bbox.xmin, bbox.ymax, bbox.xmax, bbox.ymin]
-    )
+# def extract_from_vrt(in_vrt: str, out_put_image: str, bbox: gu.Bbox):
+#     """extract part of DTM"""
+#     gdal.Translate(
+#         out_put_image, in_vrt, projWin=[bbox.xmin, bbox.ymax, bbox.xmax, bbox.ymin]
+#     )
 
 
 def get_box_from_image(input_raster: str):
