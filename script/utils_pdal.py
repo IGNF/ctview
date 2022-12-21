@@ -19,6 +19,27 @@ def get_info_from_las(points):
     pipeline.execute()
     return pipeline.metadata
 
+def get_class_min_max_from_las(points):
+    """
+    Get minimum and maximum classification of a points cloud.
+    """
+    # Which class in OUT_FILTER_GROUND ?
+    # Get Classification dictionnary
+    dico_metadata = get_info_from_las(points) # !!! an other function is used !!!
+
+    list_statistic = dico_metadata["metadata"]["filters.stats"]["statistic"]
+    
+    indice = -1 # indice will be be the indice that show the researched dictionnary
+    for i in range(len(list_statistic)):
+        if list_statistic[i]["name"] == "Classification":
+            indice = i
+            break
+    if indice == -1 :
+        print("AlgoError : classification dictionnary not found")
+    # Classification dictionnary is list_statistic[indice]
+    minClass = list_statistic[indice]["minimum"]
+    maxClass = list_statistic[indice]["maximum"]
+    return minClass, maxClass
 
 def calc_boundary(points, size_hexbin_edge):
     """Calcul approximate boundary of points with hexbin"""
