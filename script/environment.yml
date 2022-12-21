@@ -1,6 +1,7 @@
 name: ctview
 channels:
   - conda-forge
+  - anaconda
 dependencies:
   - python=3.8
   - gdal
@@ -23,6 +24,9 @@ dependencies:
   - fiona
   - filelock
   - pip
+  - numpy
+  - cgal
+  - rasterio
   - pip:
     - --extra-index-url=https://qlf-nexus.ign.fr/repository/pypi-lidarhd-hosted/simple
     - ign-gpao-project-builder

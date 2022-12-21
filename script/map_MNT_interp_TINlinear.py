@@ -4,6 +4,8 @@
 
     # File
 import tools
+from map_MNT import hillshade_from_raster, color_MNT_with_cycles
+import gen_LUT_X_cycle
     # Library
 import pdal
 from osgeo import gdal
@@ -16,53 +18,46 @@ from multiprocessing import Pool, cpu_count
 import json
 import laspy
 import math
-from map_MNT import hillshade_from_raster, color_MNT_with_cycles
-import gen_LUT_X_cycle
+import shutil
 
 
-def main():    
-    # Create the severals folder if not exists
-    create_folder(argv[2])
-    if 3 <= len(argv) <= 7: start_pool(*argv[1:])
-    else: print("Error: Incorrect number of arguments passed. Returning.")
+def delete_folder(dest_folder: str):
+    """Delete the severals folders "LAS", "DTM", "DTM_shade" and "DTM_color" if not exist"""
+    # Delete folder "LAS"
+    LAS_new_dir = os.path.join(dest_folder, 'LAS')
+    if os.path.isdir(LAS_new_dir):
+        shutil.rmtree(LAS_new_dir)
+    # Delete folder "DTM"
+    DTM_brut_new_dir = os.path.join(dest_folder, 'DTM_brut')
+    if os.path.isdir(DTM_brut_new_dir):
+        shutil.rmtree(DTM_brut_new_dir)
+    # Delete folder "DTM_shade"
+    DTM_shade_new_dir = os.path.join(dest_folder, 'DTM_shade')
+    if os.path.isdir(DTM_shade_new_dir):
+        shutil.rmtree(DTM_shade_new_dir)
+    # Delete folder "DTM_color"
+    DTM_color_new_dir = os.path.join(dest_folder, 'DTM_color')
+    if os.path.isdir(DTM_color_new_dir):
+        shutil.rmtree(DTM_color_new_dir)
 
 def create_folder(dest_folder: str):
-    """Create the severals folders "DTM" and "_tmp" if not exist"""
+    """Create the severals folders "LAS", "DTM", "DTM_shade" and "DTM_color" if not exist"""
+    # Create folder "LAS"
+    LAS_new_dir = os.path.join(dest_folder, 'LAS')
+    if not os.path.isdir(LAS_new_dir):
+        os.makedirs(LAS_new_dir)
     # Create folder "DTM"
-    DTM_new_dir = os.path.join(dest_folder, 'DTM')
-    if not os.path.isdir(DTM_new_dir):
-        os.makedirs(DTM_new_dir)
-    # Create folder "_tmp"
-    tmp_new_dir = os.path.join(dest_folder, '_tmp')
-    if not os.path.isdir(tmp_new_dir):
-        os.makedirs(tmp_new_dir)
-
-def start_pool(target_folder, src, filetype = 'las', postprocess = 0,
-               size = 1, method = 'startin-TINlinear'):
-    """Assembles and executes the multiprocessing pool.
-    The interpolation variants/export formats are handled
-    by the worker function (ip_worker(mapped)).
-    """
-    fnames = listPointclouds(target_folder, filetype)
-    cores = cpu_count()
-    print(f"Found {cores} logical cores in this PC")
-    num_threads = cores -1
-    if CPU_LIMIT > 0 and num_threads > CPU_LIMIT:
-        print(f"Limit CPU usage to {CPU_LIMIT} cores due to env var CPU_LIMIT")
-        num_threads = CPU_LIMIT
-    print("\nStarting interpolation pool of processes on the {}".format(
-        num_threads) + " logical cores.\n")
-
-    if len(fnames) == 0:
-        print("Error: No file names were input. Returning."); return
-    pre_map, processno = [], len(fnames)
-    for i in range(processno):
-        pre_map.append([src, int(postprocess), float(size),
-                            target_folder, fnames[i].strip('\n'), method, filetype])
-    p = Pool(cores -1)
-    p.map(ip_worker, pre_map)
-    p.close(); p.join()
-    print("\nAll workers have returned.")
+    DTM_brut_new_dir = os.path.join(dest_folder, 'DTM_brut')
+    if not os.path.isdir(DTM_brut_new_dir):
+        os.makedirs(DTM_brut_new_dir)
+    # Create folder "DTM_shade"
+    DTM_shade_new_dir = os.path.join(dest_folder, 'DTM_shade')
+    if not os.path.isdir(DTM_shade_new_dir):
+        os.makedirs(DTM_shade_new_dir)
+    # Create folder "DTM_color"
+    DTM_color_new_dir = os.path.join(dest_folder, 'DTM_color')
+    if not os.path.isdir(DTM_color_new_dir):
+        os.makedirs(DTM_color_new_dir)
 
 
 
@@ -91,7 +86,7 @@ def filter_las_ground(fpath: str, file: str):
         ]
     }
     ground = json.dumps(information, sort_keys=True, indent=4)
-    print(ground)
+
     pipeline = pdal.Pipeline(ground)
     pipeline.execute()
     return pipeline.arrays[0]
@@ -105,7 +100,7 @@ def write_las(input_points, file: str, src: str, name: str):
     print("src : "+src)
     dst = src
     print("dts : "+dst)
-    FileOutput = "".join([dst, "_".join([file[:-4], f'{name}.las'])])
+    FileOutput = "".join([src, "_".join([file[:-4], f'{name}.las'])])
     print("filename : "+FileOutput)
     pipeline = pdal.Writer.las(filename = FileOutput, a_srs="EPSG:2154").pipeline(input_points)
     pipeline.execute()
@@ -141,7 +136,7 @@ def execute_startin(pts, res, origin, size):
         pts : ground points clouds (for each point, just x-y-z coordinates)
         res(list): resolution in coordinates (1 000 km -> raster carré de 1 000km de côté)
         origin(list): coordinate location of the relative origin (bottom left)
-        size (int): raster cell size (1m x 1m OU 5m x 5m)
+        size (int): raster cell size (1m x 1m OR 5m x 5m)
 
     Returns:
         ras(list): Z interpolation (array de zeros et de 1)
@@ -162,7 +157,8 @@ def execute_startin(pts, res, origin, size):
                 ras[yi, xi] = -9999 # no-data value
             else:
                 tri = tin.locate(x, y) # locate the triangle containing the point [x,y]. An error is thrown if it is outside the convex hull
-                if tri != [] and 0 not in tri:
+                #print("tri", tri, type(tri))
+                if tri != np.array([]) and 0 not in tri:
                     ras[yi, xi] = interpolant(x, y)
                 else: ras[yi, xi] = -9999 # no-data value
             xi += 1
@@ -180,7 +176,7 @@ def write_geotiff_withbuffer(raster, origin, size, fpath):
         raster(array) : Z interpolation
         origin(list): coordinate location of the relative origin (bottom left)
         size (float): raster cell size
-        fpath(str): target folder "_tmp"
+        fpath(str): target folder
 
     Returns:
         bool: fpath
@@ -216,7 +212,7 @@ def get_origin(las: str):
     output :
         int, int, str, str : X coord in km, Y coord in km, system of projection, altimetric system
     """
-    # réécrire plus proprement en considérant ce qu'il y a entre chaque _ (tiret du 8)    
+    # réécrire plus proprement en allant chercher dans les métadonnées   
     return int(las[11:15]), int(las[16:20]), str(las[21:25]), str(las[26:31])
 
 def give_name_resolution_raster(size):
@@ -241,10 +237,7 @@ def give_name_resolution_raster(size):
 
 
 def las_prepare_1_file(target_file: str, src: str, fname: str, size: float):
-    """Severals steps :
-        1- Merge LIDAR tiles
-        2- Crop tiles 
-        3- Takes the filepath to an input LAS (crop) file and the desired output raster cell size. Reads the LAS file and outputs
+    """Takes the filepath to an input LAS (crop) file and the desired output raster cell size. Reads the LAS file and outputs
     the ground points as a numpy array. Also establishes some
     basic raster parameters:
         - the extents
@@ -264,7 +257,7 @@ def las_prepare_1_file(target_file: str, src: str, fname: str, size: float):
     """
     # Parameters
     Fileoutput = target_file
-    # STEP 3 : Reads the LAS file and outputs the ground points as a numpy array.
+    # Reads the LAS file and outputs the ground points as a numpy array.
     in_file = laspy.read(Fileoutput)
     header = in_file.header
     in_np = np.vstack((in_file.classification,
@@ -288,9 +281,11 @@ def color_MNT_with_cycles(
     verbose=False
 ):
     """Color a raster with a LUT created depending of a choice of cycles
-    file_las : str : points cloud
-    file_MNT : str : MNT corresponding to the points cloud
-    nb_cycle : int : the number of cycle that determine the LUT
+
+    Args :
+        file_las : str : points cloud
+        file_MNT : str : MNT corresponding to the points cloud
+        nb_cycle : int : the number of cycle that determine the LUT
     """
 
     if verbose :
@@ -319,7 +314,7 @@ def color_MNT_with_cycles(
     )
 
 
-def do(verbose=False):
+def main(verbose=False):
 
     import sys
 
@@ -332,12 +327,17 @@ def do(verbose=False):
     # Dossier dans lequel seront créés les fichiers
     path_workfolder = sys.argv[1:][1]
 
+    # Delete the severals folder LAS, DTM, DTM_shade and DTM_color if not exists
+    delete_folder(path_workfolder)
+    # Create the severals folder LAS, DTM, DTM_shade and DTM_color if not exists
+    create_folder(path_workfolder)
+
     in_las_name = in_las[-35:]
 
 
 
     # Fichier de sortie MNT brut
-    out_dtm_raster = f"{path_workfolder}DTM/{in_las_name}_DTM.tif"
+    out_dtm_raster = f"{path_workfolder}DTM_brut/{in_las_name}_DTM.tif"
 
     # Extraction infos du las
     origin_x, origin_y, ProjSystem, AltiSystem = get_origin(in_las_name)
@@ -374,8 +374,8 @@ def do(verbose=False):
     extents_calc, res_calc, origin_calc = las_prepare_1_file(target_file=in_las, src=path_workfolder, fname=in_las_name, size=size)
     if verbose :
         print(f"\nExtents {extents_calc}")
-        print(f"Resolution in coordinates : {res_calc}")
-        print(f"Loc of the relative origin : {origin_calc}")
+        print(f"Resolution in coordinates : {res_calc} m,m")
+        print(f"Localisation of the relative origin : {origin_calc} m,m")
 
 
 
@@ -392,7 +392,7 @@ def do(verbose=False):
         print(ras)
         print("\nBuild raster...")
     
-    raster_dtm_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, fpath=path_workfolder + "DTM/" + in_las_name[:-4] + _size + '_TINlinear.tif')
+    raster_dtm_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, fpath=path_workfolder + "DTM_brut/" + in_las_name[:-4] + _size + '_TINlinear.tif')
 
     if verbose :
         print(f"{path_workfolder}{_size}_TINlinear.tif")
@@ -446,4 +446,4 @@ def do(verbose=False):
 
 if __name__ == '__main__':
     
-    do(True)
+    main(True)

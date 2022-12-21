@@ -18,69 +18,64 @@ import laspy
 import math
 from map_MNT import hillshade_from_raster, color_MNT_with_cycles
 import gen_LUT_X_cycle
+import shutil
 
+def delete_folder(dest_dir: str):
+    """Delete the severals folders "LAS", "DTM", "DTM_shade" and "DTM_color" if not exist"""
+    # Delete folder "LAS"
+    LAS_new_dir = os.path.join(dest_dir, 'LAS')
+    if os.path.isdir(LAS_new_dir):
+        shutil.rmtree(LAS_new_dir)
+    # Delete folder "DTM"
+    DTM_brut_new_dir = os.path.join(dest_dir, 'DTM_brut')
+    if os.path.isdir(DTM_brut_new_dir):
+        shutil.rmtree(DTM_brut_new_dir)
+    # Delete folder "DTM_shade"
+    DTM_shade_new_dir = os.path.join(dest_dir, 'DTM_shade')
+    if os.path.isdir(DTM_shade_new_dir):
+        shutil.rmtree(DTM_shade_new_dir)
+    # Delete folder "DTM_color"
+    DTM_color_new_dir = os.path.join(dest_dir, 'DTM_color')
+    if os.path.isdir(DTM_color_new_dir):
+        shutil.rmtree(DTM_color_new_dir)
 
-def main():    
-    # Create the severals folder if not exists
-    create_folder(argv[2])
-    if 3 <= len(argv) <= 7: start_pool(*argv[1:])
-    else: print("Error: Incorrect number of arguments passed. Returning.")
-
-def create_folder(dest_folder: str):
-    """Create the severals folders "DTM" and "_tmp" if not exist"""
+def create_folder(dest_dir: str):
+    """Create the severals folders "LAS", "DTM", "DTM_shade" and "DTM_color" if not exist"""
+    # Create folder "LAS"
+    LAS_new_dir = os.path.join(dest_dir, 'LAS')
+    if not os.path.isdir(LAS_new_dir):
+        os.makedirs(LAS_new_dir)
     # Create folder "DTM"
-    DTM_new_dir = os.path.join(dest_folder, 'DTM')
-    if not os.path.isdir(DTM_new_dir):
-        os.makedirs(DTM_new_dir)
-    # Create folder "_tmp"
-    tmp_new_dir = os.path.join(dest_folder, '_tmp')
-    if not os.path.isdir(tmp_new_dir):
-        os.makedirs(tmp_new_dir)
-
-def start_pool(target_folder, src, filetype = 'las', postprocess = 0,
-               size = 1, method = 'startin-Laplace'):
-    """Assembles and executes the multiprocessing pool.
-    The interpolation variants/export formats are handled
-    by the worker function (ip_worker(mapped)).
-    """
-    fnames = listPointclouds(target_folder, filetype)
-    cores = cpu_count()
-    print(f"Found {cores} logical cores in this PC")
-    num_threads = cores -1
-    if CPU_LIMIT > 0 and num_threads > CPU_LIMIT:
-        print(f"Limit CPU usage to {CPU_LIMIT} cores due to env var CPU_LIMIT")
-        num_threads = CPU_LIMIT
-    print("\nStarting interpolation pool of processes on the {}".format(
-        num_threads) + " logical cores.\n")
-
-    if len(fnames) == 0:
-        print("Error: No file names were input. Returning."); return
-    pre_map, processno = [], len(fnames)
-    for i in range(processno):
-        pre_map.append([src, int(postprocess), float(size),
-                            target_folder, fnames[i].strip('\n'), method, filetype])
-    p = Pool(cores -1)
-    p.map(ip_worker, pre_map)
-    p.close(); p.join()
-    print("\nAll workers have returned.")
+    DTM_brut_new_dir = os.path.join(dest_dir, 'DTM_brut')
+    if not os.path.isdir(DTM_brut_new_dir):
+        os.makedirs(DTM_brut_new_dir)
+    # Create folder "DTM_shade"
+    DTM_shade_new_dir = os.path.join(dest_dir, 'DTM_shade')
+    if not os.path.isdir(DTM_shade_new_dir):
+        os.makedirs(DTM_shade_new_dir)
+    # Create folder "DTM_color"
+    DTM_color_new_dir = os.path.join(dest_dir, 'DTM_color')
+    if not os.path.isdir(DTM_color_new_dir):
+        os.makedirs(DTM_color_new_dir)
 
 
 
 
-def filter_las_ground(fpath: str, file: str):
+
+def filter_las_ground(input_dir: str, filename: str):
     """ Reads the LAS file and filter only grounds from LIDAR.
 
     Args:
-        fpath (str) : directory of projet who contains LIDAR (Ex. "data")
+        input_dir (str) : directory of projet who contains LIDAR (Ex. "data")
         file (str): name of LIDAR tiles
     """
-
+    input_file = "/".join([input_dir, filename])
     information = {}
     information = {
     "pipeline": [
             {
                 "type":"readers.las",
-                "filename":fpath,
+                "filename":input_file,
                 "override_srs": "EPSG:2154",
                 "nosrs": True
             },
@@ -96,21 +91,20 @@ def filter_las_ground(fpath: str, file: str):
     pipeline.execute()
     return pipeline.arrays[0]
 
-def write_las(input_points, file: str, src: str, name: str):
+def write_las(input_points, filename: str, output_dir: str, name: str):
     """Write a las file
     Args:
-        file (str): name of LIDAR tiles
-        src (str): directory of work who contains the output files
+        filename (str): name of LIDAR tiles
+        output_dir (str): directory of work who will contains the output files
         """
-    print("src : "+src)
-    dst = str("DTM".join([src, '/']))
-    print("dts : "+dst)
-    FileOutput = "".join([dst, "_".join([file[:-4], f'{name}.las'])])
+    dst = str("LAS".join([output_dir, '/']))
+    print("dst : "+dst)
+    FileOutput = "".join([dst, "_".join([filename[:-4], f'{name}.las'])])
     print("filename : "+FileOutput)
     pipeline = pdal.Writer.las(filename = FileOutput, a_srs="EPSG:2154").pipeline(input_points)
     pipeline.execute()
 
-    NameFileOutput = "_".join([file[:-4], f'{name}.las'])
+    NameFileOutput = "_".join([filename[:-4], f'{name}.las'])
     return NameFileOutput
 
 def write_las2(pts):
@@ -144,7 +138,7 @@ def execute_startin(pts, res, origin, size):
         size (int): raster cell size (1m x 1m OU 5m x 5m)
 
     Returns:
-        ras(list): Z interpolation (array de zeros et de 1)
+        ras(list): Z interpolation
     """
 
     # # Startin 
@@ -152,7 +146,7 @@ def execute_startin(pts, res, origin, size):
     ras = np.zeros([res[1], res[0]]) # # returns a new array of given shape and type, filled with zeros
     # # Interpolate method Laplace
     def interpolant(x, y): return tin.interpolate_laplace(x, y)
-
+    cp = 0
     yi = 0
     for y in np.arange(origin[1], origin[1] + res[1] * size, size):
         xi = 0
@@ -162,15 +156,26 @@ def execute_startin(pts, res, origin, size):
                 ras[yi, xi] = -9999 # no-data value
             else:
                 tri = tin.locate(x, y) # locate the triangle containing the point [x,y]. An error is thrown if it is outside the convex hull
+                
+                if 0 in tri :
+                    print("\nAffiche tri si 0 in tri.\n")
+                    print("tri : ", tri)
+                
+                if tri !=np.array([]) :
+                    #print("mamamia ",cp+1)
+                    cp = cp+1
+                    pass
                 if tri != [] and 0 not in tri:
                     ras[yi, xi] = interpolant(x, y)
-                else: ras[yi, xi] = -9999 # no-data value
+                else: 
+                    print("\nPAS BOUYA\n")
+                    ras[yi, xi] = -9999 # no-data value
             xi += 1
         yi += 1
     return ras
 
 
-def write_geotiff_withbuffer(raster, origin, size, fpath):
+def write_geotiff_withbuffer(raster, origin, size, output_file):
     """Writes the interpolated TIN-linear and Laplace rasters
     to disk using the GeoTIFF format with buffer (100 m). The header is based on
     the raster array and a manual definition of the coordinate
@@ -190,7 +195,7 @@ def write_geotiff_withbuffer(raster, origin, size, fpath):
     transform = (Affine.translation(origin[0], origin[1])
                  * Affine.scale(size, size))
     with rasterio.Env():
-        with rasterio.open(fpath, 'w', driver = 'GTiff',
+        with rasterio.open(output_file, 'w', driver = 'GTiff',
                            height = raster.shape[0],
                            width = raster.shape[1],
                            count = 1,
@@ -199,9 +204,9 @@ def write_geotiff_withbuffer(raster, origin, size, fpath):
                            transform = transform
                            ) as out_file:
             out_file.write(raster.astype(rasterio.float32), 1)
-    return fpath
+    return output_file
 
-def get_origin(las: str):
+def get_origin(las_input_file: str):
     """
     Returns the North-West coordinates of the las.
     Ex of file name : Semis_2021_0843_6521_LA93_IGN69.laz
@@ -216,8 +221,8 @@ def get_origin(las: str):
     output :
         int, int, str, str : X coord in km, Y coord in km, system of projection, altimetric system
     """
-    # réécrire plus proprement en considérant ce qu'il y a entre chaque _ (tiret du 8)    
-    return int(las[11:15]), int(las[16:20]), str(las[21:25]), str(las[26:31])
+    # réécrire plus proprement allant chercher dans les métadonnées    
+    return int(las_input_file[11:15]), int(las_input_file[16:20]), str(las_input_file[21:25]), str(las_input_file[26:31])
 
 def give_name_resolution_raster(size):
     """
@@ -240,11 +245,8 @@ def give_name_resolution_raster(size):
     return _size
 
 
-def las_prepare_1_file(target_file: str, src: str, fname: str, size: float):
-    """Severals steps :
-        1- Merge LIDAR tiles
-        2- Crop tiles 
-        3- Takes the filepath to an input LAS (crop) file and the desired output raster cell size. Reads the LAS file and outputs
+def las_prepare_1_file(input_file: str, output_dir: str, fname: str, size: float):
+    """Takes the filepath to an input LAS (crop) file and the desired output raster cell size. Reads the LAS file and outputs
     the ground points as a numpy array. Also establishes some
     basic raster parameters:
         - the extents
@@ -252,8 +254,8 @@ def las_prepare_1_file(target_file: str, src: str, fname: str, size: float):
         - the coordinate location of the relative origin (bottom left)
 
     Args:
-        target_folder (str): directory of pointclouds
-        src (str): directory folder for saving the outputs
+        input_file (str): directory of pointclouds
+        output_dir (str): directory folder for saving the outputs
         fname (str): name of LIDAR tile
         size (int): raster cell size
     
@@ -262,10 +264,9 @@ def las_prepare_1_file(target_file: str, src: str, fname: str, size: float):
         res(list): resolution in coordinates
         origin(list): coordinate location of the relative origin (bottom left)
     """
-    # Parameters
-    Fileoutput = target_file
-    # STEP 3 : Reads the LAS file and outputs the ground points as a numpy array.
-    in_file = laspy.read(Fileoutput)
+
+    # Reads the LAS file and outputs the ground points as a numpy array.
+    in_file = laspy.read(input_file)
     header = in_file.header
     in_np = np.vstack((in_file.classification,
                            in_file.x, in_file.y, in_file.z)).transpose()
@@ -281,16 +282,18 @@ def las_prepare_1_file(target_file: str, src: str, fname: str, size: float):
 
 
 def color_MNT_with_cycles(
-    file_las: str,
-    scr: str,
-    file_MNT: str,
+    las_input_file: str,
+    output_dir: str,
+    raster_MNT_file: str,
     nb_cycle: int,
     verbose=False
 ):
     """Color a raster with a LUT created depending of a choice of cycles
-    file_las : str : points cloud
-    file_MNT : str : MNT corresponding to the points cloud
-    nb_cycle : int : the number of cycle that determine the LUT
+
+    Argss :
+        file_las : str : points cloud
+        file_MNT : str : MNT corresponding to the points cloud
+        nb_cycle : int : the number of cycle that determine the LUT
     """
 
     if verbose :
@@ -298,28 +301,29 @@ def color_MNT_with_cycles(
         print("(1/2) Generate LUT.")
     # Create LUT
     LUT = gen_LUT_X_cycle.generate_LUT_X_cycle(
-        file_las=file_las,
-        file_MNT=file_MNT,
+        file_las=las_input_file,
+        file_MNT=raster_MNT_file,
         nb_cycle=nb_cycle,
         verbose=verbose
     )
 
     # Path MNT colorised
-    file_MNT_color = f'{scr}{file_las[:-4]}_DTM_hillshade_color{nb_cycle}c.tif'
+    raster_MNT_color_file = f'{output_dir}/DTM_color/{las_input_file[:-4]}_DTM_hillshade_color{nb_cycle}c.tif'
 
 
     if verbose :
+        print("MNT color : "+raster_MNT_color_file)
         print("(2/2) Colorise raster.")
 
     # Colorisation
     tools.color_raster_with_LUT(
-        input_raster = file_MNT,
-        output_raster = file_MNT_color,
+        input_raster = raster_MNT_file,
+        output_raster = raster_MNT_color_file,
         LUT = LUT,
     )
 
 
-def do(verbose=False):
+def main(verbose=False):
 
     import sys
 
@@ -328,22 +332,28 @@ def do(verbose=False):
     _size = give_name_resolution_raster(size)
 
     # Pour tester ce fichier de création de raster colorisé par classe après une interpolation
-    in_las = sys.argv[1:][0]
+    input_las = sys.argv[1:][0]
     # Dossier dans lequel seront créés les fichiers
-    path_workfolder = sys.argv[1:][1]
+    output_dir = sys.argv[1:][1]
 
-    in_las_name = in_las[-35:]
+    # Delete the severals folder LAS, DTM, DTM_shade and DTM_color if not exists
+    delete_folder(output_dir)
+    # Create the severals folder LAS, DTM, DTM_shade and DTM_color if not exists
+    create_folder(output_dir)
+
+    input_dir = input_las[:-35]
+    input_las_name = input_las[-35:]
 
 
 
     # Fichier de sortie MNT brut
-    out_dtm_raster = f"{path_workfolder}{in_las_name}_DTM.tif"
+    out_dtm_raster = f"{output_dir}{input_las_name}_DTM.tif"
 
     # Extraction infos du las
-    origin_x, origin_y, ProjSystem, AltiSystem = get_origin(in_las_name)
+    origin_x, origin_y, ProjSystem, AltiSystem = get_origin(input_las_name)
 
     if verbose :
-        print(f"Dalle name : {in_las_name}")
+        print(f"Dalle name : {input_las_name}")
 
         print(f"North-West X coordinate : {origin_x} km")
         print(f"North-West Y coordinate : {origin_y} km")
@@ -355,13 +365,13 @@ def do(verbose=False):
     # Filtre les points sol de classif 2 et 66
     # tools.filter_las_version2(las,las_pts_ground)
     ground_pts = filter_las_ground(
-        fpath = in_las, 
-        file = in_las_name)
+        input_dir = input_dir,
+        filename = input_las_name)
 
     if verbose :
         print("Build las...")
     # LAS points sol non interpolés
-    FileLasGround = write_las(input_points=ground_pts, file=in_las_name , src=path_workfolder, name="ground")
+    FileLasGround = write_las(input_points=ground_pts, filename=input_las_name , output_dir=output_dir, name="ground")
 
 
 
@@ -371,7 +381,7 @@ def do(verbose=False):
     if verbose :
         print("\n           Extraction liste des coordonnées du nuage de points...")
     # Extraction coord nuage de points
-    extents_calc, res_calc, origin_calc = las_prepare_1_file(target_file=in_las, src=path_workfolder, fname=in_las_name, size=size)
+    extents_calc, res_calc, origin_calc = las_prepare_1_file(input_file=input_las, output_dir=output_dir, fname=input_las_name, size=size)
     if verbose :
         print(f"\nExtents {extents_calc}")
         print(f"Resolution in coordinates : {res_calc}")
@@ -389,16 +399,39 @@ def do(verbose=False):
 
     if verbose :
         print("\nTableau d'interpolation : ")
+
+        
+        fileRas = f"{output_dir}/ras.txt"
+
+        print("\nWrite in " + fileRas)
+
+        fileR = open(fileRas, "w")
+
+        l,c = ras.shape
+        s = ''
+        for i in range(l):
+            ligne = ""
+            for j in range(c):
+                ELEMENTras = ras[i,j]
+                ligne += f"{round(ELEMENTras,5) : >20}"
+            s += ligne
+            s += '\n'  
+
+        fileR.write(s)
+        fileR.close()
+
+        print("End write.")
+        print("type ",type(ras))
         print(ras)
-        print("\nBuild raster...")
+        print("\nBuild raster ie DTM brut...")
     
-    raster_dtm_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, fpath=path_workfolder + in_las_name[:-4] + _size + '_Laplace.tif')
+    raster_dtm_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, output_file=output_dir + "DTM_brut/" + input_las_name[:-4] + _size + '_Laplace.tif')
 
     if verbose :
-        print(f"{path_workfolder}{_size}_Laplace.tif")
+        print(f"{output_dir}{_size}_Laplace.tif")
         print("\nBuild las...")
     # LAS points sol interpolés
-    las_dtm_interp = write_las(input_points=ground_pts, file=in_las_name ,src=path_workfolder, name="ground_interp")
+    las_dtm_interp = write_las(input_points=ground_pts, filename=input_las_name ,output_dir=output_dir, name="ground_interp")
 
 
     # Ajout ombrage
@@ -408,7 +441,7 @@ def do(verbose=False):
         print("\n")
 
     dtm_file = raster_dtm_interp
-    dtm_hs_file = f"../test_raster/DTM_Laplace/{in_las_name[:-4]}_DTM_hillshade.tif"
+    dtm_hs_file = f"../test_raster/DTM_Laplace/DTM_shade/{input_las_name[:-4]}_DTM_hillshade.tif"
     hillshade_from_raster(
         input_raster = dtm_file,
         output_raster = dtm_hs_file,
@@ -431,9 +464,9 @@ def do(verbose=False):
             print(f"Build raster {i+1}/{nb_raster_color}...")
 
         color_MNT_with_cycles(
-        file_las=in_las_name,
-        scr=path_workfolder,
-        file_MNT=dtm_hs_file,
+        las_input_file=input_las_name,
+        output_dir=output_dir,
+        raster_MNT_file=dtm_hs_file,
         nb_cycle=cycle,
         verbose=verbose
         )
@@ -446,4 +479,6 @@ def do(verbose=False):
 
 if __name__ == '__main__':
     
-    do(True)
+    main(True)
+
+    OTHER   = "../../data/data_simple/solo/pont_route_OK.las"
