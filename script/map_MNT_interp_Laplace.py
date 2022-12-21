@@ -86,7 +86,7 @@ def filter_las_ground(input_dir: str, filename: str):
         ]
     }
     ground = json.dumps(information, sort_keys=True, indent=4)
-    print(ground)
+    #print(ground)
     pipeline = pdal.Pipeline(ground)
     pipeline.execute()
     return pipeline.arrays[0]
