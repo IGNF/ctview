@@ -4,6 +4,7 @@
 
     # File
 import tools
+import utils_pdal
     # Library
 import pdal
 from osgeo import gdal
@@ -19,6 +20,7 @@ import math
 from map_MNT import hillshade_from_raster, color_MNT_with_cycles
 import gen_LUT_X_cycle
 import shutil
+from tqdm import tqdm
 
 def delete_folder(dest_dir: str):
     """Delete the severals folders "LAS", "DTM", "DTM_shade" and "DTM_color" if not exist"""
@@ -69,7 +71,10 @@ def filter_las_ground(input_dir: str, filename: str):
         input_dir (str) : directory of projet who contains LIDAR (Ex. "data")
         file (str): name of LIDAR tiles
     """
-    input_file = "/".join([input_dir, filename])
+    if input_dir[len(input_dir)-1]=="/":
+        input_file = "".join([input_dir, filename])
+    else :
+        input_file = "/".join([input_dir, filename])
     information = {}
     information = {
     "pipeline": [
@@ -91,16 +96,24 @@ def filter_las_ground(input_dir: str, filename: str):
     pipeline.execute()
     return pipeline.arrays[0]
 
-def write_las(input_points, filename: str, output_dir: str, name: str):
+def write_las(input_points, filename: str, output_dir: str, name: str, verbose=False):
     """Write a las file
     Args:
+        inputs_points (array) : points cloud
         filename (str): name of LIDAR tiles
         output_dir (str): directory of work who will contains the output files
+        name (str) : suffix added to filename
         """
     dst = str("LAS".join([output_dir, '/']))
-    print("dst : "+dst)
+
+    if not os.path.exists(dst):
+        os.makedirs(dst) # create directory /LAS if not exists
+
+    if verbose :
+        print("dst : "+dst)
     FileOutput = "".join([dst, "_".join([filename[:-4], f'{name}.las'])])
-    print("filename : "+FileOutput)
+    if verbose :
+        print("filename : "+FileOutput)
     pipeline = pdal.Writer.las(filename = FileOutput, a_srs="EPSG:2154").pipeline(input_points)
     pipeline.execute()
 
@@ -125,8 +138,40 @@ def write_las2(pts):
     pipeline = pdal.Pipeline(ground)
     pipeline.execute()
 
+def las_prepare_1_file(input_file: str, size: float):
+    """Takes the filepath to an input LAS (crop) file and the desired output raster cell size. Reads the LAS file and outputs
+    the ground points as a numpy array. Also establishes some
+    basic raster parameters:
+        - the extents
+        - the resolution in coordinates
+        - the coordinate location of the relative origin (bottom left)
 
-def execute_startin(pts, res, origin, size):
+    Args:
+        input_file (str): directory of pointclouds
+        fname (str): name of LIDAR tile
+        size (int): raster cell size
+    
+    Returns:
+        extents(array) : extents
+        res(list): resolution in coordinates
+        origin(list): coordinate location of the relative origin (bottom left)
+    """
+
+    # Reads the LAS file and outputs the ground points as a numpy array.
+    in_file = laspy.read(input_file)
+    header = in_file.header
+    in_np = np.vstack((in_file.classification,
+                           in_file.x, in_file.y, in_file.z)).transpose()
+    in_np = in_np[in_np[:,0] == 2].copy()[:,1:]
+    extents = [[header.min[0], header.max[0]],
+               [header.min[1], header.max[1]]]
+    res = [math.ceil((extents[0][1] - extents[0][0]) / size),
+           math.ceil((extents[1][1] - extents[1][0]) / size)]
+    origin = [np.mean(extents[0]) - (size / 2) * res[0],
+              np.mean(extents[1]) - (size / 2) * res[1]]
+    return in_np, res, origin
+
+def execute_startin(pts, res, origin, size, method):
     """Takes the grid parameters and the ground points. Interpolates
     either using the TIN-linear or the Laplace method. Uses a -9999 no-data value. 
     Fully based on the startin package (https://startinpy.readthedocs.io/en/latest/api.html)
@@ -136,43 +181,65 @@ def execute_startin(pts, res, origin, size):
         res(list): resolution in coordinates (1 000 km -> raster carré de 1 000km de côté)
         origin(list): coordinate location of the relative origin (bottom left)
         size (int): raster cell size (1m x 1m OU 5m x 5m)
+        method (str) : interpolation method
 
     Returns:
         ras(list): Z interpolation
     """
+    
 
     # # Startin 
     tin = startinpy.DT(); tin.insert(pts) # # Insert each points in the array of points (a 2D array)
     ras = np.zeros([res[1], res[0]]) # # returns a new array of given shape and type, filled with zeros
-    # # Interpolate method Laplace
-    def interpolant(x, y): return tin.interpolate_laplace(x, y)
+    # # Interpolate method Laplace or TIN Linear
+    if method == "Laplace" :
+        def interpolant(x, y): return tin.interpolate_laplace(x, y)
+    elif method == "TINlinear":
+        def interpolant(x, y): return tin.interpolate_tin_linear(x, y)
     cp = 0
+    cp2 = 0
     yi = 0
+    # Initialiser la barre de progression
+    pbar = tqdm(total=100, desc="Progression interpolation")
+    size_res = res[1]*res[0]
     for y in np.arange(origin[1], origin[1] + res[1] * size, size):
+        # print("y",y, "size", size)
+        # print("arange",len(np.arange(origin[1], origin[1] + res[1] * size, size)),np.arange(origin[1], origin[1] + res[1] * size, size))
         xi = 0
         for x in np.arange(origin[0], origin[0] + res[0] * size, size):
+            # print("x",x, "size", size)
+            # print("arange",len(np.arange(origin[0], origin[0] + res[0] * size, size)),np.arange(origin[0], origin[0] + res[0] * size, size))
+            # print("[x,y]", x, y)
             ch = tin.is_inside_convex_hull(x, y) # check is the point [x, y] located inside  the convex hull of the DT
             if ch == False:
                 ras[yi, xi] = -9999 # no-data value
             else:
                 tri = tin.locate(x, y) # locate the triangle containing the point [x,y]. An error is thrown if it is outside the convex hull
-                
-                if 0 in tri :
-                    print("\nAffiche tri si 0 in tri.\n")
-                    print("tri : ", tri)
-                
-                if tri !=np.array([]) :
-                    #print("mamamia ",cp+1)
-                    cp = cp+1
-                    pass
-                if tri != [] and 0 not in tri:
+                # print("\n\nTRI",tri)
+
+
+                if (tri.shape!=()) and (0 not in tri):
                     ras[yi, xi] = interpolant(x, y)
                 else: 
-                    print("\nPAS BOUYA\n")
                     ras[yi, xi] = -9999 # no-data value
             xi += 1
+            
         yi += 1
+        
+        if (xi*yi * 100 / size_res) in [i for i in range(100)] :
+            pbar.update( 1 )
+        # print(xi*yi * 100 / size_res )
+
+
+    pbar.close()
     return ras
+
+
+
+
+ 
+
+
 
 
 def write_geotiff_withbuffer(raster, origin, size, output_file):
@@ -245,39 +312,7 @@ def give_name_resolution_raster(size):
     return _size
 
 
-def las_prepare_1_file(input_file: str, output_dir: str, fname: str, size: float):
-    """Takes the filepath to an input LAS (crop) file and the desired output raster cell size. Reads the LAS file and outputs
-    the ground points as a numpy array. Also establishes some
-    basic raster parameters:
-        - the extents
-        - the resolution in coordinates
-        - the coordinate location of the relative origin (bottom left)
 
-    Args:
-        input_file (str): directory of pointclouds
-        output_dir (str): directory folder for saving the outputs
-        fname (str): name of LIDAR tile
-        size (int): raster cell size
-    
-    Returns:
-        extents(array) : extents
-        res(list): resolution in coordinates
-        origin(list): coordinate location of the relative origin (bottom left)
-    """
-
-    # Reads the LAS file and outputs the ground points as a numpy array.
-    in_file = laspy.read(input_file)
-    header = in_file.header
-    in_np = np.vstack((in_file.classification,
-                           in_file.x, in_file.y, in_file.z)).transpose()
-    in_np = in_np[in_np[:,0] == 2].copy()[:,1:]
-    extents = [[header.min[0], header.max[0]],
-               [header.min[1], header.max[1]]]
-    res = [math.ceil((extents[0][1] - extents[0][0]) / size),
-           math.ceil((extents[1][1] - extents[1][0]) / size)]
-    origin = [np.mean(extents[0]) - (size / 2) * res[0],
-              np.mean(extents[1]) - (size / 2) * res[1]]
-    return in_np, res, origin
     
 
 
@@ -331,34 +366,51 @@ def main(verbose=False):
     size = 1.0 # mètres = resolution from raster
     _size = give_name_resolution_raster(size)
 
-    # Pour tester ce fichier de création de raster colorisé par classe après une interpolation
-    input_las = sys.argv[1:][0]
-    # Dossier dans lequel seront créés les fichiers
-    output_dir = sys.argv[1:][1]
+    try :
+        # Pour tester ce fichier de création de raster colorisé par classe après une interpolation
+        input_las = sys.argv[1:][0]
+        # Dossier dans lequel seront créés les fichiers
+        output_dir = sys.argv[1:][1]
+        # Choice of interpolation method : Laplace or TINlinear
+        interpMETHOD = sys.argv[1:][2]
+        if interpMETHOD in ["Laplace", "laplace"]:
+            interpMETHOD == "Laplace"
+        elif interpMETHOD in ["TINlinear", "Linear", "linear"]:
+            interpMETHOD == "TINlinear"
+        else :
+            print("Wrong interpolation method : choose between Laplace method and TINlinear method")
+    except IndexError :
+        print("IndexError : Wrong number of argument : 3 expected (las path, destination folder, interpolation method)")
+        sys.exit()
 
     # Delete the severals folder LAS, DTM, DTM_shade and DTM_color if not exists
     delete_folder(output_dir)
     # Create the severals folder LAS, DTM, DTM_shade and DTM_color if not exists
     create_folder(output_dir)
 
+    # Get directory
     input_dir = input_las[:-35]
+    input_dir = utils_pdal.parent(input_las)
+    # Get filename without extension
     input_las_name = input_las[-35:]
+    input_las_name = f"{utils_pdal.stem(input_las)}.la{input_las[-1]}"
+
 
 
 
     # Fichier de sortie MNT brut
     out_dtm_raster = f"{output_dir}{input_las_name}_DTM.tif"
 
-    # Extraction infos du las
-    origin_x, origin_y, ProjSystem, AltiSystem = get_origin(input_las_name)
+    # # Extraction infos du las
+    # origin_x, origin_y, ProjSystem, AltiSystem = get_origin(input_las_name)
 
-    if verbose :
-        print(f"Dalle name : {input_las_name}")
+    # if verbose :
+    #     print(f"Dalle name : {input_las_name}")
 
-        print(f"North-West X coordinate : {origin_x} km")
-        print(f"North-West Y coordinate : {origin_y} km")
-        print(f"System of projection : {ProjSystem}")
-        print(f"Altimetric system : {AltiSystem}")
+    #     print(f"North-West X coordinate : {origin_x} km")
+    #     print(f"North-West Y coordinate : {origin_y} km")
+    #     print(f"System of projection : {ProjSystem}")
+    #     print(f"Altimetric system : {AltiSystem}")
 
     if verbose :
         print("\nFiltrage points sol et virtuels...")
@@ -371,17 +423,17 @@ def main(verbose=False):
     if verbose :
         print("Build las...")
     # LAS points sol non interpolés
-    FileLasGround = write_las(input_points=ground_pts, filename=input_las_name , output_dir=output_dir, name="ground")
+    FileLasGround = write_las(input_points=ground_pts, filename=input_las_name , output_dir=output_dir, name="ground", verbose=verbose)
 
 
 
     if verbose :
-        print("\nInterpolation méthode de Laplace...")
+        print(f"\nInterpolation méthode de {interpMETHOD}...")
 
     if verbose :
         print("\n           Extraction liste des coordonnées du nuage de points...")
     # Extraction coord nuage de points
-    extents_calc, res_calc, origin_calc = las_prepare_1_file(input_file=input_las, output_dir=output_dir, fname=input_las_name, size=size)
+    extents_calc, res_calc, origin_calc = las_prepare_1_file(input_file=input_las, size=size)
     if verbose :
         print(f"\nExtents {extents_calc}")
         print(f"Resolution in coordinates : {res_calc}")
@@ -391,10 +443,10 @@ def main(verbose=False):
 
     if verbose :
         print("\n           Interpolation...")
-    # Interpole avec la méthode de Laplace
+    # Interpole avec la méthode de Laplace ou tin linéaire
     resolution = res_calc # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
     origine = origin_calc
-    ras = execute_startin(pts=extents_calc, res=resolution, origin=origine, size=size)
+    ras = execute_startin(pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD)
     
 
     if verbose :
@@ -421,17 +473,17 @@ def main(verbose=False):
         fileR.close()
 
         print("End write.")
-        print("type ",type(ras))
+        print("\n numpy.array post-interpolation")
         print(ras)
         print("\nBuild raster ie DTM brut...")
     
-    raster_dtm_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, output_file=output_dir + "DTM_brut/" + input_las_name[:-4] + _size + '_Laplace.tif')
+    raster_dtm_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, output_file=output_dir + "DTM_brut/" + input_las_name[:-4] + _size + f'_{interpMETHOD}.tif')
 
     if verbose :
-        print(f"{output_dir}{_size}_Laplace.tif")
+        print(f"{output_dir}{_size}_{interpMETHOD}.tif")
         print("\nBuild las...")
     # LAS points sol interpolés
-    las_dtm_interp = write_las(input_points=ground_pts, filename=input_las_name ,output_dir=output_dir, name="ground_interp")
+    las_dtm_interp = write_las(input_points=ground_pts, filename=input_las_name ,output_dir=output_dir, name="ground_interp", verbose=verbose)
 
 
     # Ajout ombrage
@@ -441,7 +493,7 @@ def main(verbose=False):
         print("\n")
 
     dtm_file = raster_dtm_interp
-    dtm_hs_file = f"../test_raster/DTM_Laplace/DTM_shade/{input_las_name[:-4]}_DTM_hillshade.tif"
+    dtm_hs_file = f"../test_raster/DTM_{interpMETHOD}/DTM_shade/{input_las_name[:-4]}_DTM_hillshade.tif"
     hillshade_from_raster(
         input_raster = dtm_file,
         output_raster = dtm_hs_file,

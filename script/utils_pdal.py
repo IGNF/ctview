@@ -2,9 +2,17 @@ import pdal
 import tempfile
 
 from shapely.geometry import shape
+from pathlib import Path
 
 # from ctclass import utils_geometry, utils_gdal
 
+def stem(input_file: str):
+    """Extract filename without extension"""
+    return Path(input_file).stem
+
+def parent(input_file: str):
+    """Extract directory of input_file"""
+    return str(Path(input_file).parent)
 
 def read_las_file(input_las: str):
     """Read a las file and put it in an array"""

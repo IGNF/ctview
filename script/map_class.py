@@ -67,15 +67,16 @@ if __name__ == "__main__":
     import sys
     # Pour tester ce fichier de création de raster colorisé par classe après une interpolation
     in_las = sys.argv[1:][0]
+    input_las_name = in_las[-35:]
     # Read las
     in_points = tools.read_las(in_las)
 
     # Write raster
-    output_raster = f'../test_raster/{in_las[7:-4]}_raster.tif'
+    output_raster = f'../test_raster/{in_las[:-4]}_raster.tif'
     tools.write_raster_class(in_points, output_raster)
 
     # Fill gaps
-    fillgap_raster = f'../test_raster/{in_las[7:-4]}_raster_fillgap.tif'
+    fillgap_raster = f'../test_raster/{in_las[:-4]}_raster_fillgap.tif'
     #fillgap_color_raster = fill_gaps(color_raster)
     fill_no_data(
         src_raster=output_raster,
