@@ -2,13 +2,20 @@
 
 #IMPORT
 
+# Library
 import pdal
-from osgeo import gdal
 import tools
-import utils_gdal
-from osgeo_utils import gdal_fillnodata
+import sys
+
+from osgeo import gdal
 from typing import Optional
 from numbers import Real
+
+
+# Library intern
+import utils_gdal
+from osgeo_utils import gdal_fillnodata
+
 
 
 
@@ -56,27 +63,32 @@ def fill_no_data(src_raster: Optional[str] = None, dst_raster: Optional[str] = N
     )
 
 
+def main():
 
-
-
-
-# TEST
-
-if __name__ == "__main__":
-
-    import sys
     # Pour tester ce fichier de création de raster colorisé par classe après une interpolation
-    in_las = sys.argv[1:][0]
-    input_las_name = in_las[-35:]
+
+    try :
+        # Pour tester ce fichier de création de raster colorisé par classe après une interpolation
+        input_las = sys.argv[1:][0]
+        # Dossier dans lequel seront créés les fichiers
+        output_dir = sys.argv[1:][1]
+
+    except IndexError :
+        print("IndexError : Wrong number of argument : 2 expected (las path, destination folder)")
+        sys.exit()
+
+
+
+    input_las_name = input_las[-35:]
     # Read las
-    in_points = tools.read_las(in_las)
+    in_points = tools.read_las(input_las)
 
     # Write raster
-    output_raster = f'../test_raster/{in_las[:-4]}_raster.tif'
+    output_raster = f'{output_dir}{input_las_name[:-4]}_raster.tif'
     tools.write_raster_class(in_points, output_raster)
 
     # Fill gaps
-    fillgap_raster = f'../test_raster/{in_las[:-4]}_raster_fillgap.tif'
+    fillgap_raster = f'{output_dir}{input_las_name[:-4]}_raster_fillgap.tif'
     #fillgap_color_raster = fill_gaps(color_raster)
     fill_no_data(
         src_raster=output_raster,
@@ -86,22 +98,30 @@ if __name__ == "__main__":
     )
 
     # Color fill gaps
-    color_fillgap_raster = f'../test_raster/{in_las[7:-4]}_raster_fillgap_color.tif'
+    color_fillgap_raster = f'{output_dir}{input_las_name[:-4]}_raster_fillgap_color.tif'
     tools.color_raster_by_class_2(
         input_raster=fillgap_raster,
         output_raster=color_fillgap_raster,
         )
 
     # Color fill
-    color_raster = f'../test_raster/{in_las[7:-4]}_raster_color_.tif'
+    color_raster = f'{output_dir}{input_las_name[:-4]}_raster_color_.tif'
     tools.color_raster_by_class_2(
         input_raster=output_raster,
         output_raster=color_raster,
         )
 
 
+
+# TEST
+
+if __name__ == "__main__":
+
+    main()
+
+
     # # Color qui marche pas
-    # colorinterp_raster = f'../test_raster/raster2_colorinterp_{in_las[7:-4]}.tif'
+    # colorinterp_raster = f'{output_dir}raster2_colorinterp_{input_las[7:-4]}.tif'
     # colorinterp_points = tools.color_points_by_class(in_points)
     # tools.write_raster_class(colorinterp_points, colorinterp_raster)
 
@@ -112,9 +132,9 @@ if __name__ == "__main__":
     # # Color
     # color_points = tools.color_points_by_class(in_points)
     # # Write raster
-    # output_raster_color = f'../test_raster/raster_color{in_las[7:-4]}.tif'
+    # output_raster_color = f'{output_dir}raster_color{input_las[7:-4]}.tif'
     # tools.write_raster(color_points, output_raster_color)
-    # output_raster = f'../test_raster/raster_{in_las[7:-4]}.tif'
+    # output_raster = f'{output_dir}raster_{input_las[7:-4]}.tif'
     # tools.write_raster(in_points, output_raster)
 
 
