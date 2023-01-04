@@ -11,8 +11,7 @@ from utils_pdal import get_class_min_max_from_las,get_info_from_las, read_las_fi
 DATA_DIR = "../data/filter_ground/"
 FILE_MUTLI_1_TO_5 = "multiclass_1to5.las"
 FILE_MUTLI_65_TO_66 = "multiclass_65to66.las"
-PTS_TO_INTERPOL = read_las_file(input_las=DATA_DIR+FILE_MUTLI_65_TO_66)
-PTS_OTHER = "oneclass_2.las"
+PTS_TO_INTERPOL = "oneclass_2.las"
 
 
 # PATH TO FOLDER TEST
@@ -122,17 +121,11 @@ def test_execute_startin():
     Verify :
         - return an array
     """
-    #input_file  = DATA_DIR + FILE_MUTLI_65_TO_66
-    input_file  = DATA_DIR + PTS_OTHER
+    input_file  = DATA_DIR + PTS_TO_INTERPOL
     size=1.0
 
     pts_to_interpol, resolution, origin = las_prepare_1_file(input_file=input_file, size=size)
 
-    
-    resolution = [21,21]
-    print("\n\n\n\nresolution", resolution)
-
-    print("\nPTS_TO_INTERPOL", PTS_TO_INTERPOL)
     ras = execute_startin(
         pts=pts_to_interpol,
         res=resolution,
@@ -140,27 +133,24 @@ def test_execute_startin():
         size=1.0,
         method="Laplace"
     )
-    print("\nras", ras)
     assert isinstance(ras, np.ndarray) # type is array
 
-# def test_execute_startin_2():
-#     """
-#     Verify :
-#         - return an array
-#     """
-#     input_file  = DATA_DIR + FILE_MUTLI_65_TO_66
-#     size=1.0
+def test_execute_startin_2():
+    """
+    Verify :
+        - return an array
+    """
+    input_file  = DATA_DIR + PTS_TO_INTERPOL
+    size=1.0
 
-#     pts_to_interpol, resolution, origin = las_prepare_1_file(input_file=input_file, size=size)
+    pts_to_interpol, resolution, origin = las_prepare_1_file(input_file=input_file, size=size)
 
-#     print("\nPTS_TO_INTERPOL", PTS_TO_INTERPOL)
-#     ras = execute_startin(
-#         pts=pts_to_interpol,
-#         res=resolution,
-#         origin=origin,
-#         size=1.0,
-#         method="TINlinear"
-#     )
-#     print("\nras", ras)
-#     assert isinstance(ras, np.ndarray) # type is array
+    ras = execute_startin(
+        pts=pts_to_interpol,
+        res=resolution,
+        origin=origin,
+        size=1.0,
+        method="TINlinear"
+    )
+    assert isinstance(ras, np.ndarray) # type is array
 
