@@ -3,30 +3,42 @@ channels:
   - conda-forge
   - anaconda
 dependencies:
-  - python=3.8
+  - python=3.9.*
+  - pip
+  - conda-forge:pdal==2.3.*
+  - conda-forge:python-pdal==3.0.*
   - gdal
-  - geojson
-  - pyproj
-  - pysimplegui
-  - geopandas
-  - pyshp
   - laspy
+  - geojson
+
   - pandas
   - opencv
-  - psycopg2
-  - python-pdal
-  - scipy
-  - requests
-  - pytest
-  - pytest-dependency
-  - black
-  - isort
-  - fiona
-  - filelock
-  - pip
   - numpy
+
+  - geopandas
+  - scipy
   - cgal
   - rasterio
+
+  - pytest==6.2.*  # tests
+  - pytest-cov==3.0.*
+
+  - tqdm
+
+  # - pyproj
+  # - pysimplegui
+
+  # - pyshp
+  # - psycopg2
+  # - python-pdal
+  # - requests
+  # - pytest
+  # - pytest-dependency
+  # - black
+  # - isort
+  # - fiona
+  # - filelock
+
   - pip:
     - --extra-index-url=https://qlf-nexus.ign.fr/repository/pypi-lidarhd-hosted/simple
     - ign-gpao-project-builder

@@ -16,7 +16,7 @@ def parent(input_file: str):
 
 def read_las_file(input_las: str):
     """Read a las file and put it in an array"""
-    pipeline = pdal.Pipeline() | pdal.Reader.las(filename=input_las)
+    pipeline = pdal.Pipeline() | pdal.Reader.las(filename=input_las,override_srs="EPSG:2154",nosrs=True)
     pipeline.execute()
     return pipeline.arrays[0]
 

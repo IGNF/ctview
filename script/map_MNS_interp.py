@@ -23,42 +23,42 @@ import shutil
 from tqdm import tqdm
 
 def delete_folder(dest_dir: str):
-    """Delete the severals folders "LAS", "DTM", "DTM_shade" and "DTM_color" if not exist"""
+    """Delete the severals folders "LAS", "DSM", "DSM_shade" and "DSM_color" if not exist"""
     # Delete folder "LAS"
     LAS_new_dir = os.path.join(dest_dir, 'LAS')
     if os.path.isdir(LAS_new_dir):
         shutil.rmtree(LAS_new_dir)
-    # Delete folder "DTM"
-    DTM_brut_new_dir = os.path.join(dest_dir, 'DTM_brut')
-    if os.path.isdir(DTM_brut_new_dir):
-        shutil.rmtree(DTM_brut_new_dir)
-    # Delete folder "DTM_shade"
-    DTM_shade_new_dir = os.path.join(dest_dir, 'DTM_shade')
-    if os.path.isdir(DTM_shade_new_dir):
-        shutil.rmtree(DTM_shade_new_dir)
-    # Delete folder "DTM_color"
-    DTM_color_new_dir = os.path.join(dest_dir, 'DTM_color')
-    if os.path.isdir(DTM_color_new_dir):
-        shutil.rmtree(DTM_color_new_dir)
+    # Delete folder "DSM"
+    DSM_brut_new_dir = os.path.join(dest_dir, 'DSM_brut')
+    if os.path.isdir(DSM_brut_new_dir):
+        shutil.rmtree(DSM_brut_new_dir)
+    # Delete folder "DSM_shade"
+    DSM_shade_new_dir = os.path.join(dest_dir, 'DSM_shade')
+    if os.path.isdir(DSM_shade_new_dir):
+        shutil.rmtree(DSM_shade_new_dir)
+    # Delete folder "DSM_color"
+    DSM_color_new_dir = os.path.join(dest_dir, 'DSM_color')
+    if os.path.isdir(DSM_color_new_dir):
+        shutil.rmtree(DSM_color_new_dir)
 
 def create_folder(dest_dir: str):
-    """Create the severals folders "LAS", "DTM", "DTM_shade" and "DTM_color" if not exist"""
+    """Create the severals folders "LAS", "DSM", "DSM_shade" and "DSM_color" if not exist"""
     # Create folder "LAS"
     LAS_new_dir = os.path.join(dest_dir, 'LAS')
     if not os.path.isdir(LAS_new_dir):
         os.makedirs(LAS_new_dir)
-    # Create folder "DTM"
-    DTM_brut_new_dir = os.path.join(dest_dir, 'DTM_brut')
-    if not os.path.isdir(DTM_brut_new_dir):
-        os.makedirs(DTM_brut_new_dir)
-    # Create folder "DTM_shade"
-    DTM_shade_new_dir = os.path.join(dest_dir, 'DTM_shade')
-    if not os.path.isdir(DTM_shade_new_dir):
-        os.makedirs(DTM_shade_new_dir)
-    # Create folder "DTM_color"
-    DTM_color_new_dir = os.path.join(dest_dir, 'DTM_color')
-    if not os.path.isdir(DTM_color_new_dir):
-        os.makedirs(DTM_color_new_dir)
+    # Create folder "DSM"
+    DSM_brut_new_dir = os.path.join(dest_dir, 'DSM_brut')
+    if not os.path.isdir(DSM_brut_new_dir):
+        os.makedirs(DSM_brut_new_dir)
+    # Create folder "DSM_shade"
+    DSM_shade_new_dir = os.path.join(dest_dir, 'DSM_shade')
+    if not os.path.isdir(DSM_shade_new_dir):
+        os.makedirs(DSM_shade_new_dir)
+    # Create folder "DSM_color"
+    DSM_color_new_dir = os.path.join(dest_dir, 'DSM_color')
+    if not os.path.isdir(DSM_color_new_dir):
+        os.makedirs(DSM_color_new_dir)
 
 
 
@@ -343,7 +343,7 @@ def color_MNT_with_cycles(
     )
 
     # Path MNT colorised
-    raster_MNT_color_file = f'{output_dir}/DTM_color/{las_input_file[:-4]}_DTM_hillshade_color{nb_cycle}c.tif'
+    raster_MNT_color_file = f'{output_dir}/DSM_color/{las_input_file[:-4]}_DSM_hillshade_color{nb_cycle}c.tif'
 
 
     if verbose :
@@ -387,9 +387,9 @@ def main(verbose=False):
     if output_dir[len(output_dir)-1] != '/' :
         output_dir = output_dir + '/'
 
-    # Delete the severals folder LAS, DTM, DTM_shade and DTM_color if not exists
+    # Delete the severals folder LAS, DSM, DSM_shade and DSM_color if not exists
     delete_folder(output_dir)
-    # Create the severals folder LAS, DTM, DTM_shade and DTM_color if not exists
+    # Create the severals folder LAS, DSM, DSM_shade and DSM_color if not exists
     create_folder(output_dir)
 
     # Get directory
@@ -403,7 +403,7 @@ def main(verbose=False):
 
 
     # Fichier de sortie MNT brut
-    out_dtm_raster = f"{output_dir}{input_las_name}_DTM.tif"
+    out_DSM_raster = f"{output_dir}{input_las_name}_DSM.tif"
 
     # # Extraction infos du las
     # origin_x, origin_y, ProjSystem, AltiSystem = get_origin(input_las_name)
@@ -416,13 +416,17 @@ def main(verbose=False):
     #     print(f"System of projection : {ProjSystem}")
     #     print(f"Altimetric system : {AltiSystem}")
 
-    if verbose :
-        print("\nFiltrage points sol et virtuels...")
-    # Filtre les points sol de classif 2 et 66
-    # tools.filter_las_version2(las,las_pts_ground)
-    ground_pts = filter_las_ground(
-        input_dir = input_dir,
-        filename = input_las_name)
+    # if verbose :
+    #     print("\nFiltrage points sol et virtuels...")
+    # # Filtre les points sol de classif 2 et 66
+    # # tools.filter_las_version2(las,las_pts_ground)
+    # ground_pts = filter_las_ground(
+    #     input_dir = input_dir,
+    #     filename = input_las_name)
+
+    ground_pts = utils_pdal.read_las_file(
+        input_las = input_las
+    )
 
     if verbose :
         print("Build las...")
@@ -479,28 +483,28 @@ def main(verbose=False):
         print("End write.")
         print("\n numpy.array post-interpolation")
         print(ras)
-        print("\nBuild raster ie DTM brut...")
+        print("\nBuild raster ie DSM brut...")
     
-    raster_dtm_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, output_file=output_dir + "DTM_brut/" + input_las_name[:-4] + _size + f'_{interpMETHOD}.tif')
+    raster_DSM_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, output_file=output_dir + "DSM_brut/" + input_las_name[:-4] + _size + f'_{interpMETHOD}.tif')
 
     if verbose :
         print(f"{output_dir}{_size}_{interpMETHOD}.tif")
         print("\nBuild las...")
     # LAS points sol interpolés
-    las_dtm_interp = write_las(input_points=ground_pts, filename=input_las_name ,output_dir=output_dir, name="ground_interp", verbose=verbose)
+    las_DSM_interp = write_las(input_points=ground_pts, filename=input_las_name ,output_dir=output_dir, name="ground_interp", verbose=verbose)
 
 
     # Ajout ombrage
     if verbose :
         print("\nAdd hillshade...")
-        print(raster_dtm_interp)
+        print(raster_DSM_interp)
         print("\n")
 
-    dtm_file = raster_dtm_interp
-    dtm_hs_file = f"{output_dir}/DTM_shade/{input_las_name[:-4]}_DTM_hillshade.tif"
+    DSM_file = raster_DSM_interp
+    DSM_hs_file = f"{output_dir}/DSM_shade/{input_las_name[:-4]}_DSM_hillshade.tif"
     hillshade_from_raster(
-        input_raster = dtm_file,
-        output_raster = dtm_hs_file,
+        input_raster = DSM_file,
+        output_raster = DSM_hs_file,
     )
 
     if verbose :
@@ -522,7 +526,7 @@ def main(verbose=False):
         color_MNT_with_cycles(
         las_input_file=input_las_name,
         output_dir=output_dir,
-        raster_MNT_file=dtm_hs_file,
+        raster_MNT_file=DSM_hs_file,
         nb_cycle=cycle,
         verbose=verbose
         )
@@ -535,6 +539,6 @@ def main(verbose=False):
 
 if __name__ == '__main__':
     
-    main(False)
+    main(True)
 
     OTHER   = "../../data/data_simple/solo/pont_route_OK.las"
