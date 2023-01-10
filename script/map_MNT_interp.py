@@ -21,6 +21,7 @@ from map_MNT import hillshade_from_raster, color_MNT_with_cycles
 import gen_LUT_X_cycle
 import shutil
 from tqdm import tqdm
+import logging as log
 
 def delete_folder(dest_dir: str):
     """Delete the severals folders "LAS", "DTM", "DTM_shade" and "DTM_color" if not exist"""
@@ -96,7 +97,7 @@ def filter_las_ground(input_dir: str, filename: str):
     pipeline.execute()
     return pipeline.arrays[0]
 
-def write_las(input_points, filename: str, output_dir: str, name: str, verbose=False):
+def write_las(input_points, filename: str, output_dir: str, name: str):
     """Write a las file
     Args:
         inputs_points (array) : points cloud
@@ -109,11 +110,11 @@ def write_las(input_points, filename: str, output_dir: str, name: str, verbose=F
     if not os.path.exists(dst):
         os.makedirs(dst) # create directory /LAS if not exists
 
-    if verbose :
-        print("dst : "+dst)
+    
+    log.info("dst : "+dst)
     FileOutput = "".join([dst, "_".join([filename[:-4], f'{name}.las'])])
-    if verbose :
-        print("filename : "+FileOutput)
+    
+    log.info("filename : "+FileOutput)
     pipeline = pdal.Writer.las(filename = FileOutput, a_srs="EPSG:2154").pipeline(input_points)
     pipeline.execute()
 
@@ -134,7 +135,7 @@ def write_las2(pts):
         ]
     }
     ground = json.dumps(information, sort_keys=True, indent=4)
-    print(ground)
+    log.info(ground)
     pipeline = pdal.Pipeline(ground)
     pipeline.execute()
 
@@ -320,8 +321,7 @@ def color_MNT_with_cycles(
     las_input_file: str,
     output_dir: str,
     raster_MNT_file: str,
-    nb_cycle: int,
-    verbose=False
+    nb_cycle: int
 ):
     """Color a raster with a LUT created depending of a choice of cycles
 
@@ -331,24 +331,23 @@ def color_MNT_with_cycles(
         nb_cycle : int : the number of cycle that determine the LUT
     """
 
-    if verbose :
-        print("Generate MNT colorised :")
-        print("(1/2) Generate LUT.")
+    
+    log.info("Generate MNT colorised :")
+    log.info("(1/2) Generate LUT.")
     # Create LUT
     LUT = gen_LUT_X_cycle.generate_LUT_X_cycle(
         file_las=las_input_file,
         file_MNT=raster_MNT_file,
-        nb_cycle=nb_cycle,
-        verbose=verbose
+        nb_cycle=nb_cycle
     )
 
     # Path MNT colorised
     raster_MNT_color_file = f'{output_dir}/DTM_color/{las_input_file[:-4]}_DTM_hillshade_color{nb_cycle}c.tif'
 
 
-    if verbose :
-        print("MNT color : "+raster_MNT_color_file)
-        print("(2/2) Colorise raster.")
+    
+    log.info("MNT color : "+raster_MNT_color_file)
+    log.info("(2/2) Colorise raster.")
 
     # Colorisation
     tools.color_raster_with_LUT(
@@ -358,7 +357,7 @@ def color_MNT_with_cycles(
     )
 
 
-def main(verbose=False):
+def main():
 
     import sys
 
@@ -378,10 +377,10 @@ def main(verbose=False):
         elif interpMETHOD =="tinlinear":
             interpMETHOD = "TINlinear"
         else :
-            print("Wrong interpolation method : choose between Laplace method and TINlinear method")
+            log.critical("Wrong interpolation method : choose between Laplace method and TINlinear method")
             sys.exit()
     except IndexError :
-        print("IndexError : Wrong number of argument : 3 expected (las path, destination folder, interpolation method)")
+        log.critical("IndexError : Wrong number of argument : 3 expected (las path, destination folder, interpolation method)")
         sys.exit()
 
     # Complete path
@@ -409,93 +408,93 @@ def main(verbose=False):
     # # Extraction infos du las
     # origin_x, origin_y, ProjSystem, AltiSystem = get_origin(input_las_name)
 
-    # if verbose :
-    #     print(f"Dalle name : {input_las_name}")
+    # 
+    # log.info(f"Dalle name : {input_las_name}")
 
-    #     print(f"North-West X coordinate : {origin_x} km")
-    #     print(f"North-West Y coordinate : {origin_y} km")
-    #     print(f"System of projection : {ProjSystem}")
-    #     print(f"Altimetric system : {AltiSystem}")
+    # log.info(f"North-West X coordinate : {origin_x} km")
+    # log.info(f"North-West Y coordinate : {origin_y} km")
+    # log.info(f"System of projection : {ProjSystem}")
+    # log.info(f"Altimetric system : {AltiSystem}")
 
-    if verbose :
-        print("\nFiltrage points sol et virtuels...")
+    
+    log.info("\nFiltrage points sol et virtuels...")
     # Filtre les points sol de classif 2 et 66
     # tools.filter_las_version2(las,las_pts_ground)
     ground_pts = filter_las_ground(
         input_dir = input_dir,
         filename = input_las_name)
 
-    if verbose :
-        print("Build las...")
+    
+    log.info("Build las...")
     # LAS points sol non interpolés
-    FileLasGround = write_las(input_points=ground_pts, filename=input_las_name , output_dir=output_dir, name="ground", verbose=verbose)
+    FileLasGround = write_las(input_points=ground_pts, filename=input_las_name , output_dir=output_dir, name="ground")
 
 
 
-    if verbose :
-        print(f"\nInterpolation méthode de {interpMETHOD}...")
+    
+    log.info(f"\nInterpolation méthode de {interpMETHOD}...")
 
-    if verbose :
-        print("\n           Extraction liste des coordonnées du nuage de points...")
+    
+    log.info("\n           Extraction liste des coordonnées du nuage de points...")
     # Extraction coord nuage de points
     extents_calc, res_calc, origin_calc = las_prepare_1_file(input_file=input_las, size=size)
-    if verbose :
-        print(f"\nExtents {extents_calc}")
-        print(f"Resolution in coordinates : {res_calc}")
-        print(f"Loc of the relative origin : {origin_calc}")
+    
+    log.info(f"\nExtents {extents_calc}")
+    log.info(f"Resolution in coordinates : {res_calc}")
+    log.info(f"Loc of the relative origin : {origin_calc}")
 
 
 
-    if verbose :
-        print("\n           Interpolation...")
+    
+    log.info("\n           Interpolation...")
     # Interpole avec la méthode de Laplace ou tin linéaire
     resolution = res_calc # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
     origine = origin_calc
     ras = execute_startin(pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD)
     
 
-    if verbose :
-        print("\nTableau d'interpolation : ")
+    
+    log.info("\nTableau d'interpolation : ")
 
         
-        fileRas = f"{output_dir}ras.txt"
+    fileRas = f"{output_dir}ras.txt"
 
-        print("\nWrite in " + fileRas)
+    log.info("\nWrite in " + fileRas)
 
-        fileR = open(fileRas, "w")
+    fileR = open(fileRas, "w")
 
-        l,c = ras.shape
-        s = ''
-        for i in range(l):
-            ligne = ""
-            for j in range(c):
-                ELEMENTras = ras[i,j]
-                ligne += f"{round(ELEMENTras,5) : >20}"
-            s += ligne
-            s += '\n'  
+    l,c = ras.shape
+    s = ''
+    for i in range(l):
+        ligne = ""
+        for j in range(c):
+            ELEMENTras = ras[i,j]
+            ligne += f"{round(ELEMENTras,5) : >20}"
+        s += ligne
+        s += '\n'  
 
-        fileR.write(s)
-        fileR.close()
+    fileR.write(s)
+    fileR.close()
 
-        print("End write.")
-        print("\n numpy.array post-interpolation")
-        print(ras)
-        print("\nBuild raster ie DTM brut...")
+    log.info("End write.")
+    log.info("\n numpy.array post-interpolation")
+    log.info(ras)
+    log.info("\nBuild raster ie DTM brut...")
     
     raster_dtm_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, output_file=output_dir + "DTM_brut/" + input_las_name[:-4] + _size + f'_{interpMETHOD}.tif')
 
-    if verbose :
-        print(f"{output_dir}{_size}_{interpMETHOD}.tif")
-        print("\nBuild las...")
+    
+    log.info(f"{output_dir}{_size}_{interpMETHOD}.tif")
+    log.info("\nBuild las...")
     # LAS points sol interpolés
-    las_dtm_interp = write_las(input_points=ground_pts, filename=input_las_name ,output_dir=output_dir, name="ground_interp", verbose=verbose)
+    las_dtm_interp = write_las(input_points=ground_pts, filename=input_las_name ,output_dir=output_dir, name="ground_interp")
 
 
     # Ajout ombrage
-    if verbose :
-        print("\nAdd hillshade...")
-        print(raster_dtm_interp)
-        print("\n")
+    
+    log.info("\nAdd hillshade...")
+    log.info(raster_dtm_interp)
+    log.info("\n")
 
     dtm_file = raster_dtm_interp
     dtm_hs_file = f"{output_dir}/DTM_shade/{input_las_name[:-4]}_DTM_hillshade.tif"
@@ -504,12 +503,12 @@ def main(verbose=False):
         output_raster = dtm_hs_file,
     )
 
-    if verbose :
-        print("Success.\n")
+    
+    log.info("Success.\n")
 
     # Colorisation
-    if verbose :
-        print("Add color...")
+    
+    log.info("Add color...")
         
     nb_raster_color = int(input("How many raster colorised ? : "))
 
@@ -517,25 +516,22 @@ def main(verbose=False):
 
         cycle = int(input(f"Raster {i+1}/{nb_raster_color} : how many cycles ? : "))
         
-        if verbose :
-            print(f"Build raster {i+1}/{nb_raster_color}...")
+        
+        log.info(f"Build raster {i+1}/{nb_raster_color}...")
 
         color_MNT_with_cycles(
         las_input_file=input_las_name,
         output_dir=output_dir,
         raster_MNT_file=dtm_hs_file,
-        nb_cycle=cycle,
-        verbose=verbose
+        nb_cycle=cycle
         )
 
-        if verbose :
-            print("Success.\n")
+        log.info("Success.\n")
 
-    if verbose :
-        print("End.")
+    log.info("End.")
 
 if __name__ == '__main__':
     
-    main(True)
+    main()
 
     OTHER   = "../../data/data_simple/solo/pont_route_OK.las"

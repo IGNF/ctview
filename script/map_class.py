@@ -6,6 +6,7 @@
 import pdal
 import tools
 import sys
+import logging as log
 
 from osgeo import gdal
 from typing import Optional
@@ -74,7 +75,7 @@ def main():
         output_dir = sys.argv[1:][1]
 
     except IndexError :
-        print("IndexError : Wrong number of argument : 2 expected (las path, destination folder)")
+        log.critical("IndexError : Wrong number of argument : 2 expected (las path, destination folder)")
         sys.exit()
 
 
