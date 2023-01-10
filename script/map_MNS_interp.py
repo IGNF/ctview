@@ -357,8 +357,208 @@ def color_MNT_with_cycles(
         LUT = LUT,
     )
 
+def cluster(input_points: str):
 
-def main(verbose=False):
+    pipeline = pdal.Filter.cluster(
+        min_points = 3,
+        max_points=200,
+        tolerance=1,
+        is3d=True,
+        ).pipeline(input_points)
+    pipeline.execute()
+    return pipeline.arrays[0]
+
+def sample(input_points):
+    """Filtre points closest to 0.5m"""
+    pipeline = pdal.Filter.sample(radius="0.5").pipeline(input_points)
+    pipeline.execute()
+    return pipeline.arrays[0]
+
+
+# def main(verbose=False):
+
+#     import sys
+
+#     # Paramètres
+#     size = 1.0 # mètres = resolution from raster
+#     _size = give_name_resolution_raster(size)
+
+#     try :
+#         # Pour tester ce fichier de création de raster colorisé par classe après une interpolation
+#         input_las = sys.argv[1:][0]
+#         # Dossier dans lequel seront créés les fichiers
+#         output_dir = sys.argv[1:][1]
+#         # Choice of interpolation method : Laplace or TINlinear
+#         interpMETHOD = sys.argv[1:][2]
+#         if interpMETHOD in ["Laplace", "laplace"]:
+#             interpMETHOD == "Laplace"
+#         elif interpMETHOD in ["TINlinear", "Linear", "linear"]:
+#             interpMETHOD == "TINlinear"
+#         else :
+#             print("Wrong interpolation method : choose between Laplace method and TINlinear method")
+#     except IndexError :
+#         print("IndexError : Wrong number of argument : 3 expected (las path, destination folder, interpolation method)")
+#         sys.exit()
+
+#     # Complete path
+#     if output_dir[len(output_dir)-1] != '/' :
+#         output_dir = output_dir + '/'
+
+#     # Delete the severals folder LAS, DSM, DSM_shade and DSM_color if not exists
+#     delete_folder(output_dir)
+#     # Create the severals folder LAS, DSM, DSM_shade and DSM_color if not exists
+#     create_folder(output_dir)
+
+#     # Get directory
+#     input_dir = input_las[:-35]
+#     input_dir = utils_pdal.parent(input_las)
+#     # Get filename without extension
+#     input_las_name = input_las[-35:]
+#     input_las_name = f"{utils_pdal.stem(input_las)}.la{input_las[-1]}"
+
+
+
+
+#     # Fichier de sortie MNT brut
+#     out_DSM_raster = f"{output_dir}{input_las_name}_DSM.tif"
+
+#     # # Extraction infos du las
+#     # origin_x, origin_y, ProjSystem, AltiSystem = get_origin(input_las_name)
+
+#     # if verbose :
+#     #     print(f"Dalle name : {input_las_name}")
+
+#     #     print(f"North-West X coordinate : {origin_x} km")
+#     #     print(f"North-West Y coordinate : {origin_y} km")
+#     #     print(f"System of projection : {ProjSystem}")
+#     #     print(f"Altimetric system : {AltiSystem}")
+
+#     # if verbose :
+#     #     print("\nFiltrage points sol et virtuels...")
+#     # # Filtre les points sol de classif 2 et 66
+#     # # tools.filter_las_version2(las,las_pts_ground)
+#     # resample_pts = filter_las_ground(
+#     #     input_dir = input_dir,
+#     #     filename = input_las_name)
+
+#     resample_pts = utils_pdal.read_las_file(
+#         input_las = input_las
+#     )
+
+#     # TODO 
+#     # rééchantillonner LAS avec z les plus élevé
+
+#     if verbose :
+#         print("Build las...")
+
+#     # LAS points rééchantillonnés avec z plus élevé
+#     FileLasResample = write_las(input_points=resample_pts, filename=input_las_name , output_dir=output_dir, name="resample", verbose=verbose)
+
+
+
+#     if verbose :
+#         print(f"\nInterpolation méthode de {interpMETHOD}...")
+
+#     if verbose :
+#         print("\n           Extraction liste des coordonnées du nuage de points...")
+#     # Extraction coord nuage de points
+#     extents_calc, res_calc, origin_calc = las_prepare_1_file(input_file=input_las, size=size)
+#     if verbose :
+#         print(f"\nExtents {extents_calc}")
+#         print(f"Resolution in coordinates : {res_calc}")
+#         print(f"Loc of the relative origin : {origin_calc}")
+
+
+
+#     if verbose :
+#         print("\n           Interpolation...")
+#     # Interpole avec la méthode de Laplace ou tin linéaire
+#     resolution = res_calc # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
+#     origine = origin_calc
+#     ras = execute_startin(pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD)
+    
+
+#     if verbose :
+#         print("\nTableau d'interpolation : ")
+
+        
+#         fileRas = f"{output_dir}ras.txt"
+
+#         print("\nWrite in " + fileRas)
+
+#         fileR = open(fileRas, "w")
+
+#         l,c = ras.shape
+#         s = ''
+#         for i in range(l):
+#             ligne = ""
+#             for j in range(c):
+#                 ELEMENTras = ras[i,j]
+#                 ligne += f"{round(ELEMENTras,5) : >20}"
+#             s += ligne
+#             s += '\n'  
+
+#         fileR.write(s)
+#         fileR.close()
+
+#         print("End write.")
+#         print("\n numpy.array post-interpolation")
+#         print(ras)
+#         print("\nBuild raster ie DSM brut...")
+    
+#     raster_DSM_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, output_file=output_dir + "DSM_brut/" + input_las_name[:-4] + _size + f'_{interpMETHOD}.tif')
+
+#     if verbose :
+#         print(f"{output_dir}{_size}_{interpMETHOD}.tif")
+#         print("\nBuild las...")
+#     # LAS points sol interpolés
+#     las_DSM_interp = write_las(input_points=resample_pts, filename=input_las_name ,output_dir=output_dir, name="resample_interp", verbose=verbose)
+
+
+#     # Ajout ombrage
+#     if verbose :
+#         print("\nAdd hillshade...")
+#         print(raster_DSM_interp)
+#         print("\n")
+
+#     DSM_file = raster_DSM_interp
+#     DSM_hs_file = f"{output_dir}/DSM_shade/{input_las_name[:-4]}_DSM_hillshade.tif"
+#     hillshade_from_raster(
+#         input_raster = DSM_file,
+#         output_raster = DSM_hs_file,
+#     )
+
+#     if verbose :
+#         print("Success.\n")
+
+#     # Colorisation
+#     if verbose :
+#         print("Add color...")
+        
+#     nb_raster_color = int(input("How many raster colorised ? : "))
+
+#     for i in range(nb_raster_color) :
+
+#         cycle = int(input(f"Raster {i+1}/{nb_raster_color} : how many cycles ? : "))
+        
+#         if verbose :
+#             print(f"Build raster {i+1}/{nb_raster_color}...")
+
+#         color_MNT_with_cycles(
+#         las_input_file=input_las_name,
+#         output_dir=output_dir,
+#         raster_MNT_file=DSM_hs_file,
+#         nb_cycle=cycle,
+#         verbose=verbose
+#         )
+
+#         if verbose :
+#             print("Success.\n")
+
+#     if verbose :
+#         print("End.")
+
+def main_work(verbose=False):
 
     import sys
 
@@ -372,11 +572,11 @@ def main(verbose=False):
         # Dossier dans lequel seront créés les fichiers
         output_dir = sys.argv[1:][1]
         # Choice of interpolation method : Laplace or TINlinear
-        interpMETHOD = sys.argv[1:][2]
-        if interpMETHOD in ["Laplace", "laplace"]:
-            interpMETHOD == "Laplace"
-        elif interpMETHOD in ["TINlinear", "Linear", "linear"]:
-            interpMETHOD == "TINlinear"
+        interpMETHOD = sys.argv[1:][2].lower()
+        if interpMETHOD == "laplace":
+            interpMETHOD = "Laplace"
+        elif interpMETHOD =="tinlinear":
+            interpMETHOD = "TINlinear"
         else :
             print("Wrong interpolation method : choose between Laplace method and TINlinear method")
     except IndexError :
@@ -420,125 +620,35 @@ def main(verbose=False):
     #     print("\nFiltrage points sol et virtuels...")
     # # Filtre les points sol de classif 2 et 66
     # # tools.filter_las_version2(las,las_pts_ground)
-    # ground_pts = filter_las_ground(
+    # resample_pts = filter_las_ground(
     #     input_dir = input_dir,
     #     filename = input_las_name)
 
-    ground_pts = utils_pdal.read_las_file(
+    read_pts = utils_pdal.read_las_file(
         input_las = input_las
     )
+    print("\nBefore cluster\n",read_pts)
+    # TODO 
+    # rééchantillonner LAS avec z les plus élevé
+    #cluster
 
-    if verbose :
-        print("Build las...")
-    # LAS points sol non interpolés
-    FileLasGround = write_las(input_points=ground_pts, filename=input_las_name , output_dir=output_dir, name="ground", verbose=verbose)
+    cluster_pts = cluster(input_points=read_pts)
+    print("\nAfter cluster\n",cluster_pts)
 
-
-
-    if verbose :
-        print(f"\nInterpolation méthode de {interpMETHOD}...")
-
-    if verbose :
-        print("\n           Extraction liste des coordonnées du nuage de points...")
-    # Extraction coord nuage de points
-    extents_calc, res_calc, origin_calc = las_prepare_1_file(input_file=input_las, size=size)
-    if verbose :
-        print(f"\nExtents {extents_calc}")
-        print(f"Resolution in coordinates : {res_calc}")
-        print(f"Loc of the relative origin : {origin_calc}")
+    #sample
+    sample_pts = sample(input_points=read_pts)
+    print("\nAfter sample\n",sample_pts)
 
 
+    print("\nBefore : type", type(read_pts), ", taille : ", np.shape(read_pts))
 
-    if verbose :
-        print("\n           Interpolation...")
-    # Interpole avec la méthode de Laplace ou tin linéaire
-    resolution = res_calc # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
-    origine = origin_calc
-    ras = execute_startin(pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD)
-    
+    print("\nAfter cluster : type", type(cluster_pts), ", taille : ", np.shape(cluster_pts))
 
-    if verbose :
-        print("\nTableau d'interpolation : ")
+    print("\nAfter sample : type", type(sample_pts), ", taille : ", np.shape(sample_pts))
 
-        
-        fileRas = f"{output_dir}ras.txt"
-
-        print("\nWrite in " + fileRas)
-
-        fileR = open(fileRas, "w")
-
-        l,c = ras.shape
-        s = ''
-        for i in range(l):
-            ligne = ""
-            for j in range(c):
-                ELEMENTras = ras[i,j]
-                ligne += f"{round(ELEMENTras,5) : >20}"
-            s += ligne
-            s += '\n'  
-
-        fileR.write(s)
-        fileR.close()
-
-        print("End write.")
-        print("\n numpy.array post-interpolation")
-        print(ras)
-        print("\nBuild raster ie DSM brut...")
-    
-    raster_DSM_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, output_file=output_dir + "DSM_brut/" + input_las_name[:-4] + _size + f'_{interpMETHOD}.tif')
-
-    if verbose :
-        print(f"{output_dir}{_size}_{interpMETHOD}.tif")
-        print("\nBuild las...")
-    # LAS points sol interpolés
-    las_DSM_interp = write_las(input_points=ground_pts, filename=input_las_name ,output_dir=output_dir, name="ground_interp", verbose=verbose)
-
-
-    # Ajout ombrage
-    if verbose :
-        print("\nAdd hillshade...")
-        print(raster_DSM_interp)
-        print("\n")
-
-    DSM_file = raster_DSM_interp
-    DSM_hs_file = f"{output_dir}/DSM_shade/{input_las_name[:-4]}_DSM_hillshade.tif"
-    hillshade_from_raster(
-        input_raster = DSM_file,
-        output_raster = DSM_hs_file,
-    )
-
-    if verbose :
-        print("Success.\n")
-
-    # Colorisation
-    if verbose :
-        print("Add color...")
-        
-    nb_raster_color = int(input("How many raster colorised ? : "))
-
-    for i in range(nb_raster_color) :
-
-        cycle = int(input(f"Raster {i+1}/{nb_raster_color} : how many cycles ? : "))
-        
-        if verbose :
-            print(f"Build raster {i+1}/{nb_raster_color}...")
-
-        color_MNT_with_cycles(
-        las_input_file=input_las_name,
-        output_dir=output_dir,
-        raster_MNT_file=DSM_hs_file,
-        nb_cycle=cycle,
-        verbose=verbose
-        )
-
-        if verbose :
-            print("Success.\n")
-
-    if verbose :
-        print("End.")
 
 if __name__ == '__main__':
     
-    main(True)
+    main_work(True)
 
     OTHER   = "../../data/data_simple/solo/pont_route_OK.las"

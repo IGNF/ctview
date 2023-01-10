@@ -372,13 +372,14 @@ def main(verbose=False):
         # Dossier dans lequel seront créés les fichiers
         output_dir = sys.argv[1:][1]
         # Choice of interpolation method : Laplace or TINlinear
-        interpMETHOD = sys.argv[1:][2]
-        if interpMETHOD in ["Laplace", "laplace"]:
-            interpMETHOD == "Laplace"
-        elif interpMETHOD in ["TINlinear", "Linear", "linear"]:
-            interpMETHOD == "TINlinear"
+        interpMETHOD = sys.argv[1:][2].lower()
+        if interpMETHOD == "laplace":
+            interpMETHOD = "Laplace"
+        elif interpMETHOD =="tinlinear":
+            interpMETHOD = "TINlinear"
         else :
             print("Wrong interpolation method : choose between Laplace method and TINlinear method")
+            sys.exit()
     except IndexError :
         print("IndexError : Wrong number of argument : 3 expected (las path, destination folder, interpolation method)")
         sys.exit()
@@ -535,6 +536,6 @@ def main(verbose=False):
 
 if __name__ == '__main__':
     
-    main(False)
+    main(True)
 
     OTHER   = "../../data/data_simple/solo/pont_route_OK.las"

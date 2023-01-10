@@ -43,7 +43,7 @@ def fill_gaps(input_raster):
 
 
 
-def fill_no_data(src_raster: Optional[str] = None, dst_raster: Optional[str] = None, max_Search_Distance: Real = 100):
+def fill_no_data(src_raster: Optional[str] = None, dst_raster: Optional[str] = None, max_Search_Distance: Real = 2):
     """Fill gap in the data.
     input_raster : raster to fill
     output_raster : raster with no gap
@@ -93,7 +93,7 @@ def main():
     fill_no_data(
         src_raster=output_raster,
         dst_raster=fillgap_raster,
-        max_Search_Distance=100,
+        max_Search_Distance=2, #modif 10/01/2023
 
     )
 
