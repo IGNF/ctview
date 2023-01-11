@@ -46,20 +46,16 @@ def create_folder(dest_dir: str):
     """Create the severals folders "LAS", "DTM", "DTM_shade" and "DTM_color" if not exist"""
     # Create folder "LAS"
     LAS_new_dir = os.path.join(dest_dir, 'LAS')
-    if not os.path.isdir(LAS_new_dir):
-        os.makedirs(LAS_new_dir)
+    os.makedirs(LAS_new_dir, exist_ok=True)
     # Create folder "DTM"
     DTM_brut_new_dir = os.path.join(dest_dir, 'DTM_brut')
-    if not os.path.isdir(DTM_brut_new_dir):
-        os.makedirs(DTM_brut_new_dir)
+    os.makedirs(DTM_brut_new_dir, exist_ok=True)
     # Create folder "DTM_shade"
     DTM_shade_new_dir = os.path.join(dest_dir, 'DTM_shade')
-    if not os.path.isdir(DTM_shade_new_dir):
-        os.makedirs(DTM_shade_new_dir)
+    os.makedirs(DTM_shade_new_dir, exist_ok=True)
     # Create folder "DTM_color"
     DTM_color_new_dir = os.path.join(dest_dir, 'DTM_color')
-    if not os.path.isdir(DTM_color_new_dir):
-        os.makedirs(DTM_color_new_dir)
+    os.makedirs(DTM_color_new_dir, exist_ok=True)
 
 
 

@@ -46,20 +46,16 @@ def create_folder(dest_dir: str):
     """Create the severals folders "LAS", "DSM", "DSM_shade" and "DSM_color" if not exist"""
     # Create folder "LAS"
     LAS_new_dir = os.path.join(dest_dir, 'LAS')
-    if not os.path.isdir(LAS_new_dir):
-        os.makedirs(LAS_new_dir)
+    os.makedirs(LAS_new_dir, exist_ok=True)
     # Create folder "DSM"
     DSM_brut_new_dir = os.path.join(dest_dir, 'DSM_brut')
-    if not os.path.isdir(DSM_brut_new_dir):
-        os.makedirs(DSM_brut_new_dir)
+    os.makedirs(DSM_brut_new_dir, exist_ok=True)
     # Create folder "DSM_shade"
     DSM_shade_new_dir = os.path.join(dest_dir, 'DSM_shade')
-    if not os.path.isdir(DSM_shade_new_dir):
-        os.makedirs(DSM_shade_new_dir)
+    os.makedirs(DSM_shade_new_dir, exist_ok=True)
     # Create folder "DSM_color"
     DSM_color_new_dir = os.path.join(dest_dir, 'DSM_color')
-    if not os.path.isdir(DSM_color_new_dir):
-        os.makedirs(DSM_color_new_dir)
+    os.makedirs(DSM_color_new_dir, exist_ok=True)
 
 
 
