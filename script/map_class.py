@@ -80,16 +80,16 @@ def main():
 
 
 
-    input_las_name = input_las[-35:]
-    # Read las
+    input_las_name = os.path.basename(input_las)
+    input_las_name_without_extension = os.path.splitext(input_las_name[0])    # Read las
     in_points = tools.read_las(input_las)
 
     # Write raster
-    output_raster = f'{output_dir}{input_las_name[:-4]}_raster.tif'
+    output_raster = f'{output_dir}{input_las_name_without_extension}_raster.tif'
     tools.write_raster_class(in_points, output_raster)
 
     # Fill gaps
-    fillgap_raster = f'{output_dir}{input_las_name[:-4]}_raster_fillgap.tif'
+    fillgap_raster = f'{output_dir}{input_las_name_without_extension}_raster_fillgap.tif'
     #fillgap_color_raster = fill_gaps(color_raster)
     fill_no_data(
         src_raster=output_raster,
@@ -99,14 +99,14 @@ def main():
     )
 
     # Color fill gaps
-    color_fillgap_raster = f'{output_dir}{input_las_name[:-4]}_raster_fillgap_color.tif'
+    color_fillgap_raster = f'{output_dir}{input_las_name_without_extension}_raster_fillgap_color.tif'
     tools.color_raster_by_class_2(
         input_raster=fillgap_raster,
         output_raster=color_fillgap_raster,
         )
 
     # Color fill
-    color_raster = f'{output_dir}{input_las_name[:-4]}_raster_color_.tif'
+    color_raster = f'{output_dir}{input_las_name_without_extension}_raster_color_.tif'
     tools.color_raster_by_class_2(
         input_raster=output_raster,
         output_raster=color_raster,

@@ -397,10 +397,10 @@ def sample(input_points):
 #     create_folder(output_dir)
 
 #     # Get directory
-#     input_dir = input_las[:-35]
+#     input_dir = os.path.dirname(input_las)
 #     input_dir = utils_pdal.parent(input_las)
 #     # Get filename without extension
-#     input_las_name = input_las[-35:]
+#     input_las_name = os.path.basename(input_las)
 #     input_las_name = f"{utils_pdal.stem(input_las)}.la{input_las[-1]}"
 
 
