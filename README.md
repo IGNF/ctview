@@ -8,28 +8,67 @@ Ce projet a pour but de créer différentes vues opérateurs pour différents co
 - image de densité colorisée
 - COG
 
+# Installation
 
-# Vue n°1
+Installation de l'environnement conda
+```
+conda env create -n ctview -f environnement.yml
+```
 
-# Vue n°2
-Fichiers utilisés :
-- map_MTN.py
-- gen_LUT_X_cycle.py
-- tools
-- utils_gdal
+Activation de l'environnement
+```
+conda activate ctview
+```
 
-Fonctionnement :
-- Créer un dossier "LAS" au même niveau que le dossier "script" dans lequel placer les las à traiter.
-- Créer un dossier "test_raster" au même niveau que le dossier "script". Ce dossier contiendra les raster.
-- Créer un dossier "DTM" dans le dossier "test_raster"
-- Ouvrir un terminal dans le dossier script
-- Lancer "python map_MTN.py /chemin/fichier_las_a_traiter.las
+# Tests
 
-Cela va créer dans le dossier /test_raster/DTM :
-- 1 MNT brut
-- 1 MNT ombragé
-- 1 ou plusieurs MNT ombragé colorisé
+## Tests unitaires des fonctions du fichier map_MNT_interp
 
-Reste à faire :
-- combler les trous (interpolation?)
-- découpage puis assemblage de dalles
+Se placer dans le dossier script/ et lancer
+```
+python -m pytest -s test_map_MNT_interp.py
+```
+
+## Tests unitaires des fonctions ajoutées dans le fichier utils_pdal
+Se placer dans le dossier script/ et lancer
+```
+python -m pytest -s test_utils_pdal.py
+```
+
+# Génération des vues
+
+## Génération de MNT
+- Se placer dans le dossier script/
+- Choisir un LAS ou un LAZ à tester. Exemple : path1/Semis_2022_0671_6912_LA93_IGN69.laz
+- Choisir un dossier de sortie et le créer. Exemple : path2/DTM_test/
+- Choisir une méthode d'interpolation (Laplace ou TINlinear)
+- Lancer la commande
+```
+python map_MNT_interp.py path1/Semis_2022_0671_6912_LA93_IGN69.laz path2/DTM_test/ Laplace
+```
+Ce qui est attendu : génération de :
+- DTM_brut/ 
+    - 1 fichier tif MNT brut
+- DTM_color/
+    - x fichiers tif MNTs ombragés colorisés
+- DTM_shade/
+    - 1 fichier tif MNT ombragé
+- LAS/
+    - 1 fichier las des points sol et virtuels (classif 2 et 66)
+    - 1 fichier las des points sol et virtuels (classif 2 et 66) avec interpolation
+- ras.txt (contient la grille d'interpolation)
+
+## Génération de carte de classe
+- Se placer dans le dossier script/
+- Choisir un LAS ou un LAZ à tester. Exemple : path1/Semis_2022_0671_6912_LA93_IGN69.laz
+- Choisir un dossier de sortie et le créer. Exemple : path2/class_test/
+- Lancer la commande
+```
+python map_class.py path1/Semis_2022_0671_6912_LA93_IGN69.laz path2/class_test/
+```
+Ce qui est attendu : génération de :
+4 tif :
+- raster brut
+- raster colorisé par classe
+- raster avec fillgap
+- raster colorisé par classe avec fillgap
