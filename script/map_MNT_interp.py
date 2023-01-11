@@ -68,10 +68,7 @@ def filter_las_ground(input_dir: str, filename: str):
         input_dir (str) : directory of projet who contains LIDAR (Ex. "data")
         file (str): name of LIDAR tiles
     """
-    if input_dir[len(input_dir)-1]=="/":
-        input_file = "".join([input_dir, filename])
-    else :
-        input_file = "/".join([input_dir, filename])
+    os.path.join(input_dir, filename)
     information = {}
     information = {
     "pipeline": [
@@ -101,10 +98,10 @@ def write_las(input_points, filename: str, output_dir: str, name: str):
         output_dir (str): directory of work who will contains the output files
         name (str) : suffix added to filename
         """
-    dst = str("LAS".join([output_dir, '/']))
+    dst = os.path.join(output_dir, 'LAS')
 
     if not os.path.exists(dst):
-        os.makedirs(dst) # create directory /LAS if not exists
+        os.makedirs(dst) # create directory LAS/ if not exists
 
     
     log.info("dst : "+dst)
@@ -338,7 +335,7 @@ def color_MNT_with_cycles(
     )
 
     # Path MNT colorised
-    raster_MNT_color_file = f'{output_dir}/DTM_color/{las_input_file[:-4]}_DTM_hillshade_color{nb_cycle}c.tif'
+    raster_MNT_color_file = os.path.join(os.path.join(output_dir,'DTM_color'),f'{las_input_file[:-4]}_DTM_hillshade_color{nb_cycle}c.tif')
 
 
     
@@ -379,9 +376,8 @@ def main():
         log.critical("IndexError : Wrong number of argument : 3 expected (las path, destination folder, interpolation method)")
         sys.exit()
 
-    # Complete path
-    if output_dir[len(output_dir)-1] != '/' :
-        output_dir = output_dir + '/'
+    # Complete path (exemple : "data" become "data/")
+    output_dir = os.path.join(output_dir,"")
 
     # Delete the severals folder LAS, DTM, DTM_shade and DTM_color if not exists
     delete_folder(output_dir)
@@ -477,7 +473,7 @@ def main():
     log.info(ras)
     log.info("\nBuild raster ie DTM brut...")
     
-    raster_dtm_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, output_file=output_dir + "DTM_brut/" + input_las_name[:-4] + _size + f'_{interpMETHOD}.tif')
+    raster_dtm_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, output_file= os.path.join(os.path.join(output_dir, "DTM_brut"), input_las_name[:-4] + _size + f'_{interpMETHOD}.tif') )
 
     
     log.info(f"{output_dir}{_size}_{interpMETHOD}.tif")
@@ -493,7 +489,7 @@ def main():
     log.info("\n")
 
     dtm_file = raster_dtm_interp
-    dtm_hs_file = f"{output_dir}/DTM_shade/{input_las_name[:-4]}_DTM_hillshade.tif"
+    dtm_hs_file = os.path.join(os.path.join(output_dir,"DTM_shade"),f"{input_las_name[:-4]}_DTM_hillshade.tif")
     hillshade_from_raster(
         input_raster = dtm_file,
         output_raster = dtm_hs_file,
@@ -529,5 +525,3 @@ def main():
 if __name__ == '__main__':
     
     main()
-
-    OTHER   = "../../data/data_simple/solo/pont_route_OK.las"

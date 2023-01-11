@@ -68,10 +68,7 @@ def filter_las_ground(input_dir: str, filename: str):
         input_dir (str) : directory of projet who contains LIDAR (Ex. "data")
         file (str): name of LIDAR tiles
     """
-    if input_dir[len(input_dir)-1]=="/":
-        input_file = "".join([input_dir, filename])
-    else :
-        input_file = "/".join([input_dir, filename])
+    input_file = os.path.join(input_dir, filename)
     information = {}
     information = {
     "pipeline": [
@@ -101,7 +98,7 @@ def write_las(input_points, filename: str, output_dir: str, name: str):
         output_dir (str): directory of work who will contains the output files
         name (str) : suffix added to filename
         """
-    dst = str("LAS".join([output_dir, '/']))
+    dst = os.path.join(output_dir, 'LAS')
 
     if not os.path.exists(dst):
         os.makedirs(dst) # create directory /LAS if not exists
@@ -334,7 +331,7 @@ def color_MNT_with_cycles(
     )
 
     # Path MNT colorised
-    raster_MNT_color_file = f'{output_dir}/DSM_color/{las_input_file[:-4]}_DSM_hillshade_color{nb_cycle}c.tif'
+    raster_MNT_color_file = os.path.join(os.path.join(output_dir,'DSM_color'),f'{las_input_file[:-4]}_DSM_hillshade_color{nb_cycle}c.tif')
 
 
     log.info("MNT color : "+raster_MNT_color_file)
@@ -392,8 +389,7 @@ def sample(input_points):
 #         sys.exit()
 
 #     # Complete path
-#     if output_dir[len(output_dir)-1] != '/' :
-#         output_dir = output_dir + '/'
+#     output_dir = os.path.join(output_dir, "")
 
 #     # Delete the severals folder LAS, DSM, DSM_shade and DSM_color if not exists
 #     delete_folder(output_dir)
@@ -489,7 +485,7 @@ def sample(input_points):
     # log.info(ras)
     # log.info("\nBuild raster ie DSM brut...")
     
-#     raster_DSM_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, output_file=output_dir + "DSM_brut/" + input_las_name[:-4] + _size + f'_{interpMETHOD}.tif')
+#     raster_DSM_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, output_file= os.path.join(os.path.join(output_dir, "DSM_brut"), input_las_name[:-4] + _size + f'_{interpMETHOD}.tif') )
 
 #     log.info(f"{output_dir}{_size}_{interpMETHOD}.tif")
 #     log.info("\nBuild las...")
@@ -503,7 +499,7 @@ def sample(input_points):
 #     log.info("\n")
 
 #     DSM_file = raster_DSM_interp
-#     DSM_hs_file = f"{output_dir}/DSM_shade/{input_las_name[:-4]}_DSM_hillshade.tif"
+#     DSM_hs_file = os.path.join(os.path.join(output_dir,"DSM_shade"),f"{input_las_name[:-4]}_DTM_hillshade.tif")
 #     hillshade_from_raster(
 #         input_raster = DSM_file,
 #         output_raster = DSM_hs_file,
@@ -560,8 +556,7 @@ def main_work():
         sys.exit()
 
     # Complete path
-    if output_dir[len(output_dir)-1] != '/' :
-        output_dir = output_dir + '/'
+    output_dir = os.path.join(output_dir, "")
 
     # Delete the severals folder LAS, DSM, DSM_shade and DSM_color if not exists
     delete_folder(output_dir)
@@ -624,5 +619,3 @@ def main_work():
 if __name__ == '__main__':
     
     main_work()
-
-    OTHER   = "../../data/data_simple/solo/pont_route_OK.las"
