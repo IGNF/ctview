@@ -5,6 +5,7 @@
     # File
 import tools
 import utils_pdal
+from parameter import dico_param
     # Library
 import pdal
 from osgeo import gdal
@@ -22,6 +23,10 @@ import gen_LUT_X_cycle
 import shutil
 from tqdm import tqdm
 import logging as log
+
+# PARAMETERS
+
+EPSG = dico_param["EPSG"]
 
 def delete_folder(dest_dir: str):
     """Delete the severals folders "LAS", "DSM", "DSM_shade" and "DSM_color" if not exist"""
@@ -75,7 +80,7 @@ def filter_las_ground(input_dir: str, filename: str):
             {
                 "type":"readers.las",
                 "filename":input_file,
-                "override_srs": "EPSG:2154",
+                "override_srs": f"EPSG:{EPSG}",
                 "nosrs": True
             },
             {
@@ -106,7 +111,7 @@ def write_las(input_points, filename: str, output_dir: str, name: str):
     log.info("dst : "+dst)
     FileOutput = "".join([dst, "_".join([filename[:-4], f'{name}.las'])])
     log.info("filename : "+FileOutput)
-    pipeline = pdal.Writer.las(filename = FileOutput, a_srs="EPSG:2154").pipeline(input_points)
+    pipeline = pdal.Writer.las(filename = FileOutput, a_srs=f"EPSG:{EPSG}").pipeline(input_points)
     pipeline.execute()
 
     NameFileOutput = "_".join([filename[:-4], f'{name}.las'])
@@ -118,7 +123,7 @@ def write_las2(pts):
     "pipeline": [
             {
                 "type": "writers.las",
-                "a_srs": "EPSG:2154",
+                "a_srs": f"EPSG:{EPSG}",
                 # "minor_version": 4,
                 # "dataformat_id": 6,
                 "filename": FileOutput
@@ -258,7 +263,7 @@ def write_geotiff_withbuffer(raster, origin, size, output_file):
                            width = raster.shape[1],
                            count = 1,
                            dtype = rasterio.float32,
-                           crs='EPSG:2154',
+                           crs=f"EPSG:{EPSG}",
                            transform = transform
                            ) as out_file:
             out_file.write(raster.astype(rasterio.float32), 1)
