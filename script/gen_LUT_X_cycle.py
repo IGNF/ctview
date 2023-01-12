@@ -4,13 +4,13 @@
 
 import subprocess
 import numpy
+import logging as log
 
 # FONCTION
 
 
 def get_zmin_zmax_from_MNT(
-    input_MNT: str,
-    verbose=False
+    input_MNT: str
 ):
     """
     Get zmin and zmax of an DTM.
@@ -34,9 +34,9 @@ def get_zmin_zmax_from_MNT(
             if zmintest>0:
                 zmin = zmintest
     
-    if verbose :
-        print(f"Zmin :{zmin}")
-        print(f"Zmax :{zmax}")
+     
+    log.info(f"Zmin :{zmin}")
+    log.info(f"Zmax :{zmax}")
 
     return zmax, zmin
 
@@ -45,8 +45,7 @@ def get_zmin_zmax_from_MNT(
 def generate_LUT_X_cycle(
     file_las: str,
     file_MNT: str,
-    nb_cycle: int,
-    verbose=False
+    nb_cycle: int
 ):
     """
     Generate a LUT in link with a DTM.
@@ -56,20 +55,20 @@ def generate_LUT_X_cycle(
     return   : path of the LUT
     """
 
-    if verbose :
-        print(f"Generate LUT of file {file_MNT}")
+     
+    log.info(f"Generate LUT of file {file_MNT}")
 
     path = f"../LUT/LUT_{nb_cycle}cycle_{file_las[-31:-4]}.txt"
 
-    zmin, zmax = get_zmin_zmax_from_MNT(input_MNT=file_MNT, verbose=verbose)
+    zmin, zmax = get_zmin_zmax_from_MNT(input_MNT=file_MNT)
 
     MNT_LUTcycle_FILE = open(path, "w")
     
     MNT_LUTcycle_FILE.write(f"#LUT of {file_MNT}\n")
     MNT_LUTcycle_FILE.write(f"#number of cycles :{nb_cycle}\n")
     
-    if verbose :
-        print(f"Number of cycles : {nb_cycle}")
+     
+    log.info(f"Number of cycles : {nb_cycle}")
 
     pasCycle = (zmax - zmin) / nb_cycle
     
@@ -94,6 +93,5 @@ if __name__=="__main__":
     generate_LUT_X_cycle(
         file_las = "../LAS/C5_OK.las",
         file_MNT = "../test_raster/DTM/C5_OK_DTM_hillshade.tif",
-        nb_cycle = 6,
-        verbose=True
+        nb_cycle = 6
     )

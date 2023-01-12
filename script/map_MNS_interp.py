@@ -24,45 +24,44 @@ import gen_LUT_X_cycle
 import shutil
 from tqdm import tqdm
 import logging as log
-import argparse
 
 # PARAMETERS
 
 EPSG = dico_param["EPSG"]
 
 def delete_folder(dest_dir: str):
-    """Delete the severals folders "LAS", "DTM", "DTM_shade" and "DTM_color" if not exist"""
+    """Delete the severals folders "LAS", "DSM", "DSM_shade" and "DSM_color" if not exist"""
     # Delete folder "LAS"
     LAS_new_dir = os.path.join(dest_dir, 'LAS')
     if os.path.isdir(LAS_new_dir):
         shutil.rmtree(LAS_new_dir)
-    # Delete folder "DTM"
-    DTM_brut_new_dir = os.path.join(dest_dir, 'DTM_brut')
-    if os.path.isdir(DTM_brut_new_dir):
-        shutil.rmtree(DTM_brut_new_dir)
-    # Delete folder "DTM_shade"
-    DTM_shade_new_dir = os.path.join(dest_dir, 'DTM_shade')
-    if os.path.isdir(DTM_shade_new_dir):
-        shutil.rmtree(DTM_shade_new_dir)
-    # Delete folder "DTM_color"
-    DTM_color_new_dir = os.path.join(dest_dir, 'DTM_color')
-    if os.path.isdir(DTM_color_new_dir):
-        shutil.rmtree(DTM_color_new_dir)
+    # Delete folder "DSM"
+    DSM_brut_new_dir = os.path.join(dest_dir, 'DSM_brut')
+    if os.path.isdir(DSM_brut_new_dir):
+        shutil.rmtree(DSM_brut_new_dir)
+    # Delete folder "DSM_shade"
+    DSM_shade_new_dir = os.path.join(dest_dir, 'DSM_shade')
+    if os.path.isdir(DSM_shade_new_dir):
+        shutil.rmtree(DSM_shade_new_dir)
+    # Delete folder "DSM_color"
+    DSM_color_new_dir = os.path.join(dest_dir, 'DSM_color')
+    if os.path.isdir(DSM_color_new_dir):
+        shutil.rmtree(DSM_color_new_dir)
 
 def create_folder(dest_dir: str):
-    """Create the severals folders "LAS", "DTM", "DTM_shade" and "DTM_color" if not exist"""
+    """Create the severals folders "LAS", "DSM", "DSM_shade" and "DSM_color" if not exist"""
     # Create folder "LAS"
     LAS_new_dir = os.path.join(dest_dir, 'LAS')
     os.makedirs(LAS_new_dir, exist_ok=True)
-    # Create folder "DTM"
-    DTM_brut_new_dir = os.path.join(dest_dir, 'DTM_brut')
-    os.makedirs(DTM_brut_new_dir, exist_ok=True)
-    # Create folder "DTM_shade"
-    DTM_shade_new_dir = os.path.join(dest_dir, 'DTM_shade')
-    os.makedirs(DTM_shade_new_dir, exist_ok=True)
-    # Create folder "DTM_color"
-    DTM_color_new_dir = os.path.join(dest_dir, 'DTM_color')
-    os.makedirs(DTM_color_new_dir, exist_ok=True)
+    # Create folder "DSM"
+    DSM_brut_new_dir = os.path.join(dest_dir, 'DSM_brut')
+    os.makedirs(DSM_brut_new_dir, exist_ok=True)
+    # Create folder "DSM_shade"
+    DSM_shade_new_dir = os.path.join(dest_dir, 'DSM_shade')
+    os.makedirs(DSM_shade_new_dir, exist_ok=True)
+    # Create folder "DSM_color"
+    DSM_color_new_dir = os.path.join(dest_dir, 'DSM_color')
+    os.makedirs(DSM_color_new_dir, exist_ok=True)
 
 
 
@@ -92,7 +91,7 @@ def filter_las_ground(input_dir: str, filename: str):
         ]
     }
     ground = json.dumps(information, sort_keys=True, indent=4)
-    #print(ground)
+    #log.info(ground)
     pipeline = pdal.Pipeline(ground)
     pipeline.execute()
     return pipeline.arrays[0]
@@ -105,15 +104,13 @@ def write_las(input_points, filename: str, output_dir: str, name: str):
         output_dir (str): directory of work who will contains the output files
         name (str) : suffix added to filename
         """
-    file_root = os.path.splitext(filename)[0] #filename without extension
-
     dst = os.path.join(output_dir, 'LAS')
 
-    os.makedirs(dst, exist_ok=True) # create directory LAS/ if not exists
+    if not os.path.exists(dst):
+        os.makedirs(dst) # create directory /LAS if not exists
 
     log.info("dst : "+dst)
-    FileOutput = os.path.join(dst, f'{file_root}_{name}.las')
-    
+    FileOutput = "".join([dst, "_".join([filename[:-4], f'{name}.las'])])
     log.info("filename : "+FileOutput)
     pipeline = pdal.Writer.las(filename = FileOutput, a_srs=f"EPSG:{EPSG}").pipeline(input_points)
     pipeline.execute()
@@ -135,7 +132,6 @@ def write_las2(pts):
         ]
     }
     ground = json.dumps(information, sort_keys=True, indent=4)
-    log.info(ground)
     pipeline = pdal.Pipeline(ground)
     pipeline.execute()
 
@@ -204,19 +200,19 @@ def execute_startin(pts, res, origin, size, method):
     pbar = tqdm(total=100, desc="Progression interpolation")
     size_res = res[1]*res[0]
     for y in np.arange(origin[1], origin[1] + res[1] * size, size):
-        # print("y",y, "size", size)
-        # print("arange",len(np.arange(origin[1], origin[1] + res[1] * size, size)),np.arange(origin[1], origin[1] + res[1] * size, size))
+        # log.info("y",y, "size", size)
+        # log.info("arange",len(np.arange(origin[1], origin[1] + res[1] * size, size)),np.arange(origin[1], origin[1] + res[1] * size, size))
         xi = 0
         for x in np.arange(origin[0], origin[0] + res[0] * size, size):
-            # print("x",x, "size", size)
-            # print("arange",len(np.arange(origin[0], origin[0] + res[0] * size, size)),np.arange(origin[0], origin[0] + res[0] * size, size))
-            # print("[x,y]", x, y)
+            # log.info("x",x, "size", size)
+            # log.info("arange",len(np.arange(origin[0], origin[0] + res[0] * size, size)),np.arange(origin[0], origin[0] + res[0] * size, size))
+            # log.info("[x,y]", x, y)
             ch = tin.is_inside_convex_hull(x, y) # check is the point [x, y] located inside  the convex hull of the DT
             if ch == False:
                 ras[yi, xi] = -9999 # no-data value
             else:
                 tri = tin.locate(x, y) # locate the triangle containing the point [x,y]. An error is thrown if it is outside the convex hull
-                # print("\n\nTRI",tri)
+                # log.info("\n\nTRI",tri)
 
 
                 if (tri.shape!=()) and (0 not in tri):
@@ -229,7 +225,7 @@ def execute_startin(pts, res, origin, size, method):
         
         if (xi*yi * 100 / size_res) in [i for i in range(100)] :
             pbar.update( 1 )
-        # print(xi*yi * 100 / size_res )
+        # log.info(xi*yi * 100 / size_res )
 
 
     pbar.close()
@@ -331,7 +327,6 @@ def color_MNT_with_cycles(
         nb_cycle : int : the number of cycle that determine the LUT
     """
 
-    
     log.info("Generate MNT colorised :")
     log.info("(1/2) Generate LUT.")
     # Create LUT
@@ -342,10 +337,9 @@ def color_MNT_with_cycles(
     )
 
     # Path MNT colorised
-    raster_MNT_color_file = os.path.join(os.path.join(output_dir,'DTM_color'),f'{las_input_file[:-4]}_DTM_hillshade_color{nb_cycle}c.tif')
+    raster_MNT_color_file = os.path.join(os.path.join(output_dir,'DSM_color'),f'{las_input_file[:-4]}_DSM_hillshade_color{nb_cycle}c.tif')
 
 
-    
     log.info("MNT color : "+raster_MNT_color_file)
     log.info("(2/2) Colorise raster.")
 
@@ -355,6 +349,23 @@ def color_MNT_with_cycles(
         output_raster = raster_MNT_color_file,
         LUT = LUT,
     )
+
+def cluster(input_points: str):
+
+    pipeline = pdal.Filter.cluster(
+        min_points = 3,
+        max_points=200,
+        tolerance=1,
+        is3d=True,
+        ).pipeline(input_points)
+    pipeline.execute()
+    return pipeline.arrays[0]
+
+def sample(input_points):
+    """Filtre points closest to 0.5m"""
+    pipeline = pdal.Filter.sample(radius="0.5").pipeline(input_points)
+    pipeline.execute()
+    return pipeline.arrays[0]
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -379,31 +390,30 @@ def main():
     output_dir = args.output_dir
     interMETHOD = args.interpMETHOD
 
-    # Complete path (exemple : "data" become "data/")
-    output_dir = os.path.join(output_dir,"")
+    # Complete path
+    output_dir = os.path.join(output_dir, "")
 
-    # Delete the severals folder LAS, DTM, DTM_shade and DTM_color if not exists
+    # Delete the severals folder LAS, DSM, DSM_shade and DSM_color if not exists
     delete_folder(output_dir)
-    # Create the severals folder LAS, DTM, DTM_shade and DTM_color if not exists
+    # Create the severals folder LAS, DSM, DSM_shade and DSM_color if not exists
     create_folder(output_dir)
 
     # Get directory
-    input_dir = os.path.dirname(input_las)
+    input_dir = input_las[:-35]
     input_dir = utils_pdal.parent(input_las)
     # Get filename without extension
-    input_las_name = os.path.basename(input_las)
+    input_las_name = input_las[-35:]
     input_las_name = f"{utils_pdal.stem(input_las)}.la{input_las[-1]}"
 
 
 
 
     # Fichier de sortie MNT brut
-    out_dtm_raster = f"{output_dir}{input_las_name}_DTM.tif"
+    out_DSM_raster = f"{output_dir}{input_las_name}_DSM.tif"
 
     # # Extraction infos du las
     # origin_x, origin_y, ProjSystem, AltiSystem = get_origin(input_las_name)
 
-    # 
     # log.info(f"Dalle name : {input_las_name}")
 
     # log.info(f"North-West X coordinate : {origin_x} km")
@@ -411,120 +421,36 @@ def main():
     # log.info(f"System of projection : {ProjSystem}")
     # log.info(f"Altimetric system : {AltiSystem}")
 
-    
-    log.info("\nFiltrage points sol et virtuels...")
-    # Filtre les points sol de classif 2 et 66
-    # tools.filter_las_version2(las,las_pts_ground)
-    ground_pts = filter_las_ground(
-        input_dir = input_dir,
-        filename = input_las_name)
+    # log.info("\nFiltrage points sol et virtuels...")
+    # # Filtre les points sol de classif 2 et 66
+    # # tools.filter_las_version2(las,las_pts_ground)
+    # resample_pts = filter_las_ground(
+    #     input_dir = input_dir,
+    #     filename = input_las_name)
 
-    
-    log.info("Build las...")
-    # LAS points sol non interpolés
-    FileLasGround = write_las(input_points=ground_pts, filename=input_las_name , output_dir=output_dir, name="ground")
-
-
-
-    
-    log.info(f"\nInterpolation méthode de {interpMETHOD}...")
-
-    
-    log.info("\n           Extraction liste des coordonnées du nuage de points...")
-    # Extraction coord nuage de points
-    extents_calc, res_calc, origin_calc = las_prepare_1_file(input_file=input_las, size=size)
-    
-    log.info(f"\nExtents {extents_calc}")
-    log.info(f"Resolution in coordinates : {res_calc}")
-    log.info(f"Loc of the relative origin : {origin_calc}")
-
-
-
-    
-    log.info("\n           Interpolation...")
-    # Interpole avec la méthode de Laplace ou tin linéaire
-    resolution = res_calc # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
-    origine = origin_calc
-    ras = execute_startin(pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD)
-    
-
-    
-    log.info("\nTableau d'interpolation : ")
-
-        
-    fileRas = f"{output_dir}ras.txt"
-
-    log.info("\nWrite in " + fileRas)
-
-    fileR = open(fileRas, "w")
-
-    l,c = ras.shape
-    s = ''
-    for i in range(l):
-        ligne = ""
-        for j in range(c):
-            ELEMENTras = ras[i,j]
-            ligne += f"{round(ELEMENTras,5) : >20}"
-        s += ligne
-        s += '\n'  
-
-    fileR.write(s)
-    fileR.close()
-
-    log.info("End write.")
-    log.info("\n numpy.array post-interpolation")
-    log.info(ras)
-    log.info("\nBuild raster ie DTM brut...")
-    
-    raster_dtm_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, output_file= os.path.join(os.path.join(output_dir, "DTM_brut"), input_las_name[:-4] + _size + f'_{interpMETHOD}.tif') )
-
-    
-    log.info(f"{output_dir}{_size}_{interpMETHOD}.tif")
-    log.info("\nBuild las...")
-    # LAS points sol interpolés
-    las_dtm_interp = write_las(input_points=ground_pts, filename=input_las_name ,output_dir=output_dir, name="ground_interp")
-
-
-    # Ajout ombrage
-    
-    log.info("\nAdd hillshade...")
-    log.info(raster_dtm_interp)
-    log.info("\n")
-
-    dtm_file = raster_dtm_interp
-    dtm_hs_file = os.path.join(os.path.join(output_dir,"DTM_shade"),f"{input_las_name[:-4]}_DTM_hillshade.tif")
-    hillshade_from_raster(
-        input_raster = dtm_file,
-        output_raster = dtm_hs_file,
+    read_pts = utils_pdal.read_las_file(
+        input_las = input_las
     )
+    log.info("\nBefore cluster\n",read_pts)
+    # TODO 
+    # rééchantillonner LAS avec z les plus élevé
+    #cluster
 
-    
-    log.info("Success.\n")
+    cluster_pts = cluster(input_points=read_pts)
+    log.info("\nAfter cluster\n",cluster_pts)
 
-    # Colorisation
-    
-    log.info("Add color...")
-        
-    nb_raster_color = int(input("How many raster colorised ? : "))
+    #sample
+    sample_pts = sample(input_points=read_pts)
+    log.info("\nAfter sample\n",sample_pts)
 
-    for i in range(nb_raster_color) :
 
-        cycle = int(input(f"Raster {i+1}/{nb_raster_color} : how many cycles ? : "))
-        
-        
-        log.info(f"Build raster {i+1}/{nb_raster_color}...")
+    log.info("\nBefore : type", type(read_pts), ", taille : ", np.shape(read_pts))
 
-        color_MNT_with_cycles(
-        las_input_file=input_las_name,
-        output_dir=output_dir,
-        raster_MNT_file=dtm_hs_file,
-        nb_cycle=cycle
-        )
+    log.info("\nAfter cluster : type", type(cluster_pts), ", taille : ", np.shape(cluster_pts))
 
-        log.info("Success.\n")
+    log.info("\nAfter sample : type", type(sample_pts), ", taille : ", np.shape(sample_pts))
 
-    log.info("End.")
 
 if __name__ == '__main__':
     
-    main()
+    main_work()

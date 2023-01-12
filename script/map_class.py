@@ -2,13 +2,23 @@
 
 #IMPORT
 
+# Library
 import pdal
-from osgeo import gdal
 import tools
-import utils_gdal
-from osgeo_utils import gdal_fillnodata
+import sys
+import logging as log
+import os
+import argparse
+
+from osgeo import gdal
 from typing import Optional
 from numbers import Real
+
+
+# Library intern
+import utils_gdal
+from osgeo_utils import gdal_fillnodata
+
 
 
 
@@ -36,7 +46,7 @@ def fill_gaps(input_raster):
 
 
 
-def fill_no_data(src_raster: Optional[str] = None, dst_raster: Optional[str] = None, max_Search_Distance: Real = 100):
+def fill_no_data(src_raster: Optional[str] = None, dst_raster: Optional[str] = None, max_Search_Distance: Real = 2):
     """Fill gap in the data.
     input_raster : raster to fill
     output_raster : raster with no gap
@@ -55,67 +65,97 @@ def fill_no_data(src_raster: Optional[str] = None, dst_raster: Optional[str] = N
         options=None,
     )
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-las", "--input_las")
+    parser.add_argument('-o', '--output_dir')
+
+    return parser.parse_args()
+
+def main():
 
 
+    log.basicConfig(level=log.INFO)
 
+    # Get las file, output directory and interpolation method
+    args = parse_args()
+    input_las = args.input_las
+    output_dir = args.output_dir
 
+    # Clean folder
+    for filename in os.listdir(output_dir):
+        os.remove(os.path.join(output_dir, filename))
 
-# TEST
+    input_las_name = os.path.basename(input_las)
+    input_las_name_without_extension = os.path.splitext(input_las_name)[0]    # Read las
+    in_points = tools.read_las(input_las)
 
-if __name__ == "__main__":
-
-    import sys
-    # Pour tester ce fichier de création de raster colorisé par classe après une interpolation
-    in_las = sys.argv[1:][0]
-    input_las_name = in_las[-35:]
-    # Read las
-    in_points = tools.read_las(in_las)
+    log.info(f"\n\nMAP OF CLASS : file : {input_las_name}")
 
     # Write raster
-    output_raster = f'../test_raster/{in_las[:-4]}_raster.tif'
+    output_raster = os.path.join(output_dir,f'{input_las_name_without_extension}_raster.tif')
     tools.write_raster_class(in_points, output_raster)
 
+    log.info("Create raster of class brut : ")
+    log.info(output_raster)
+
+    if not os.path.exists(output_raster) :
+        print(f"FileNotFoundError : {output_raster} not found")
+        sys.exit()
+
+
     # Fill gaps
-    fillgap_raster = f'../test_raster/{in_las[:-4]}_raster_fillgap.tif'
-    #fillgap_color_raster = fill_gaps(color_raster)
+    fillgap_raster = os.path.join(output_dir,f'{input_las_name_without_extension}_raster_fillgap.tif')
+   
     fill_no_data(
         src_raster=output_raster,
         dst_raster=fillgap_raster,
-        max_Search_Distance=100,
+        max_Search_Distance=2, #modif 10/01/2023
 
     )
 
+    log.info("Fill gaps : ")
+    log.info(fillgap_raster)
+
+    if not os.path.exists(fillgap_raster) :
+        print(f"FileNotFoundError : {fillgap_raster} not found")
+        sys.exit()
+
     # Color fill gaps
-    color_fillgap_raster = f'../test_raster/{in_las[7:-4]}_raster_fillgap_color.tif'
+    color_fillgap_raster = os.path.join(output_dir,f'{input_las_name_without_extension}_raster_fillgap_color.tif')
     tools.color_raster_by_class_2(
         input_raster=fillgap_raster,
         output_raster=color_fillgap_raster,
         )
 
+    log.info("Color fill gaps raster : ")
+    log.info(color_fillgap_raster)
+
+    if not os.path.exists(color_fillgap_raster) :
+        print(f"FileNotFoundError : {color_fillgap_raster} not found")
+        sys.exit()
+
     # Color fill
-    color_raster = f'../test_raster/{in_las[7:-4]}_raster_color_.tif'
+    color_raster = os.path.join(output_dir,f'{input_las_name_without_extension}_raster_color_.tif')
     tools.color_raster_by_class_2(
         input_raster=output_raster,
         output_raster=color_raster,
         )
 
+    log.info("Color raster brut: ")
+    log.info(color_raster)
 
-    # # Color qui marche pas
-    # colorinterp_raster = f'../test_raster/raster2_colorinterp_{in_las[7:-4]}.tif'
-    # colorinterp_points = tools.color_points_by_class(in_points)
-    # tools.write_raster_class(colorinterp_points, colorinterp_raster)
+    if not os.path.exists(color_raster) :
+        print(f"FileNotFoundError : {color_raster} not found")
+        sys.exit()
 
-    # # Info
-    # metadata = utils_gdal.get_info_from_las(in_points)
-    # print(metadata)
 
-    # # Color
-    # color_points = tools.color_points_by_class(in_points)
-    # # Write raster
-    # output_raster_color = f'../test_raster/raster_color{in_las[7:-4]}.tif'
-    # tools.write_raster(color_points, output_raster_color)
-    # output_raster = f'../test_raster/raster_{in_las[7:-4]}.tif'
-    # tools.write_raster(in_points, output_raster)
+
+
+if __name__ == "__main__":
+
+    main()
+
 
 
 
