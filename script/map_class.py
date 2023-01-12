@@ -8,6 +8,7 @@ import tools
 import sys
 import logging as log
 import os
+import argparse
 
 from osgeo import gdal
 from typing import Optional
@@ -64,20 +65,22 @@ def fill_no_data(src_raster: Optional[str] = None, dst_raster: Optional[str] = N
         options=None,
     )
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-las", "--input_las")
+    parser.add_argument('-o', '--output_dir')
+
+    return parser.parse_args()
 
 def main():
 
-    # Pour tester ce fichier de création de raster colorisé par classe après une interpolation
 
-    try :
-        # Pour tester ce fichier de création de raster colorisé par classe après une interpolation
-        input_las = sys.argv[1:][0]
-        # Dossier dans lequel seront créés les fichiers
-        output_dir = sys.argv[1:][1]
+    log.basicConfig(level=log.INFO)
 
-    except IndexError :
-        log.critical("IndexError : Wrong number of argument : 2 expected (las path, destination folder)")
-        sys.exit()
+    # Get las file, output directory and interpolation method
+    args = parse_args()
+    input_las = args.input_las
+    output_dir = args.output_dir
 
     # Clean folder
     for filename in os.listdir(output_dir):
@@ -87,9 +90,19 @@ def main():
     input_las_name_without_extension = os.path.splitext(input_las_name)[0]    # Read las
     in_points = tools.read_las(input_las)
 
+    log.info(f"\n\nMAP OF CLASS : file : {input_las_name}")
+
     # Write raster
     output_raster = os.path.join(output_dir,f'{input_las_name_without_extension}_raster.tif')
     tools.write_raster_class(in_points, output_raster)
+
+    log.info("Create raster of class brut : ")
+    log.info(output_raster)
+
+    if not os.path.exists(output_raster) :
+        print(f"FileNotFoundError : {output_raster} not found")
+        sys.exit()
+
 
     # Fill gaps
     fillgap_raster = os.path.join(output_dir,f'{input_las_name_without_extension}_raster_fillgap.tif')
@@ -101,19 +114,40 @@ def main():
 
     )
 
+    log.info("Fill gaps : ")
+    log.info(fillgap_raster)
+
+    if not os.path.exists(fillgap_raster) :
+        print(f"FileNotFoundError : {fillgap_raster} not found")
+        sys.exit()
+
     # Color fill gaps
     color_fillgap_raster = os.path.join(output_dir,f'{input_las_name_without_extension}_raster_fillgap_color.tif')
     tools.color_raster_by_class_2(
         input_raster=fillgap_raster,
         output_raster=color_fillgap_raster,
         )
-    print(color_fillgap_raster)
+
+    log.info("Color fill gaps raster : ")
+    log.info(color_fillgap_raster)
+
+    if not os.path.exists(color_fillgap_raster) :
+        print(f"FileNotFoundError : {color_fillgap_raster} not found")
+        sys.exit()
+
     # Color fill
     color_raster = os.path.join(output_dir,f'{input_las_name_without_extension}_raster_color_.tif')
     tools.color_raster_by_class_2(
         input_raster=output_raster,
         output_raster=color_raster,
         )
+
+    log.info("Color raster brut: ")
+    log.info(color_raster)
+
+    if not os.path.exists(color_raster) :
+        print(f"FileNotFoundError : {color_raster} not found")
+        sys.exit()
 
 
 

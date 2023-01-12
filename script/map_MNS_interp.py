@@ -7,6 +7,7 @@ import tools
 import utils_pdal
 from parameter import dico_param
     # Library
+import sys
 import pdal
 from osgeo import gdal
 import numpy as np
@@ -366,199 +367,28 @@ def sample(input_points):
     pipeline.execute()
     return pipeline.arrays[0]
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-las", "--input_las")
+    parser.add_argument('-o', '--output_dir')
+    parser.add_argument("-m", "--interpMETHOD",
+                        default="Laplace")
 
-# def main():
+    return parser.parse_args()
 
-#     import sys
+def main():
 
-#     # Paramètres
-#     size = 1.0 # mètres = resolution from raster
-#     _size = give_name_resolution_raster(size)
-
-#     try :
-#         # Pour tester ce fichier de création de raster colorisé par classe après une interpolation
-#         input_las = sys.argv[1:][0]
-#         # Dossier dans lequel seront créés les fichiers
-#         output_dir = sys.argv[1:][1]
-#         # Choice of interpolation method : Laplace or TINlinear
-#         interpMETHOD = sys.argv[1:][2]
-#         if interpMETHOD in ["Laplace", "laplace"]:
-#             interpMETHOD == "Laplace"
-#         elif interpMETHOD in ["TINlinear", "Linear", "linear"]:
-#             interpMETHOD == "TINlinear"
-#         else :
-#             log.critical("Wrong interpolation method : choose between Laplace method and TINlinear method")
-#             sys.exit()
-#     except IndexError :
-#         log.critical("IndexError : Wrong number of argument : 3 expected (las path, destination folder, interpolation method)")
-#         sys.exit()
-
-#     # Complete path
-#     output_dir = os.path.join(output_dir, "")
-
-#     # Delete the severals folder LAS, DSM, DSM_shade and DSM_color if not exists
-#     delete_folder(output_dir)
-#     # Create the severals folder LAS, DSM, DSM_shade and DSM_color if not exists
-#     create_folder(output_dir)
-
-#     # Get directory
-#     input_dir = os.path.dirname(input_las)
-#     input_dir = utils_pdal.parent(input_las)
-#     # Get filename without extension
-#     input_las_name = os.path.basename(input_las)
-#     input_las_name = f"{utils_pdal.stem(input_las)}.la{input_las[-1]}"
-
-
-
-
-#     # Fichier de sortie MNT brut
-#     out_DSM_raster = f"{output_dir}{input_las_name}_DSM.tif"
-
-#     # # Extraction infos du las
-#     # origin_x, origin_y, ProjSystem, AltiSystem = get_origin(input_las_name)
-
-#     # log.info(f"Dalle name : {input_las_name}")
-
-#     # log.info(f"North-West X coordinate : {origin_x} km")
-#     # log.info(f"North-West Y coordinate : {origin_y} km")
-#     # log.info(f"System of projection : {ProjSystem}")
-#     # log.info(f"Altimetric system : {AltiSystem}")
-
-#     # log.info("\nFiltrage points sol et virtuels...")
-#     # # Filtre les points sol de classif 2 et 66
-#     # # tools.filter_las_version2(las,las_pts_ground)
-#     # resample_pts = filter_las_ground(
-#     #     input_dir = input_dir,
-#     #     filename = input_las_name)
-
-#     resample_pts = utils_pdal.read_las_file(
-#         input_las = input_las
-#     )
-
-#     # TODO 
-#     # rééchantillonner LAS avec z les plus élevé
-
-#     log.info("Build las...")
-
-#     # LAS points rééchantillonnés avec z plus élevé
-#     FileLasResample = write_las(input_points=resample_pts, filename=input_las_name , output_dir=output_dir, name="resample")
-
-
-
-#     log.info(f"\nInterpolation méthode de {interpMETHOD}...")
-
-#     log.info("\n           Extraction liste des coordonnées du nuage de points...")
-#     # Extraction coord nuage de points
-#     extents_calc, res_calc, origin_calc = las_prepare_1_file(input_file=input_las, size=size)
-#     log.info(f"\nExtents {extents_calc}")
-#     log.info(f"Resolution in coordinates : {res_calc}")
-#     log.info(f"Loc of the relative origin : {origin_calc}")
-
-
-
-#     log.info("\n           Interpolation...")
-#     # Interpole avec la méthode de Laplace ou tin linéaire
-#     resolution = res_calc # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
-#     origine = origin_calc
-#     ras = execute_startin(pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD)
-    
-
-    # log.info("\nTableau d'interpolation : ")
-
-        
-    # fileRas = f"{output_dir}ras.txt"
-
-    # log.info("\nWrite in " + fileRas)
-
-    # fileR = open(fileRas, "w")
-
-    # l,c = ras.shape
-    # s = ''
-    # for i in range(l):
-    #     ligne = ""
-    #     for j in range(c):
-    #         ELEMENTras = ras[i,j]
-    #         ligne += f"{round(ELEMENTras,5) : >20}"
-    #     s += ligne
-    #     s += '\n'  
-
-    # fileR.write(s)
-    # fileR.close()
-
-    # log.info("End write.")
-    # log.info("\n numpy.array post-interpolation")
-    # log.info(ras)
-    # log.info("\nBuild raster ie DSM brut...")
-    
-#     raster_DSM_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, output_file= os.path.join(os.path.join(output_dir, "DSM_brut"), input_las_name[:-4] + _size + f'_{interpMETHOD}.tif') )
-
-#     log.info(f"{output_dir}{_size}_{interpMETHOD}.tif")
-#     log.info("\nBuild las...")
-#     # LAS points sol interpolés
-#     las_DSM_interp = write_las(input_points=resample_pts, filename=input_las_name ,output_dir=output_dir, name="resample_interp")
-
-
-#     # Ajout ombrage
-#     log.info("\nAdd hillshade...")
-#     log.info(raster_DSM_interp)
-#     log.info("\n")
-
-#     DSM_file = raster_DSM_interp
-#     DSM_hs_file = os.path.join(os.path.join(output_dir,"DSM_shade"),f"{input_las_name[:-4]}_DTM_hillshade.tif")
-#     hillshade_from_raster(
-#         input_raster = DSM_file,
-#         output_raster = DSM_hs_file,
-#     )
-
-#     log.info("Success.\n")
-
-#     # Colorisation
-#     log.info("Add color...")
-        
-#     nb_raster_color = int(input("How many raster colorised ? : "))
-
-#     for i in range(nb_raster_color) :
-
-#         cycle = int(input(f"Raster {i+1}/{nb_raster_color} : how many cycles ? : "))
-        
-#         log.info(f"Build raster {i+1}/{nb_raster_color}...")
-
-#         color_MNT_with_cycles(
-#         las_input_file=input_las_name,
-#         output_dir=output_dir,
-#         raster_MNT_file=DSM_hs_file,
-#         nb_cycle=cycle
-#         )
-
-#         log.info("Success.\n")
-
-#     log.info("End.")
-
-def main_work():
-
-    import sys
+    log.basicConfig(level=log.INFO)
 
     # Paramètres
     size = 1.0 # mètres = resolution from raster
     _size = give_name_resolution_raster(size)
 
-    try :
-        # Pour tester ce fichier de création de raster colorisé par classe après une interpolation
-        input_las = sys.argv[1:][0]
-        # Dossier dans lequel seront créés les fichiers
-        output_dir = sys.argv[1:][1]
-        # Choice of interpolation method : Laplace or TINlinear
-        interpMETHOD = sys.argv[1:][2].lower()
-        if interpMETHOD == "laplace":
-            interpMETHOD = "Laplace"
-        elif interpMETHOD =="tinlinear":
-            interpMETHOD = "TINlinear"
-        else :
-            log.critical("Wrong interpolation method : choose between Laplace method and TINlinear method")
-            sys.exit()
-    except IndexError :
-        log.critical("IndexError : Wrong number of argument : 3 expected (las path, destination folder, interpolation method)")
-        sys.exit()
+    # Get las file, output directory and interpolation method
+    args = parse_args()
+    input_las = args.input_las
+    output_dir = args.output_dir
+    interMETHOD = args.interpMETHOD
 
     # Complete path
     output_dir = os.path.join(output_dir, "")

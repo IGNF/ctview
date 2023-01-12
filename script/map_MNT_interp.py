@@ -7,6 +7,7 @@ import tools
 import utils_pdal
 from parameter import dico_param
     # Library
+import sys
 import pdal
 from osgeo import gdal
 import numpy as np
@@ -23,6 +24,7 @@ import gen_LUT_X_cycle
 import shutil
 from tqdm import tqdm
 import logging as log
+import argparse
 
 # PARAMETERS
 
@@ -354,32 +356,28 @@ def color_MNT_with_cycles(
         LUT = LUT,
     )
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-las", "--input_las")
+    parser.add_argument('-o', '--output_dir')
+    parser.add_argument("-m", "--interpMETHOD",
+                        default="Laplace")
+
+    return parser.parse_args()
 
 def main():
 
-    import sys
+    log.basicConfig(level=log.INFO)
 
     # Paramètres
     size = 1.0 # mètres = resolution from raster
     _size = give_name_resolution_raster(size)
 
-    try :
-        # Pour tester ce fichier de création de raster colorisé par classe après une interpolation
-        input_las = sys.argv[1:][0]
-        # Dossier dans lequel seront créés les fichiers
-        output_dir = sys.argv[1:][1]
-        # Choice of interpolation method : Laplace or TINlinear
-        interpMETHOD = sys.argv[1:][2].lower()
-        if interpMETHOD == "laplace":
-            interpMETHOD = "Laplace"
-        elif interpMETHOD =="tinlinear":
-            interpMETHOD = "TINlinear"
-        else :
-            log.critical("Wrong interpolation method : choose between Laplace method and TINlinear method")
-            sys.exit()
-    except IndexError :
-        log.critical("IndexError : Wrong number of argument : 3 expected (las path, destination folder, interpolation method)")
-        sys.exit()
+    # Get las file, output directory and interpolation method
+    args = parse_args()
+    input_las = args.input_las
+    output_dir = args.output_dir
+    interMETHOD = args.interpMETHOD
 
     # Complete path (exemple : "data" become "data/")
     output_dir = os.path.join(output_dir,"")
