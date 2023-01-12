@@ -7,6 +7,7 @@ import pdal
 import tools
 import sys
 import logging as log
+import os
 
 from osgeo import gdal
 from typing import Optional
@@ -78,10 +79,12 @@ def main():
         log.critical("IndexError : Wrong number of argument : 2 expected (las path, destination folder)")
         sys.exit()
 
-
+    # Clean folder
+    for filename in os.listdir(output_dir):
+        os.remove(os.path.join(output_dir, filename))
 
     input_las_name = os.path.basename(input_las)
-    input_las_name_without_extension = os.path.splitext(input_las_name[0])    # Read las
+    input_las_name_without_extension = os.path.splitext(input_las_name)[0]    # Read las
     in_points = tools.read_las(input_las)
 
     # Write raster
@@ -90,7 +93,7 @@ def main():
 
     # Fill gaps
     fillgap_raster = os.path.join(output_dir,f'{input_las_name_without_extension}_raster_fillgap.tif')
-
+   
     fill_no_data(
         src_raster=output_raster,
         dst_raster=fillgap_raster,
@@ -104,7 +107,7 @@ def main():
         input_raster=fillgap_raster,
         output_raster=color_fillgap_raster,
         )
-
+    print(color_fillgap_raster)
     # Color fill
     color_raster = os.path.join(output_dir,f'{input_las_name_without_extension}_raster_color_.tif')
     tools.color_raster_by_class_2(
@@ -114,29 +117,11 @@ def main():
 
 
 
-# TEST
 
 if __name__ == "__main__":
 
     main()
 
-
-    # # Color qui marche pas
-    # colorinterp_raster = f'{output_dir}raster2_colorinterp_{input_las[7:-4]}.tif'
-    # colorinterp_points = tools.color_points_by_class(in_points)
-    # tools.write_raster_class(colorinterp_points, colorinterp_raster)
-
-    # # Info
-    # metadata = utils_gdal.get_info_from_las(in_points)
-    # print(metadata)
-
-    # # Color
-    # color_points = tools.color_points_by_class(in_points)
-    # # Write raster
-    # output_raster_color = f'{output_dir}raster_color{input_las[7:-4]}.tif'
-    # tools.write_raster(color_points, output_raster_color)
-    # output_raster = f'{output_dir}raster_{input_las[7:-4]}.tif'
-    # tools.write_raster(in_points, output_raster)
 
 
 
