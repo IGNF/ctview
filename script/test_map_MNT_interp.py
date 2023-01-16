@@ -2,7 +2,7 @@ import os
 import shutil
 import numpy as np
 
-from map_MNT_interp import delete_folder, create_folder, filter_las_ground, write_las, las_prepare_1_file, execute_startin
+from map_MNT_interp import filter_las_ground, write_las, las_prepare_1_file, execute_startin
 
 from utils_pdal import get_class_min_max_from_las,get_info_from_las, read_las_file
 # from utils_pdal import get_stats_from_las
@@ -23,29 +23,6 @@ if os.path.exists(TEST_DIR) :
 else :
     # Create folder test if not exists
     os.makedirs(TEST_DIR)
-
-def test_create_folder(dest_dir=TEST_DIR):
-    """Verify :
-        - folders are created"""
-    # Create folders
-    create_folder(dest_dir)
-
-    assert os.path.exists(f"{dest_dir}/LAS") == True
-    assert os.path.exists(f"{dest_dir}/DTM_brut") == True
-    assert os.path.exists(f"{dest_dir}/DTM_shade") == True
-    assert os.path.exists(f"{dest_dir}/DTM_color") == True
-
-
-def test_delete_folder(dest_dir=TEST_DIR):
-    """Verify :
-        - folders are deleted"""
-    # Delete folders
-    delete_folder(dest_dir)
-
-    assert os.path.exists(f"{dest_dir}/LAS") == False
-    assert os.path.exists(f"{dest_dir}/DTM_brut") == False
-    assert os.path.exists(f"{dest_dir}/DTM_shade") == False
-    assert os.path.exists(f"{dest_dir}/DTm_color") == False
 
 
 def test_1_filter_las_ground(INPUT_DIR=DATA_DIR, filename=FILE_MUTLI_1_TO_5):
@@ -91,12 +68,12 @@ def test_write_las():
 
     filename = "Stand_ardd_Name_File_Test_IGN69.laz"
     output_filename = write_las(input_points=input_points, filename=filename, output_dir=TEST_DIR, name="")
-    output_file = TEST_DIR + "LAS/" + output_filename
+    print("filename", output_filename)
 
-    assert os.path.exists(output_file) # file created
-    assert output_file[-4:] == ".las"  # extension is las
+    assert os.path.exists(output_filename) # file created
+    assert os.path.splitext(output_filename)[1] == ".las"  # extension is las
 
-    shutil.rmtree(TEST_DIR + "LAS/")  # suppr folder /test/LAS/
+    shutil.rmtree(TEST_DIR + "LAS_ground/")  # suppr folder /test/LAS_ground/
 
 
 

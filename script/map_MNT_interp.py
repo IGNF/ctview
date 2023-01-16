@@ -6,6 +6,7 @@
 import tools
 import utils_pdal
 from parameter import dico_param
+from check_folder import dico_folder
     # Library
 import sys
 import pdal
@@ -21,50 +22,12 @@ import laspy
 import math
 from map_MNT import hillshade_from_raster, color_MNT_with_cycles
 import gen_LUT_X_cycle
-import shutil
 from tqdm import tqdm
 import logging as log
-import argparse
 
 # PARAMETERS
 
 EPSG = dico_param["EPSG"]
-
-def delete_folder(dest_dir: str):
-    """Delete the severals folders "LAS", "DTM", "DTM_shade" and "DTM_color" if not exist"""
-    # Delete folder "LAS"
-    LAS_new_dir = os.path.join(dest_dir, 'LAS')
-    if os.path.isdir(LAS_new_dir):
-        shutil.rmtree(LAS_new_dir)
-    # Delete folder "DTM"
-    DTM_brut_new_dir = os.path.join(dest_dir, 'DTM_brut')
-    if os.path.isdir(DTM_brut_new_dir):
-        shutil.rmtree(DTM_brut_new_dir)
-    # Delete folder "DTM_shade"
-    DTM_shade_new_dir = os.path.join(dest_dir, 'DTM_shade')
-    if os.path.isdir(DTM_shade_new_dir):
-        shutil.rmtree(DTM_shade_new_dir)
-    # Delete folder "DTM_color"
-    DTM_color_new_dir = os.path.join(dest_dir, 'DTM_color')
-    if os.path.isdir(DTM_color_new_dir):
-        shutil.rmtree(DTM_color_new_dir)
-
-def create_folder(dest_dir: str):
-    """Create the severals folders "LAS", "DTM", "DTM_shade" and "DTM_color" if not exist"""
-    # Create folder "LAS"
-    LAS_new_dir = os.path.join(dest_dir, 'LAS')
-    os.makedirs(LAS_new_dir, exist_ok=True)
-    # Create folder "DTM"
-    DTM_brut_new_dir = os.path.join(dest_dir, 'DTM_brut')
-    os.makedirs(DTM_brut_new_dir, exist_ok=True)
-    # Create folder "DTM_shade"
-    DTM_shade_new_dir = os.path.join(dest_dir, 'DTM_shade')
-    os.makedirs(DTM_shade_new_dir, exist_ok=True)
-    # Create folder "DTM_color"
-    DTM_color_new_dir = os.path.join(dest_dir, 'DTM_color')
-    os.makedirs(DTM_color_new_dir, exist_ok=True)
-
-
 
 
 
@@ -107,7 +70,7 @@ def write_las(input_points, filename: str, output_dir: str, name: str):
         """
     file_root = os.path.splitext(filename)[0] #filename without extension
 
-    dst = os.path.join(output_dir, 'LAS')
+    dst = os.path.join(output_dir, dico_folder["folder_LAS_ground"])
 
     os.makedirs(dst, exist_ok=True) # create directory LAS/ if not exists
 
@@ -355,16 +318,16 @@ def color_MNT_with_cycles(
         LUT = LUT,
     )
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-las", "--input_las")
-    parser.add_argument('-o', '--output_dir')
-    parser.add_argument("-m", "--interpMETHOD",
-                        default="Laplace")
 
-    return parser.parse_args()
-
-def main():
+def create_map_one_las(input_las: str, output_dir: str, interpMETHOD: str, list_c : list):
+    """
+    Create a DTM with Laplace or Linear method of interpolation. This function create a brut DTM, a shade DTM and a colored shade DTM.
+    Args :
+        input_las: las file
+        output_dir: output directory
+        interpMETHOD : method of interpolation (Laplace or TINLinear)
+        list_c: liste of number of cycles for each DTM colored. This list allows to create several DTM with differents colorisations.
+    """
 
     log.basicConfig(level=log.INFO)
 
@@ -372,19 +335,11 @@ def main():
     size = dico_param["resolution_MNT"] # mètres = resolution from raster
     _size = give_name_resolution_raster(size)
 
-    # Get las file, output directory and interpolation method
-    args = parse_args()
-    input_las = args.input_las
-    output_dir = args.output_dir
-    interpMETHOD = args.interpMETHOD
 
     # Complete path (exemple : "data" become "data/")
     output_dir = os.path.join(output_dir,"")
 
-    # Delete the severals folder LAS, DTM, DTM_shade and DTM_color if not exists
-    delete_folder(output_dir)
-    # Create the severals folder LAS, DTM, DTM_shade and DTM_color if not exists
-    create_folder(output_dir)
+
 
     # Get directory
     input_dir = os.path.dirname(input_las)
@@ -505,15 +460,13 @@ def main():
     # Colorisation
     
     log.info("Add color...")
-        
-    nb_raster_color = int(input("How many raster colorised ? : "))
 
-    for i in range(nb_raster_color) :
+    cpt = 1
 
-        cycle = int(input(f"Raster {i+1}/{nb_raster_color} : how many cycles ? : "))
+    for cycle in list_c :
         
         
-        log.info(f"Build raster {i+1}/{nb_raster_color}...")
+        log.info(f"Build raster {cpt}/{len(list_c)}...")
 
         color_MNT_with_cycles(
         las_input_file=input_las_name,
@@ -522,7 +475,7 @@ def main():
         nb_cycle=cycle
         )
 
-        log.info("Success.\n")
+        cpt += 1
 
     log.info("End.")
 
