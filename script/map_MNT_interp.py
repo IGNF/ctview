@@ -118,8 +118,7 @@ def write_las(input_points, filename: str, output_dir: str, name: str):
     pipeline = pdal.Writer.las(filename = FileOutput, a_srs=f"EPSG:{EPSG}").pipeline(input_points)
     pipeline.execute()
 
-    NameFileOutput = "_".join([filename[:-4], f'{name}.las'])
-    return NameFileOutput
+    return FileOutput
 
 def write_las2(pts):
     information = {}
@@ -253,7 +252,7 @@ def write_geotiff_withbuffer(raster, origin, size, output_file):
         raster(array) : Z interpolation
         origin(list): coordinate location of the relative origin (bottom left)
         size (float): raster cell size
-        fpath(str): target folder "_tmp"
+        output_file (str) : 
 
     Returns:
         bool: fpath
@@ -370,14 +369,14 @@ def main():
     log.basicConfig(level=log.INFO)
 
     # Paramètres
-    size = 1.0 # mètres = resolution from raster
+    size = dico_param["resolution_MNT"] # mètres = resolution from raster
     _size = give_name_resolution_raster(size)
 
     # Get las file, output directory and interpolation method
     args = parse_args()
     input_las = args.input_las
     output_dir = args.output_dir
-    interMETHOD = args.interpMETHOD
+    interpMETHOD = args.interpMETHOD
 
     # Complete path (exemple : "data" become "data/")
     output_dir = os.path.join(output_dir,"")
@@ -431,8 +430,10 @@ def main():
 
     
     log.info("\n           Extraction liste des coordonnées du nuage de points...")
+    log.info(f"Ré-échantillonnage à {size} mètres...")
     # Extraction coord nuage de points
-    extents_calc, res_calc, origin_calc = las_prepare_1_file(input_file=input_las, size=size)
+    log.info(f"input : {FileLasGround}")
+    extents_calc, res_calc, origin_calc = las_prepare_1_file(input_file=FileLasGround, size=size)
     
     log.info(f"\nExtents {extents_calc}")
     log.info(f"Resolution in coordinates : {res_calc}")
@@ -479,7 +480,7 @@ def main():
     raster_dtm_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, output_file= os.path.join(os.path.join(output_dir, "DTM_brut"), input_las_name[:-4] + _size + f'_{interpMETHOD}.tif') )
 
     
-    log.info(f"{output_dir}{_size}_{interpMETHOD}.tif")
+    log.info(f"{output_dir}{raster_dtm_interp}")
     log.info("\nBuild las...")
     # LAS points sol interpolés
     las_dtm_interp = write_las(input_points=ground_pts, filename=input_las_name ,output_dir=output_dir, name="ground_interp")
@@ -492,7 +493,7 @@ def main():
     log.info("\n")
 
     dtm_file = raster_dtm_interp
-    dtm_hs_file = os.path.join(os.path.join(output_dir,"DTM_shade"),f"{input_las_name[:-4]}_DTM_hillshade.tif")
+    dtm_hs_file = os.path.join(os.path.join(output_dir,"DTM_shade"),f"{input_las_name[:-4]}_DTM{_size}_hillshade.tif")
     hillshade_from_raster(
         input_raster = dtm_file,
         output_raster = dtm_hs_file,
