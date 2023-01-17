@@ -26,11 +26,6 @@ dir_folder3 = os.path.join(TEST_DIR, folder3)
 dir_folder4 = os.path.join(TEST_DIR, folder4)
 
 
-
-
-
-
-
 def test_create_folder(dest_dir=TEST_DIR):
     """Verify :
         - folders are created"""

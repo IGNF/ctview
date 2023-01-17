@@ -49,6 +49,7 @@ def delete_folder(dest_dir: str):
     if os.path.isdir(DSM_color_new_dir):
         shutil.rmtree(DSM_color_new_dir)
 
+
 def create_folder(dest_dir: str):
     """Create the severals folders "LAS", "DSM", "DSM_shade" and "DSM_color" if not exist"""
     # Create folder "LAS"
@@ -63,9 +64,6 @@ def create_folder(dest_dir: str):
     # Create folder "DSM_color"
     DSM_color_new_dir = os.path.join(dest_dir, 'DSM_color')
     os.makedirs(DSM_color_new_dir, exist_ok=True)
-
-
-
 
 
 def filter_las_ground(input_dir: str, filename: str):
@@ -97,6 +95,7 @@ def filter_las_ground(input_dir: str, filename: str):
     pipeline.execute()
     return pipeline.arrays[0]
 
+
 def write_las(input_points, filename: str, output_dir: str, name: str):
     """Write a las file
     Args:
@@ -121,6 +120,7 @@ def write_las(input_points, filename: str, output_dir: str, name: str):
 
     return FileOutput
 
+
 def write_las2(pts):
     information = {}
     information = {
@@ -137,6 +137,7 @@ def write_las2(pts):
     ground = json.dumps(information, sort_keys=True, indent=4)
     pipeline = pdal.Pipeline(ground)
     pipeline.execute()
+
 
 def las_prepare_1_file(input_file: str, size: float):
     """Takes the filepath to an input LAS (crop) file and the desired output raster cell size. Reads the LAS file and outputs
@@ -171,6 +172,7 @@ def las_prepare_1_file(input_file: str, size: float):
               np.mean(extents[1]) - (size / 2) * res[1]]
     return in_np, res, origin
 
+
 def execute_startin(pts, res, origin, size, method):
     """Takes the grid parameters and the ground points. Interpolates
     either using the TIN-linear or the Laplace method. Uses a -9999 no-data value. 
@@ -186,8 +188,6 @@ def execute_startin(pts, res, origin, size, method):
     Returns:
         ras(list): Z interpolation
     """
-    
-
     # # Startin 
     tin = startinpy.DT(); tin.insert(pts) # # Insert each points in the array of points (a 2D array)
     ras = np.zeros([res[1], res[0]]) # # returns a new array of given shape and type, filled with zeros
@@ -203,20 +203,15 @@ def execute_startin(pts, res, origin, size, method):
     pbar = tqdm(total=100, desc="Progression interpolation")
     size_res = res[1]*res[0]
     for y in np.arange(origin[1], origin[1] + res[1] * size, size):
-        # log.info("y",y, "size", size)
-        # log.info("arange",len(np.arange(origin[1], origin[1] + res[1] * size, size)),np.arange(origin[1], origin[1] + res[1] * size, size))
+
         xi = 0
         for x in np.arange(origin[0], origin[0] + res[0] * size, size):
-            # log.info("x",x, "size", size)
-            # log.info("arange",len(np.arange(origin[0], origin[0] + res[0] * size, size)),np.arange(origin[0], origin[0] + res[0] * size, size))
-            # log.info("[x,y]", x, y)
+
             ch = tin.is_inside_convex_hull(x, y) # check is the point [x, y] located inside  the convex hull of the DT
             if ch == False:
                 ras[yi, xi] = -9999 # no-data value
             else:
                 tri = tin.locate(x, y) # locate the triangle containing the point [x,y]. An error is thrown if it is outside the convex hull
-                # log.info("TRI",tri)
-
 
                 if (tri.shape!=()) and (0 not in tri):
                     ras[yi, xi] = interpolant(x, y)
@@ -228,18 +223,9 @@ def execute_startin(pts, res, origin, size, method):
         
         if (xi*yi * 100 / size_res) in [i for i in range(100)] :
             pbar.update( 1 )
-        # log.info(xi*yi * 100 / size_res )
-
 
     pbar.close()
     return ras
-
-
-
-
- 
-
-
 
 
 def write_geotiff_withbuffer(raster, origin, size, output_file):
@@ -273,6 +259,7 @@ def write_geotiff_withbuffer(raster, origin, size, output_file):
             out_file.write(raster.astype(rasterio.float32), 1)
     return output_file
 
+
 def get_origin(las_input_file: str):
     """
     Returns the North-West coordinates of the las.
@@ -290,6 +277,7 @@ def get_origin(las_input_file: str):
     """
     # réécrire plus proprement allant chercher dans les métadonnées    
     return int(las_input_file[11:15]), int(las_input_file[16:20]), str(las_input_file[21:25]), str(las_input_file[26:31])
+
 
 def give_name_resolution_raster(size):
     """
@@ -310,10 +298,6 @@ def give_name_resolution_raster(size):
     else:
         _size = str(size)
     return _size
-
-
-
-    
 
 
 def color_MNT_with_cycles(
@@ -342,7 +326,6 @@ def color_MNT_with_cycles(
     # Path MNT colorised
     raster_MNT_color_file = os.path.join(os.path.join(output_dir,'DSM_color'),f'{las_input_file[:-4]}_DSM_hillshade_color{nb_cycle}c.tif')
 
-
     log.info("MNT color : "+raster_MNT_color_file)
     log.info("(2/2) Colorise raster.")
 
@@ -352,6 +335,7 @@ def color_MNT_with_cycles(
         output_raster = raster_MNT_color_file,
         LUT = LUT,
     )
+
 
 def cluster(input_points: str):
 
@@ -364,11 +348,13 @@ def cluster(input_points: str):
     pipeline.execute()
     return pipeline.arrays[0]
 
+
 def sample(input_points):
     """Filtre points closest to 0.5m"""
     pipeline = pdal.Filter.sample(radius="0.5").pipeline(input_points)
     pipeline.execute()
     return pipeline.arrays[0]
+
 
 def resample(input_las: str, res: float, output_filename: str):
     """ Resample with a given resolution.
@@ -386,6 +372,7 @@ def resample(input_las: str, res: float, output_filename: str):
     )
     pipeline.execute()
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-las", "--input_las")
@@ -394,6 +381,7 @@ def parse_args():
                         default="Laplace")
 
     return parser.parse_args()
+
 
 def main():
 
@@ -422,16 +410,12 @@ def main():
     # Get filename without extension
     input_las_name = os.path.basename(input_las)
 
-
-
-
     # Fichier de sortie MNT brut
     out_DSM_raster = os.path.join(output_dir,f"{input_las_name}_DSM.tif")
 
     # # Extraction infos du las
     # origin_x, origin_y, ProjSystem, AltiSystem = get_origin(input_las_name)
 
-    # 
     # log.info(f"Dalle name : {input_las_name}")
 
     # log.info(f"North-West X coordinate : {origin_x} km")
@@ -439,7 +423,6 @@ def main():
     # log.info(f"System of projection : {ProjSystem}")
     # log.info(f"Altimetric system : {AltiSystem}")
 
-    
     # log.info("Ré-échantillonnage à 0.5 mètres...")
     # FileLas_resampleResMNS = os.path.join(os.path.join(output_dir, 'LAS'), f'{os.path.splitext(input_las_name)[0]}{_size}.las')
     # print("in_las : ", input_las)
@@ -453,10 +436,8 @@ def main():
 
     # sys.exit()
 
-
     log.info(f"Interpolation méthode de {interpMETHOD}...")
 
-    
     log.info("Extraction liste des coordonnées du nuage de points...")
     log.info(f"Ré-échantillonnage à {size} mètres...")
     # Name of outputfile
@@ -468,20 +449,14 @@ def main():
     log.info(f"Resolution in coordinates : {res_calc}")
     log.info(f"Loc of the relative origin : {origin_calc}")
 
-
-
-    
     log.info("           Interpolation...")
     # Interpole avec la méthode de Laplace ou tin linéaire
     resolution = res_calc # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
     origine = origin_calc
     ras = execute_startin(pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD)
-    
 
-    
     log.info("Tableau d'interpolation : ")
-
-        
+  
     fileRas = f"{output_dir}ras.txt"
 
     log.info("Write in " + fileRas)
@@ -516,7 +491,6 @@ def main():
     # TODO : numpy array ras must have 3 dimensions to be considered as points_cloud for write_las function
     #las_DSM_interp = write_las(input_points=ras, filename=input_las_name ,output_dir=output_dir, name="ground_interp")
 
-
     # Ajout ombrage
     
     log.info("Add hillshade...")
@@ -530,7 +504,6 @@ def main():
         output_raster = DSM_hs_file,
     )
 
-    
     log.info("Success.")
 
     # Colorisation
@@ -542,7 +515,6 @@ def main():
     for i in range(nb_raster_color) :
 
         cycle = int(input(f"Raster {i+1}/{nb_raster_color} : how many cycles ? : "))
-        
         
         log.info(f"Build raster {i+1}/{nb_raster_color}...")
 

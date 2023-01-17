@@ -28,8 +28,6 @@ import logging as log
 
 EPSG = dico_param["EPSG"]
 
-
-
 def filter_las_ground(input_dir: str, filename: str):
     """ Reads the LAS file and filter only grounds from LIDAR.
 
@@ -59,6 +57,7 @@ def filter_las_ground(input_dir: str, filename: str):
     pipeline.execute()
     return pipeline.arrays[0]
 
+
 def write_las(input_points, filename: str, output_dir: str, name: str):
     """Write a las file
     Args:
@@ -82,6 +81,7 @@ def write_las(input_points, filename: str, output_dir: str, name: str):
 
     return FileOutput
 
+
 def write_las2(pts):
     information = {}
     information = {
@@ -99,6 +99,7 @@ def write_las2(pts):
     log.info(ground)
     pipeline = pdal.Pipeline(ground)
     pipeline.execute()
+
 
 def las_prepare_1_file(input_file: str, size: float):
     """Takes the filepath to an input LAS (crop) file and the desired output raster cell size. Reads the LAS file and outputs
@@ -133,6 +134,7 @@ def las_prepare_1_file(input_file: str, size: float):
               np.mean(extents[1]) - (size / 2) * res[1]]
     return in_np, res, origin
 
+
 def execute_startin(pts, res, origin, size, method):
     """Takes the grid parameters and the ground points. Interpolates
     either using the TIN-linear or the Laplace method. Uses a -9999 no-data value. 
@@ -148,8 +150,6 @@ def execute_startin(pts, res, origin, size, method):
     Returns:
         ras(list): Z interpolation
     """
-    
-
     # # Startin 
     tin = startinpy.DT(); tin.insert(pts) # # Insert each points in the array of points (a 2D array)
     ras = np.zeros([res[1], res[0]]) # # returns a new array of given shape and type, filled with zeros
@@ -165,20 +165,15 @@ def execute_startin(pts, res, origin, size, method):
     pbar = tqdm(total=100, desc="Progression interpolation")
     size_res = res[1]*res[0]
     for y in np.arange(origin[1], origin[1] + res[1] * size, size):
-        # print("y",y, "size", size)
-        # print("arange",len(np.arange(origin[1], origin[1] + res[1] * size, size)),np.arange(origin[1], origin[1] + res[1] * size, size))
+
         xi = 0
         for x in np.arange(origin[0], origin[0] + res[0] * size, size):
-            # print("x",x, "size", size)
-            # print("arange",len(np.arange(origin[0], origin[0] + res[0] * size, size)),np.arange(origin[0], origin[0] + res[0] * size, size))
-            # print("[x,y]", x, y)
+
             ch = tin.is_inside_convex_hull(x, y) # check is the point [x, y] located inside  the convex hull of the DT
             if ch == False:
                 ras[yi, xi] = -9999 # no-data value
             else:
                 tri = tin.locate(x, y) # locate the triangle containing the point [x,y]. An error is thrown if it is outside the convex hull
-                # print("\n\nTRI",tri)
-
 
                 if (tri.shape!=()) and (0 not in tri):
                     ras[yi, xi] = interpolant(x, y)
@@ -190,18 +185,9 @@ def execute_startin(pts, res, origin, size, method):
         
         if (xi*yi * 100 / size_res) in [i for i in range(100)] :
             pbar.update( 1 )
-        # print(xi*yi * 100 / size_res )
-
 
     pbar.close()
     return ras
-
-
-
-
- 
-
-
 
 
 def write_geotiff_withbuffer(raster, origin, size, output_file):
@@ -235,6 +221,7 @@ def write_geotiff_withbuffer(raster, origin, size, output_file):
             out_file.write(raster.astype(rasterio.float32), 1)
     return output_file
 
+
 def get_origin(las_input_file: str):
     """
     Returns the North-West coordinates of the las.
@@ -252,6 +239,7 @@ def get_origin(las_input_file: str):
     """
     # réécrire plus proprement allant chercher dans les métadonnées    
     return int(las_input_file[11:15]), int(las_input_file[16:20]), str(las_input_file[21:25]), str(las_input_file[26:31])
+
 
 def give_name_resolution_raster(size):
     """
@@ -285,7 +273,6 @@ def hillshade_from_raster(
         )
     
 
-
 def color_MNT_with_cycles(
     las_input_file: str,
     output_dir: str,
@@ -298,9 +285,7 @@ def color_MNT_with_cycles(
         file_las : str : points cloud
         file_MNT : str : MNT corresponding to the points cloud
         nb_cycle : int : the number of cycle that determine the LUT
-    """
-
-    
+    """ 
     log.info("Generate MNT colorised :")
     log.info("(1/2) Generate LUT.")
     # Create LUT
@@ -313,8 +298,6 @@ def color_MNT_with_cycles(
     # Path MNT colorised
     raster_MNT_color_file = os.path.join(os.path.join(output_dir,'DTM_color'),f'{las_input_file[:-4]}_DTM_hillshade_color{nb_cycle}c.tif')
 
-
-    
     log.info("MNT color : "+raster_MNT_color_file)
     log.info("(2/2) Colorise raster.")
 
@@ -335,18 +318,14 @@ def create_map_one_las(input_las: str, output_dir: str, interpMETHOD: str, list_
         interpMETHOD : method of interpolation (Laplace or TINLinear)
         list_c: liste of number of cycles for each DTM colored. This list allows to create several DTM with differents colorisations.
     """
-
     log.basicConfig(level=log.INFO)
 
     # Paramètres
     size = dico_param["resolution_MNT"] # meter = resolution from raster
     _size = give_name_resolution_raster(size)
 
-
     # Complete path (exemple : "data" become "data/")
     output_dir = os.path.join(output_dir,"")
-
-
 
     # Get directory
     input_dir = os.path.dirname(input_las)
@@ -355,24 +334,19 @@ def create_map_one_las(input_las: str, output_dir: str, interpMETHOD: str, list_
     input_las_name = os.path.basename(input_las)
     input_las_name = f"{utils_pdal.stem(input_las)}.la{input_las[-1]}"
 
-
-
-
     # Fichier de sortie MNT brut
     out_dtm_raster = f"{output_dir}{input_las_name}_DTM.tif"
 
     # # Extraction infos du las
     # origin_x, origin_y, ProjSystem, AltiSystem = get_origin(input_las_name)
 
-    # 
     # log.info(f"Dalle name : {input_las_name}")
 
     # log.info(f"North-West X coordinate : {origin_x} km")
     # log.info(f"North-West Y coordinate : {origin_y} km")
     # log.info(f"System of projection : {ProjSystem}")
     # log.info(f"Altimetric system : {AltiSystem}")
-
-    
+ 
     log.info("Filtering ground and virtual points...")
     # Filtre les points sol de classif 2 et 66
     # tools.filter_las_version2(las,las_pts_ground)
@@ -380,16 +354,11 @@ def create_map_one_las(input_las: str, output_dir: str, interpMETHOD: str, list_
         input_dir = input_dir,
         filename = input_las_name)
 
-    
     log.info("Build las filtered...")
     # LAS points sol non interpolés
     FileLasGround = write_las(input_points=ground_pts, filename=input_las_name , output_dir=output_dir, name="ground")
 
-
-
-    
     log.info(f"Interpolation method : {interpMETHOD}")
-
     
     log.info(f"Re-sampling : resolution {size} meter...")
     # Extraction coord points cloud
@@ -400,9 +369,6 @@ def create_map_one_las(input_las: str, output_dir: str, interpMETHOD: str, list_
     log.debug(f"Resolution in coordinates : {res_calc}")
     log.debug(f"Loc of the relative origin : {origin_calc}")
 
-
-
-    
     log.info("Begin Interpolation...")
     # Interpolation using Laplace or tin linear method
     resolution = res_calc # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
@@ -410,7 +376,6 @@ def create_map_one_las(input_las: str, output_dir: str, interpMETHOD: str, list_
     ras = execute_startin(pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD)
     log.info("End interpolation.")
 
-    
     log.debug("Tableau d'interpolation : ")
     log.debug(ras)
 
@@ -419,7 +384,6 @@ def create_map_one_las(input_las: str, output_dir: str, interpMETHOD: str, list_
     raster_dtm_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, output_file= os.path.join(os.path.join(output_dir, "DTM_brut"), input_las_name[:-4] + _size + f'_{interpMETHOD}.tif') )
   
     log.debug(os.path.join(output_dir, raster_dtm_interp))
-
 
     # Add hillshade
     
@@ -442,7 +406,6 @@ def create_map_one_las(input_las: str, output_dir: str, interpMETHOD: str, list_
 
     for cycle in list_c :
         
-        
         log.info(f"{cpt}/{len(list_c)}...")
 
         color_MNT_with_cycles(
@@ -455,6 +418,7 @@ def create_map_one_las(input_las: str, output_dir: str, interpMETHOD: str, list_
         cpt += 1
 
     log.debug("End DTM.")
+
 
 if __name__ == '__main__':
     

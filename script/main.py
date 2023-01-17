@@ -38,7 +38,6 @@ def main():
         print("Error in -c argument. Integer expected for each element.")
         sys.exit()
     
-    
     # Create output directory if not exist
     os.makedirs(out_dir, exist_ok=True)
 
@@ -49,7 +48,6 @@ def main():
     except TypeError :
         log.error("Output directory is None. String expected.")
   
-
     # Scan las/laz file from input directory
     list_las = []
     for f in os.listdir(in_dir) :
@@ -61,7 +59,6 @@ def main():
     log.info(f"{len(list_las)} las/laz founded :")
     for f in list_las :
         log.info(os.path.basename(f))
-
 
     # Scan las/laz file from input directory
     for f in list_las :
