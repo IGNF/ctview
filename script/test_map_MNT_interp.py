@@ -41,6 +41,7 @@ def test_1_filter_las_ground(INPUT_DIR=DATA_DIR, filename=FILE_MUTLI_1_TO_5):
 
     assert isinstance(out_filter_ground, np.ndarray) # type is array
 
+
 def test_2_filter_las_ground(INPUT_DIR=DATA_DIR, filename=FILE_MUTLI_65_TO_66):
     """
     Input :
@@ -56,6 +57,7 @@ def test_2_filter_las_ground(INPUT_DIR=DATA_DIR, filename=FILE_MUTLI_65_TO_66):
         assert p[8] == 66 # Classification==66
 
     assert isinstance(out_filter_ground, np.ndarray) # type is array
+
 
 def test_write_las():
     """
@@ -76,7 +78,6 @@ def test_write_las():
     shutil.rmtree(TEST_DIR + "LAS_ground/")  # suppr folder /test/LAS_ground/
 
 
-
 def test_las_prepare_1_file():
     """
     Verify :
@@ -90,7 +91,6 @@ def test_las_prepare_1_file():
     assert isinstance(extends, np.ndarray) # type is array
     assert isinstance(resolution, list) and len(resolution)==2 # type is list and len==2
     assert isinstance(origin, list) and len(resolution)==2 # type is list and len==2
-
 
 
 def test_execute_startin():
@@ -111,6 +111,7 @@ def test_execute_startin():
         method="Laplace"
     )
     assert isinstance(ras, np.ndarray) # type is array
+
 
 def test_execute_startin_2():
     """
