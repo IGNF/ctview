@@ -23,4 +23,3 @@ def create_folder(dest_dir: str):
     for folder in dico_folder :
         folder_path = os.path.join(dest_dir, dico_folder[folder])
         os.makedirs(folder_path, exist_ok=True) # create folder if not exist
-

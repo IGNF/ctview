@@ -20,7 +20,6 @@ from multiprocessing import Pool, cpu_count
 import json
 import laspy
 import math
-from map_MNT import hillshade_from_raster, color_MNT_with_cycles
 import gen_LUT_X_cycle
 from tqdm import tqdm
 import logging as log
@@ -55,7 +54,7 @@ def filter_las_ground(input_dir: str, filename: str):
         ]
     }
     ground = json.dumps(information, sort_keys=True, indent=4)
-    #print(ground)
+    log.debug(f"ground :{ground}")
     pipeline = pdal.Pipeline(ground)
     pipeline.execute()
     return pipeline.arrays[0]
@@ -74,10 +73,10 @@ def write_las(input_points, filename: str, output_dir: str, name: str):
 
     os.makedirs(dst, exist_ok=True) # create directory LAS/ if not exists
 
-    log.info("dst : "+dst)
+    log.debug("dst : "+dst)
     FileOutput = os.path.join(dst, f'{file_root}_{name}.las')
     
-    log.info("filename : "+FileOutput)
+    log.debug("filename : "+FileOutput)
     pipeline = pdal.Writer.las(filename = FileOutput, a_srs=f"EPSG:{EPSG}").pipeline(input_points)
     pipeline.execute()
 
@@ -275,7 +274,15 @@ def give_name_resolution_raster(size):
     return _size
 
 
-
+def hillshade_from_raster(
+    input_raster: str, output_raster: str
+):
+    """Add hillshade to raster"""
+    gdal.DEMProcessing(
+        destName=output_raster,
+        srcDS=input_raster,
+        processing = "hillshade",
+        )
     
 
 
@@ -332,7 +339,7 @@ def create_map_one_las(input_las: str, output_dir: str, interpMETHOD: str, list_
     log.basicConfig(level=log.INFO)
 
     # Paramètres
-    size = dico_param["resolution_MNT"] # mètres = resolution from raster
+    size = dico_param["resolution_MNT"] # meter = resolution from raster
     _size = give_name_resolution_raster(size)
 
 
@@ -366,7 +373,7 @@ def create_map_one_las(input_las: str, output_dir: str, interpMETHOD: str, list_
     # log.info(f"Altimetric system : {AltiSystem}")
 
     
-    log.info("\nFiltrage points sol et virtuels...")
+    log.info("Filtering ground and virtual points...")
     # Filtre les points sol de classif 2 et 66
     # tools.filter_las_version2(las,las_pts_ground)
     ground_pts = filter_las_ground(
@@ -374,78 +381,49 @@ def create_map_one_las(input_las: str, output_dir: str, interpMETHOD: str, list_
         filename = input_las_name)
 
     
-    log.info("Build las...")
+    log.info("Build las filtered...")
     # LAS points sol non interpolés
     FileLasGround = write_las(input_points=ground_pts, filename=input_las_name , output_dir=output_dir, name="ground")
 
 
 
     
-    log.info(f"\nInterpolation méthode de {interpMETHOD}...")
+    log.info(f"Interpolation method : {interpMETHOD}")
 
     
-    log.info("\n           Extraction liste des coordonnées du nuage de points...")
-    log.info(f"Ré-échantillonnage à {size} mètres...")
-    # Extraction coord nuage de points
-    log.info(f"input : {FileLasGround}")
+    log.info(f"Re-sampling : resolution {size} meter...")
+    # Extraction coord points cloud
+    log.debug(f"input : {FileLasGround}")
     extents_calc, res_calc, origin_calc = las_prepare_1_file(input_file=FileLasGround, size=size)
     
-    log.info(f"\nExtents {extents_calc}")
-    log.info(f"Resolution in coordinates : {res_calc}")
-    log.info(f"Loc of the relative origin : {origin_calc}")
+    log.debug(f"Extents {extents_calc}")
+    log.debug(f"Resolution in coordinates : {res_calc}")
+    log.debug(f"Loc of the relative origin : {origin_calc}")
 
 
 
     
-    log.info("\n           Interpolation...")
-    # Interpole avec la méthode de Laplace ou tin linéaire
+    log.info("Begin Interpolation...")
+    # Interpolation using Laplace or tin linear method
     resolution = res_calc # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
     origine = origin_calc
     ras = execute_startin(pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD)
-    
+    log.info("End interpolation.")
 
     
-    log.info("\nTableau d'interpolation : ")
+    log.debug("Tableau d'interpolation : ")
+    log.debug(ras)
 
-        
-    fileRas = f"{output_dir}ras.txt"
-
-    log.info("\nWrite in " + fileRas)
-
-    fileR = open(fileRas, "w")
-
-    l,c = ras.shape
-    s = ''
-    for i in range(l):
-        ligne = ""
-        for j in range(c):
-            ELEMENTras = ras[i,j]
-            ligne += f"{round(ELEMENTras,5) : >20}"
-        s += ligne
-        s += '\n'  
-
-    fileR.write(s)
-    fileR.close()
-
-    log.info("End write.")
-    log.info("\n numpy.array post-interpolation")
-    log.info(ras)
-    log.info("\nBuild raster ie DTM brut...")
+    log.info("Build DTM brut...")
     
     raster_dtm_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, output_file= os.path.join(os.path.join(output_dir, "DTM_brut"), input_las_name[:-4] + _size + f'_{interpMETHOD}.tif') )
+  
+    log.debug(os.path.join(output_dir, raster_dtm_interp))
 
+
+    # Add hillshade
     
-    log.info(f"{output_dir}{raster_dtm_interp}")
-    log.info("\nBuild las...")
-    # LAS points sol interpolés
-    las_dtm_interp = write_las(input_points=ground_pts, filename=input_las_name ,output_dir=output_dir, name="ground_interp")
-
-
-    # Ajout ombrage
-    
-    log.info("\nAdd hillshade...")
-    log.info(raster_dtm_interp)
-    log.info("\n")
+    log.info("Build DTM hillshade...")
 
     dtm_file = raster_dtm_interp
     dtm_hs_file = os.path.join(os.path.join(output_dir,"DTM_shade"),f"{input_las_name[:-4]}_DTM{_size}_hillshade.tif")
@@ -454,19 +432,18 @@ def create_map_one_las(input_las: str, output_dir: str, interpMETHOD: str, list_
         output_raster = dtm_hs_file,
     )
 
-    
-    log.info("Success.\n")
+    log.debug(os.path.join(output_dir, dtm_hs_file))
 
-    # Colorisation
+    # Add color
     
-    log.info("Add color...")
+    log.info("Build DTM hillshade color")
 
     cpt = 1
 
     for cycle in list_c :
         
         
-        log.info(f"Build raster {cpt}/{len(list_c)}...")
+        log.info(f"{cpt}/{len(list_c)}...")
 
         color_MNT_with_cycles(
         las_input_file=input_las_name,
@@ -477,7 +454,7 @@ def create_map_one_las(input_las: str, output_dir: str, interpMETHOD: str, list_
 
         cpt += 1
 
-    log.info("End.")
+    log.debug("End DTM.")
 
 if __name__ == '__main__':
     
