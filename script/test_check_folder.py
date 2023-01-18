@@ -4,12 +4,12 @@ import shutil
 from check_folder import delete_folder, create_folder
 
 # PATH TO FOLDER "TEST"
-TEST_DIR = os.path.join("..","test")
+TEST_DIR = os.path.join("..", "test")
 
-if os.path.exists(TEST_DIR) :
+if os.path.exists(TEST_DIR):
     # Clean folder test if exists
     shutil.rmtree(TEST_DIR)
-else :
+else:
     # Create folder test if not exists
     os.makedirs(TEST_DIR)
 
@@ -28,7 +28,7 @@ dir_folder4 = os.path.join(TEST_DIR, folder4)
 
 def test_create_folder(dest_dir=TEST_DIR):
     """Verify :
-        - folders are created"""
+    - folders are created"""
     # Create folders
     create_folder(dest_dir)
 
@@ -40,7 +40,7 @@ def test_create_folder(dest_dir=TEST_DIR):
 
 def test_delete_folder(dest_dir=TEST_DIR):
     """Verify :
-        - folders are deleted"""
+    - folders are deleted"""
     # Delete folders
     delete_folder(dest_dir)
 

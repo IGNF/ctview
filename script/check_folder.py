@@ -11,15 +11,17 @@ dico_folder = {
     "folder_density_color" : "DENS_COL"
 }
 
+
 def delete_folder(dest_dir: str):
     """Delete folders from dictionnary dico_folder if exist"""
     for folder in dico_folder:
-        folder_path = os.path.join(dest_dir,dico_folder[folder])
-        if os.path.isdir(folder_path): # if exist
-            shutil.rmtree(folder_path) # delete
+        folder_path = os.path.join(dest_dir, dico_folder[folder])
+        if os.path.isdir(folder_path):  # if exist
+            shutil.rmtree(folder_path)  # delete
+
 
 def create_folder(dest_dir: str):
     """Create folders from dictionnary dico_folder if not exist"""
-    for folder in dico_folder :
+    for folder in dico_folder:
         folder_path = os.path.join(dest_dir, dico_folder[folder])
         os.makedirs(folder_path, exist_ok=True) # create folder if not exist
