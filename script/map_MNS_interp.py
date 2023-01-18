@@ -2,11 +2,12 @@
 
 # IMPORT
 
-    # File
+# File
 import tools
 import utils_pdal
 from parameter import dico_param
-    # Library
+
+# Library
 import sys
 import pdal
 from osgeo import gdal
@@ -30,22 +31,23 @@ import argparse
 
 EPSG = dico_param["EPSG"]
 
+
 def delete_folder(dest_dir: str):
     """Delete the severals folders "LAS", "DSM", "DSM_shade" and "DSM_color" if not exist"""
     # Delete folder "LAS"
-    LAS_new_dir = os.path.join(dest_dir, 'LAS')
+    LAS_new_dir = os.path.join(dest_dir, "LAS")
     if os.path.isdir(LAS_new_dir):
         shutil.rmtree(LAS_new_dir)
     # Delete folder "DSM"
-    DSM_brut_new_dir = os.path.join(dest_dir, 'DSM_brut')
+    DSM_brut_new_dir = os.path.join(dest_dir, "DSM_brut")
     if os.path.isdir(DSM_brut_new_dir):
         shutil.rmtree(DSM_brut_new_dir)
     # Delete folder "DSM_shade"
-    DSM_shade_new_dir = os.path.join(dest_dir, 'DSM_shade')
+    DSM_shade_new_dir = os.path.join(dest_dir, "DSM_shade")
     if os.path.isdir(DSM_shade_new_dir):
         shutil.rmtree(DSM_shade_new_dir)
     # Delete folder "DSM_color"
-    DSM_color_new_dir = os.path.join(dest_dir, 'DSM_color')
+    DSM_color_new_dir = os.path.join(dest_dir, "DSM_color")
     if os.path.isdir(DSM_color_new_dir):
         shutil.rmtree(DSM_color_new_dir)
 
@@ -53,21 +55,21 @@ def delete_folder(dest_dir: str):
 def create_folder(dest_dir: str):
     """Create the severals folders "LAS", "DSM", "DSM_shade" and "DSM_color" if not exist"""
     # Create folder "LAS"
-    LAS_new_dir = os.path.join(dest_dir, 'LAS')
+    LAS_new_dir = os.path.join(dest_dir, "LAS")
     os.makedirs(LAS_new_dir, exist_ok=True)
     # Create folder "DSM"
-    DSM_brut_new_dir = os.path.join(dest_dir, 'DSM_brut')
+    DSM_brut_new_dir = os.path.join(dest_dir, "DSM_brut")
     os.makedirs(DSM_brut_new_dir, exist_ok=True)
     # Create folder "DSM_shade"
-    DSM_shade_new_dir = os.path.join(dest_dir, 'DSM_shade')
+    DSM_shade_new_dir = os.path.join(dest_dir, "DSM_shade")
     os.makedirs(DSM_shade_new_dir, exist_ok=True)
     # Create folder "DSM_color"
-    DSM_color_new_dir = os.path.join(dest_dir, 'DSM_color')
+    DSM_color_new_dir = os.path.join(dest_dir, "DSM_color")
     os.makedirs(DSM_color_new_dir, exist_ok=True)
 
 
 def filter_las_ground(input_dir: str, filename: str):
-    """ Reads the LAS file and filter only grounds from LIDAR.
+    """Reads the LAS file and filter only grounds from LIDAR.
 
     Args:
         input_dir (str) : directory of projet who contains LIDAR (Ex. "data")
@@ -76,21 +78,21 @@ def filter_las_ground(input_dir: str, filename: str):
     input_file = os.path.join(input_dir, filename)
     information = {}
     information = {
-    "pipeline": [
+        "pipeline": [
             {
-                "type":"readers.las",
-                "filename":input_file,
+                "type": "readers.las",
+                "filename": input_file,
                 "override_srs": f"EPSG:{EPSG}",
-                "nosrs": True
+                "nosrs": True,
             },
             {
-                "type":"filters.range",
-                "limits":"Classification[2:2],Classification[66:66]"
-            }
+                "type": "filters.range",
+                "limits": "Classification[2:2],Classification[66:66]",
+            },
         ]
     }
     ground = json.dumps(information, sort_keys=True, indent=4)
-    #log.info(ground)
+    # log.info(ground)
     pipeline = pdal.Pipeline(ground)
     pipeline.execute()
     return pipeline.arrays[0]
@@ -103,19 +105,21 @@ def write_las(input_points, filename: str, output_dir: str, name: str):
         filename (str): name of LIDAR tiles
         output_dir (str): directory of work who will contains the output files
         name (str) : suffix added to filename
-        """
-    file_root = os.path.splitext(filename)[0] #filename without extension
+    """
+    file_root = os.path.splitext(filename)[0]  # filename without extension
 
-    dst = os.path.join(output_dir, 'LAS')
+    dst = os.path.join(output_dir, "LAS")
 
-    os.makedirs(dst, exist_ok=True) # create directory LAS/ if not exists
+    os.makedirs(dst, exist_ok=True)  # create directory LAS/ if not exists
 
-    log.info("input_file : "+filename)
-    FileOutput = os.path.join(dst, f'{file_root}_{name}.las')
-    
-    log.info("output_file : "+FileOutput)
+    log.info("input_file : " + filename)
+    FileOutput = os.path.join(dst, f"{file_root}_{name}.las")
 
-    pipeline = pdal.Writer.las(filename = FileOutput, a_srs=f"EPSG:{EPSG}").pipeline(input_points)
+    log.info("output_file : " + FileOutput)
+
+    pipeline = pdal.Writer.las(filename=FileOutput, a_srs=f"EPSG:{EPSG}").pipeline(
+        input_points
+    )
     pipeline.execute()
 
     return FileOutput
@@ -124,13 +128,13 @@ def write_las(input_points, filename: str, output_dir: str, name: str):
 def write_las2(pts):
     information = {}
     information = {
-    "pipeline": [
+        "pipeline": [
             {
                 "type": "writers.las",
                 "a_srs": f"EPSG:{EPSG}",
                 # "minor_version": 4,
                 # "dataformat_id": 6,
-                "filename": FileOutput
+                "filename": FileOutput,
             }
         ]
     }
@@ -151,7 +155,7 @@ def las_prepare_1_file(input_file: str, size: float):
         input_file (str): directory of pointclouds
         fname (str): name of LIDAR tile
         size (int): raster cell size
-    
+
     Returns:
         extents(array) : extents
         res(list): resolution in coordinates
@@ -161,21 +165,25 @@ def las_prepare_1_file(input_file: str, size: float):
     # Reads the LAS file and outputs the ground points as a numpy array.
     in_file = laspy.read(input_file)
     header = in_file.header
-    in_np = np.vstack((in_file.classification,
-                           in_file.x, in_file.y, in_file.z)).transpose()
-    in_np = in_np[in_np[:,0] == 2].copy()[:,1:]
-    extents = [[header.min[0], header.max[0]],
-               [header.min[1], header.max[1]]]
-    res = [math.ceil((extents[0][1] - extents[0][0]) / size),
-           math.ceil((extents[1][1] - extents[1][0]) / size)]
-    origin = [np.mean(extents[0]) - (size / 2) * res[0],
-              np.mean(extents[1]) - (size / 2) * res[1]]
+    in_np = np.vstack(
+        (in_file.classification, in_file.x, in_file.y, in_file.z)
+    ).transpose()
+    in_np = in_np[in_np[:, 0] == 2].copy()[:, 1:]
+    extents = [[header.min[0], header.max[0]], [header.min[1], header.max[1]]]
+    res = [
+        math.ceil((extents[0][1] - extents[0][0]) / size),
+        math.ceil((extents[1][1] - extents[1][0]) / size),
+    ]
+    origin = [
+        np.mean(extents[0]) - (size / 2) * res[0],
+        np.mean(extents[1]) - (size / 2) * res[1],
+    ]
     return in_np, res, origin
 
 
 def execute_startin(pts, res, origin, size, method):
     """Takes the grid parameters and the ground points. Interpolates
-    either using the TIN-linear or the Laplace method. Uses a -9999 no-data value. 
+    either using the TIN-linear or the Laplace method. Uses a -9999 no-data value.
     Fully based on the startin package (https://startinpy.readthedocs.io/en/latest/api.html)
 
     Args:
@@ -188,41 +196,54 @@ def execute_startin(pts, res, origin, size, method):
     Returns:
         ras(list): Z interpolation
     """
-    # # Startin 
-    tin = startinpy.DT(); tin.insert(pts) # # Insert each points in the array of points (a 2D array)
-    ras = np.zeros([res[1], res[0]]) # # returns a new array of given shape and type, filled with zeros
+    # # Startin
+    tin = startinpy.DT()
+    tin.insert(pts)  # # Insert each points in the array of points (a 2D array)
+    ras = np.zeros(
+        [res[1], res[0]]
+    )  # # returns a new array of given shape and type, filled with zeros
     # # Interpolate method Laplace or TIN Linear
-    if method == "Laplace" :
-        def interpolant(x, y): return tin.interpolate_laplace(x, y)
+    if method == "Laplace":
+
+        def interpolant(x, y):
+            return tin.interpolate_laplace(x, y)
+
     elif method == "TINlinear":
-        def interpolant(x, y): return tin.interpolate_tin_linear(x, y)
+
+        def interpolant(x, y):
+            return tin.interpolate_tin_linear(x, y)
+
     cp = 0
     cp2 = 0
     yi = 0
     # Initialiser la barre de progression
     pbar = tqdm(total=100, desc="Progression interpolation")
-    size_res = res[1]*res[0]
+    size_res = res[1] * res[0]
     for y in np.arange(origin[1], origin[1] + res[1] * size, size):
 
         xi = 0
         for x in np.arange(origin[0], origin[0] + res[0] * size, size):
 
-            ch = tin.is_inside_convex_hull(x, y) # check is the point [x, y] located inside  the convex hull of the DT
+            ch = tin.is_inside_convex_hull(
+                x, y
+            )  # check is the point [x, y] located inside  the convex hull of the DT
             if ch == False:
-                ras[yi, xi] = -9999 # no-data value
+                ras[yi, xi] = -9999  # no-data value
             else:
-                tri = tin.locate(x, y) # locate the triangle containing the point [x,y]. An error is thrown if it is outside the convex hull
+                tri = tin.locate(
+                    x, y
+                )  # locate the triangle containing the point [x,y]. An error is thrown if it is outside the convex hull
 
-                if (tri.shape!=()) and (0 not in tri):
+                if (tri.shape != ()) and (0 not in tri):
                     ras[yi, xi] = interpolant(x, y)
-                else: 
-                    ras[yi, xi] = -9999 # no-data value
+                else:
+                    ras[yi, xi] = -9999  # no-data value
             xi += 1
-            
+
         yi += 1
-        
-        if (xi*yi * 100 / size_res) in [i for i in range(100)] :
-            pbar.update( 1 )
+
+        if (xi * yi * 100 / size_res) in [i for i in range(100)]:
+            pbar.update(1)
 
     pbar.close()
     return ras
@@ -245,17 +266,20 @@ def write_geotiff_withbuffer(raster, origin, size, output_file):
     """
     import rasterio
     from rasterio.transform import Affine
-    transform = (Affine.translation(origin[0], origin[1])
-                 * Affine.scale(size, size))
+
+    transform = Affine.translation(origin[0], origin[1]) * Affine.scale(size, size)
     with rasterio.Env():
-        with rasterio.open(output_file, 'w', driver = 'GTiff',
-                           height = raster.shape[0],
-                           width = raster.shape[1],
-                           count = 1,
-                           dtype = rasterio.float32,
-                           crs=f"EPSG:{EPSG}",
-                           transform = transform
-                           ) as out_file:
+        with rasterio.open(
+            output_file,
+            "w",
+            driver="GTiff",
+            height=raster.shape[0],
+            width=raster.shape[1],
+            count=1,
+            dtype=rasterio.float32,
+            crs=f"EPSG:{EPSG}",
+            transform=transform,
+        ) as out_file:
             out_file.write(raster.astype(rasterio.float32), 1)
     return output_file
 
@@ -275,8 +299,13 @@ def get_origin(las_input_file: str):
     output :
         int, int, str, str : X coord in km, Y coord in km, system of projection, altimetric system
     """
-    # réécrire plus proprement allant chercher dans les métadonnées    
-    return int(las_input_file[11:15]), int(las_input_file[16:20]), str(las_input_file[21:25]), str(las_input_file[26:31])
+    # réécrire plus proprement allant chercher dans les métadonnées
+    return (
+        int(las_input_file[11:15]),
+        int(las_input_file[16:20]),
+        str(las_input_file[21:25]),
+        str(las_input_file[26:31]),
+    )
 
 
 def give_name_resolution_raster(size):
@@ -290,21 +319,18 @@ def give_name_resolution_raster(size):
         _size(str): resolution from raster for output's name
     """
     if float(size) == 1.0:
-        _size = str('_1M')
+        _size = str("_1M")
     elif float(size) == 0.5:
-        _size = str('_50CM')
+        _size = str("_50CM")
     elif float(size) == 5.0:
-        _size = str('_5M')
+        _size = str("_5M")
     else:
         _size = str(size)
     return _size
 
 
 def color_MNT_with_cycles(
-    las_input_file: str,
-    output_dir: str,
-    raster_MNT_file: str,
-    nb_cycle: int
+    las_input_file: str, output_dir: str, raster_MNT_file: str, nb_cycle: int
 ):
     """Color a raster with a LUT created depending of a choice of cycles
 
@@ -318,33 +344,34 @@ def color_MNT_with_cycles(
     log.info("(1/2) Generate LUT.")
     # Create LUT
     LUT = gen_LUT_X_cycle.generate_LUT_X_cycle(
-        file_las=las_input_file,
-        file_MNT=raster_MNT_file,
-        nb_cycle=nb_cycle
+        file_las=las_input_file, file_MNT=raster_MNT_file, nb_cycle=nb_cycle
     )
 
     # Path MNT colorised
-    raster_MNT_color_file = os.path.join(os.path.join(output_dir,'DSM_color'),f'{las_input_file[:-4]}_DSM_hillshade_color{nb_cycle}c.tif')
+    raster_MNT_color_file = os.path.join(
+        os.path.join(output_dir, "DSM_color"),
+        f"{las_input_file[:-4]}_DSM_hillshade_color{nb_cycle}c.tif",
+    )
 
-    log.info("MNT color : "+raster_MNT_color_file)
+    log.info("MNT color : " + raster_MNT_color_file)
     log.info("(2/2) Colorise raster.")
 
     # Colorisation
     tools.color_raster_with_LUT(
-        input_raster = raster_MNT_file,
-        output_raster = raster_MNT_color_file,
-        LUT = LUT,
+        input_raster=raster_MNT_file,
+        output_raster=raster_MNT_color_file,
+        LUT=LUT,
     )
 
 
 def cluster(input_points: str):
 
     pipeline = pdal.Filter.cluster(
-        min_points = 3,
+        min_points=3,
         max_points=200,
         tolerance=1,
         is3d=True,
-        ).pipeline(input_points)
+    ).pipeline(input_points)
     pipeline.execute()
     return pipeline.arrays[0]
 
@@ -357,18 +384,15 @@ def sample(input_points):
 
 
 def resample(input_las: str, res: float, output_filename: str):
-    """ Resample with a given resolution.
+    """Resample with a given resolution.
     Args :
         input_las : las file
         res : resolution in meter
     """
-    pipeline = ( 
-        pdal.Reader.las(filename=input_las)
-        | pdal.Writer.las(
-            resolution=res,
-            filename=output_filename,
-            a_srs=f"EPSG:{EPSG}",
-        )
+    pipeline = pdal.Reader.las(filename=input_las) | pdal.Writer.las(
+        resolution=res,
+        filename=output_filename,
+        a_srs=f"EPSG:{EPSG}",
     )
     pipeline.execute()
 
@@ -376,9 +400,8 @@ def resample(input_las: str, res: float, output_filename: str):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-las", "--input_las")
-    parser.add_argument('-o', '--output_dir')
-    parser.add_argument("-m", "--interpMETHOD",
-                        default="Laplace")
+    parser.add_argument("-o", "--output_dir")
+    parser.add_argument("-m", "--interpMETHOD", default="Laplace")
 
     return parser.parse_args()
 
@@ -388,7 +411,7 @@ def main():
     log.basicConfig(level=log.INFO)
 
     # Paramètres
-    size = dico_param["resolution_MNS"] # in meter = resolution from raster
+    size = dico_param["resolution_MNS"]  # in meter = resolution from raster
     _size = give_name_resolution_raster(size)
 
     # Get las file, output directory and interpolation method
@@ -398,11 +421,11 @@ def main():
     interpMETHOD = args.interpMETHOD
 
     # Complete path (exemple : "data" become "data/")
-    output_dir = os.path.join(output_dir,"")
+    output_dir = os.path.join(output_dir, "")
 
     # Delete the severals folder LAS, DSM, DSM_shade and DSM_color if not exists
     delete_folder(output_dir)
-    # Create the severals folder LAS, DSM, DSM_shade and DSM_color if not exists
+    # Create the severals folder LAS, DSM, DSM_shade and DSM_color if not exists
     create_folder(output_dir)
 
     # Get directory
@@ -411,7 +434,7 @@ def main():
     input_las_name = os.path.basename(input_las)
 
     # Fichier de sortie MNT brut
-    out_DSM_raster = os.path.join(output_dir,f"{input_las_name}_DSM.tif")
+    out_DSM_raster = os.path.join(output_dir, f"{input_las_name}_DSM.tif")
 
     # # Extraction infos du las
     # origin_x, origin_y, ProjSystem, AltiSystem = get_origin(input_las_name)
@@ -441,37 +464,41 @@ def main():
     log.info("Extraction liste des coordonnées du nuage de points...")
     log.info(f"Ré-échantillonnage à {size} mètres...")
     # Name of outputfile
-    
+
     # Extraction coord nuage de points
-    extents_calc, res_calc, origin_calc = las_prepare_1_file(input_file=input_las, size=size)
-    
+    extents_calc, res_calc, origin_calc = las_prepare_1_file(
+        input_file=input_las, size=size
+    )
+
     log.info(f"Extents {extents_calc}")
     log.info(f"Resolution in coordinates : {res_calc}")
     log.info(f"Loc of the relative origin : {origin_calc}")
 
     log.info("           Interpolation...")
     # Interpole avec la méthode de Laplace ou tin linéaire
-    resolution = res_calc # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
+    resolution = res_calc  # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
     origine = origin_calc
-    ras = execute_startin(pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD)
+    ras = execute_startin(
+        pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD
+    )
 
     log.info("Tableau d'interpolation : ")
-  
+
     fileRas = f"{output_dir}ras.txt"
 
     log.info("Write in " + fileRas)
 
     fileR = open(fileRas, "w")
 
-    l,c = ras.shape
-    s = ''
+    l, c = ras.shape
+    s = ""
     for i in range(l):
         ligne = ""
         for j in range(c):
-            ELEMENTras = ras[i,j]
+            ELEMENTras = ras[i, j]
             ligne += f"{round(ELEMENTras,5) : >20}"
         s += ligne
-        s += ''  
+        s += ""
 
     fileR.write(s)
     fileR.close()
@@ -480,49 +507,60 @@ def main():
     log.info(" numpy.array post-interpolation")
     log.info(ras)
     log.info("Build raster ie DSM brut...")
-    
-    raster_DSM_interp = write_geotiff_withbuffer(raster=ras, origin=origine, size=size, output_file= os.path.join(os.path.join(output_dir, "DSM_brut"), f'{os.path.splitext(input_las_name)[0]}{_size}_{interpMETHOD}.tif') )
-    print("output : ",raster_DSM_interp)
-    
+
+    raster_DSM_interp = write_geotiff_withbuffer(
+        raster=ras,
+        origin=origine,
+        size=size,
+        output_file=os.path.join(
+            os.path.join(output_dir, "DSM_brut"),
+            f"{os.path.splitext(input_las_name)[0]}{_size}_{interpMETHOD}.tif",
+        ),
+    )
+    print("output : ", raster_DSM_interp)
+
     log.info(f"{output_dir}{_size}_{interpMETHOD}.tif")
     log.info("Build las...")
 
     # LAS points sol interpolés
     # TODO : numpy array ras must have 3 dimensions to be considered as points_cloud for write_las function
-    #las_DSM_interp = write_las(input_points=ras, filename=input_las_name ,output_dir=output_dir, name="ground_interp")
+    # las_DSM_interp = write_las(input_points=ras, filename=input_las_name ,output_dir=output_dir, name="ground_interp")
 
     # Ajout ombrage
-    
+
     log.info("Add hillshade...")
     log.info(raster_DSM_interp)
     log.info("")
 
     DSM_file = raster_DSM_interp
-    DSM_hs_file = os.path.join(os.path.join(output_dir,"DSM_shade"),f"{os.path.splitext(input_las_name)[0]}_DSM{_size}_hillshade.tif")
+    DSM_hs_file = os.path.join(
+        os.path.join(output_dir, "DSM_shade"),
+        f"{os.path.splitext(input_las_name)[0]}_DSM{_size}_hillshade.tif",
+    )
     hillshade_from_raster(
-        input_raster = DSM_file,
-        output_raster = DSM_hs_file,
+        input_raster=DSM_file,
+        output_raster=DSM_hs_file,
     )
 
     log.info("Success.")
 
     # Colorisation
-    
+
     log.info("Add color...")
-        
+
     nb_raster_color = int(input("How many raster colorised ? : "))
 
-    for i in range(nb_raster_color) :
+    for i in range(nb_raster_color):
 
         cycle = int(input(f"Raster {i+1}/{nb_raster_color} : how many cycles ? : "))
-        
+
         log.info(f"Build raster {i+1}/{nb_raster_color}...")
 
         color_MNT_with_cycles(
-        las_input_file=input_las_name,
-        output_dir=output_dir,
-        raster_MNT_file=DSM_hs_file,
-        nb_cycle=cycle
+            las_input_file=input_las_name,
+            output_dir=output_dir,
+            raster_MNT_file=DSM_hs_file,
+            nb_cycle=cycle,
         )
 
         log.info("Success.")
@@ -530,6 +568,6 @@ def main():
     log.info("End.")
 
 
-if __name__ == '__main__':
-    
+if __name__ == "__main__":
+
     main()

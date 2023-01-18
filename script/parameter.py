@@ -1,12 +1,10 @@
-
 dico_param = {
-    "EPSG" : 2154,
-    "raster_extension" : ".tif",
-    "resolution_MNS" : 0.5,
-    "resolution_MNT" : 1.0,
-    "interpolation_method" : "Laplace",
-    "cycles_color_DTM" : [1]
-
+    "EPSG": 2154,
+    "raster_extension": ".tif",
+    "resolution_MNS": 0.5,
+    "resolution_MNT": 1.0,
+    "interpolation_method": "Laplace",
+    "cycles_color_DTM": [1],
 }
 
 # EPSG : projection system

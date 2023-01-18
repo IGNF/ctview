@@ -1,19 +1,17 @@
-#Autor : ELucon
+# Autor : ELucon
 
 # IMPORT
 
-    # File
+# File
 import utils_pdal
-    # Library
 
+# Library
 
 
 # FONCTION
 
 
-def generate_raster_of_density(
-    input_las: str
-):
+def generate_raster_of_density(input_las: str):
     """
     Build a raster with ground points only (class 2)
     input_las : origin points cloud
@@ -30,5 +28,4 @@ def generate_raster_of_density(
 
     # Color density
 
-    # Mutiply 
-
+    # Mutiply
