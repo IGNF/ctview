@@ -32,10 +32,10 @@ def test_create_folder(dest_dir=TEST_DIR):
     # Create folders
     create_folder(dest_dir)
 
-    assert os.path.exists(dir_folder1) == True
-    assert os.path.exists(dir_folder2) == True
-    assert os.path.exists(dir_folder3) == True
-    assert os.path.exists(dir_folder4) == True
+    assert os.path.exists(dir_folder1)
+    assert os.path.exists(dir_folder2)
+    assert os.path.exists(dir_folder3)
+    assert os.path.exists(dir_folder4)
 
 
 def test_delete_folder(dest_dir=TEST_DIR):
@@ -44,7 +44,7 @@ def test_delete_folder(dest_dir=TEST_DIR):
     # Delete folders
     delete_folder(dest_dir)
 
-    assert os.path.exists(dir_folder1) == False
-    assert os.path.exists(dir_folder2) == False
-    assert os.path.exists(dir_folder3) == False
-    assert os.path.exists(dir_folder4) == False
+    assert not os.path.exists(dir_folder1)
+    assert not os.path.exists(dir_folder2)
+    assert not os.path.exists(dir_folder3)
+    assert not os.path.exists(dir_folder4)
