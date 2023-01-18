@@ -17,7 +17,7 @@ def parse_args():
     parser.add_argument("-idir", "--input_dir", default=None)
     parser.add_argument('-odir', '--output_dir', default=None)
     parser.add_argument("-m", "--interp_method", default=dico_param["interpolation_method"])
-    parser.add_argument("-c", "--cycles_MNT_colored", nargs="+", default=dico_param["cycles_color_DTM"])
+    parser.add_argument("-c", "--cycles_MNT_colored", nargs="+", type=int, default=dico_param["cycles_color_DTM"])
 
     return parser.parse_args()
 
@@ -31,12 +31,6 @@ def main():
     out_dir = args.output_dir
     interp_Method = args.interp_method
     list_cycles = args.cycles_MNT_colored
-
-    try :
-        list_cycles = list(map(int, list_cycles)) # all element are integers
-    except ValueError :
-        print("Error in -c argument. Integer expected for each element.")
-        sys.exit()
     
     # Create output directory if not exist
     os.makedirs(out_dir, exist_ok=True)
