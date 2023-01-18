@@ -412,12 +412,12 @@ class File:
         self.mode = mode
 
     def __enter__(self):
-        print(f'Opening the file {self.filename}.')
+        log.info(f'Opening the file {self.filename}.')
         self.__file = open(self.filename, self.mode)
         return self.__file
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        print(f'Closing the file {self.filename}.')
+        log.info(f'Closing the file {self.filename}.')
         if not self.__file.closed:
             self.__file.close()
 
