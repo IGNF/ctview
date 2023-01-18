@@ -335,24 +335,6 @@ def color_MNT_with_cycles(
     )
 
 
-class File:
-    def __init__(self, filename, mode):
-        self.filename = filename
-        self.mode = mode
-
-    def __enter__(self):
-        log.info(f'Opening the file {self.filename}.')
-        self.__file = open(self.filename, self.mode)
-        return self.__file
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        log.info(f'Closing the file {self.filename}.')
-        if not self.__file.closed:
-            self.__file.close()
-
-        return False
-
-
 def create_map_one_las(
     input_las: str, output_dir: str, interpMETHOD: str, list_c: list
 ):
@@ -438,7 +420,7 @@ def create_map_one_las(
         dico_folder["folder_interp_table"],
         f"ras_{os.path.splitext(input_las_name)[0]}.txt"
         )  
-    with File(fileRas, "w") as f :
+    with open(fileRas, "w") as f :
         l, c = ras.shape
         s = ""
         for i in range(l):
