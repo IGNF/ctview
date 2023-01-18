@@ -7,6 +7,7 @@ dico_folder = {
     "folder_DTM_shade": "DTM_shade",
     "folder_DTM_color": "DTM_color",
     "folder_intensity": "INTENSITY",
+    "folder_interp_table": "TABLE_INTERP"
 }
 
 
