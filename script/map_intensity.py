@@ -71,11 +71,9 @@ def main():
     # Path
     output_filename = os.path.join(
         output_dir,
-        os.path.join(
-            dico_folder["folder_intensity"],
-            f"{os.path.splitext(os.path.basename(input_las))[0]}_INTENSITY{extension}",
-        ),
-    )
+        dico_folder["folder_intensity"],
+        f"{os.path.splitext(os.path.basename(input_las))[0]}_INTENSITY{extension}",
+        )
 
     # Creation raster intensity
     create_map_intensity(input_las, output_filename)
