@@ -349,7 +349,8 @@ def color_MNT_with_cycles(
 
     # Path MNT colorised
     raster_MNT_color_file = os.path.join(
-        os.path.join(output_dir, "DSM_color"),
+        output_dir, 
+        "DSM_color"
         f"{las_input_file[:-4]}_DSM_hillshade_color{nb_cycle}c.tif",
     )
 
@@ -465,7 +466,7 @@ def main():
     # log.info(f"Altimetric system : {AltiSystem}")
 
     # log.info("Ré-échantillonnage à 0.5 mètres...")
-    # FileLas_resampleResMNS = os.path.join(os.path.join(output_dir, 'LAS'), f'{os.path.splitext(input_las_name)[0]}{_size}.las')
+    # FileLas_resampleResMNS = os.path.join(output_dir, 'LAS', f'{os.path.splitext(input_las_name)[0]}{_size}.las')
     # print("in_las : ", input_las)
     # print("res : ", size, type(size))
     # print('out_file :', FileLas_resampleResMNS)
@@ -505,7 +506,7 @@ def main():
     log.debug(ras)
 
     # Write interpolation table in a text file
-    fileRas = os.path.join(output_dir,os.path.join(dico_folder["folder_interp_table"]),f"ras_{os.path.splitext(input_las_name)[0]}.txt")  
+    fileRas = os.path.join(output_dir,dico_folder["folder_interp_table"],f"ras_{os.path.splitext(input_las_name)[0]}.txt")  
     with File(fileRas, "w") as f :
         l, c = ras.shape
         s = ""
@@ -527,7 +528,7 @@ def main():
         origin=origine,
         size=size,
         output_file=os.path.join(
-            os.path.join(output_dir, "DTM_brut"),
+            output_dir, "DTM_brut"
             input_las_name[:-4] + _size + f"_{interpMETHOD}.tif",
         ),
     )
@@ -540,7 +541,7 @@ def main():
 
     dtm_file = raster_dtm_interp
     dtm_hs_file = os.path.join(
-        os.path.join(output_dir, "DTM_shade"),
+        output_dir, "DTM_shade",
         f"{input_las_name[:-4]}_DTM{_size}_hillshade.tif",
     )
     hillshade_from_raster(
