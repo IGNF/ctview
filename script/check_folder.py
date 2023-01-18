@@ -9,6 +9,7 @@ dico_folder = {
     "folder_intensity" : "INTENSITY",
     "folder_density_value" : "DENS_VAL",
     "folder_density_color" : "DENS_COL"
+    "folder_interp_table": "TABLE_INTERP"
 }
 
 

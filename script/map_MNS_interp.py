@@ -406,6 +406,24 @@ def parse_args():
     return parser.parse_args()
 
 
+class File:
+    def __init__(self, filename, mode):
+        self.filename = filename
+        self.mode = mode
+
+    def __enter__(self):
+        print(f'Opening the file {self.filename}.')
+        self.__file = open(self.filename, self.mode)
+        return self.__file
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        print(f'Closing the file {self.filename}.')
+        if not self.__file.closed:
+            self.__file.close()
+
+        return False
+
+
 def main():
 
     log.basicConfig(level=log.INFO)
@@ -481,91 +499,77 @@ def main():
     ras = execute_startin(
         pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD
     )
+    log.info("End interpolation.")
 
-    log.info("Tableau d'interpolation : ")
+    log.debug("Interpolation table : ")
+    log.debug(ras)
 
-    fileRas = f"{output_dir}ras.txt"
+    # Write interpolation table in a text file
+    fileRas = os.path.join(output_dir,os.path.join(dico_folder["folder_interp_table"]),f"ras_{os.path.splitext(input_las_name)[0]}.txt")  
+    with File(fileRas, "w") as f :
+        l, c = ras.shape
+        s = ""
+        for i in range(l):
+            ligne = ""
+            for j in range(c):
+                ELEMENTras = ras[i, j]
+                ligne += f"{round(ELEMENTras,5) : >20}"
+            s += ligne
+            s += ""
 
-    log.info("Write in " + fileRas)
+        f.write(s)
+    log.debug(f"All in :{fileRas}")
+    
+    log.info("Build DTM brut...")
 
-    fileR = open(fileRas, "w")
-
-    l, c = ras.shape
-    s = ""
-    for i in range(l):
-        ligne = ""
-        for j in range(c):
-            ELEMENTras = ras[i, j]
-            ligne += f"{round(ELEMENTras,5) : >20}"
-        s += ligne
-        s += ""
-
-    fileR.write(s)
-    fileR.close()
-
-    log.info("End write.")
-    log.info(" numpy.array post-interpolation")
-    log.info(ras)
-    log.info("Build raster ie DSM brut...")
-
-    raster_DSM_interp = write_geotiff_withbuffer(
+    raster_dtm_interp = write_geotiff_withbuffer(
         raster=ras,
         origin=origine,
         size=size,
         output_file=os.path.join(
-            os.path.join(output_dir, "DSM_brut"),
-            f"{os.path.splitext(input_las_name)[0]}{_size}_{interpMETHOD}.tif",
+            os.path.join(output_dir, "DTM_brut"),
+            input_las_name[:-4] + _size + f"_{interpMETHOD}.tif",
         ),
     )
-    print("output : ", raster_DSM_interp)
 
-    log.info(f"{output_dir}{_size}_{interpMETHOD}.tif")
-    log.info("Build las...")
+    log.debug(os.path.join(output_dir, raster_dtm_interp))
 
-    # LAS points sol interpolés
-    # TODO : numpy array ras must have 3 dimensions to be considered as points_cloud for write_las function
-    # las_DSM_interp = write_las(input_points=ras, filename=input_las_name ,output_dir=output_dir, name="ground_interp")
+    # Add hillshade
 
-    # Ajout ombrage
+    log.info("Build DTM hillshade...")
 
-    log.info("Add hillshade...")
-    log.info(raster_DSM_interp)
-    log.info("")
-
-    DSM_file = raster_DSM_interp
-    DSM_hs_file = os.path.join(
-        os.path.join(output_dir, "DSM_shade"),
-        f"{os.path.splitext(input_las_name)[0]}_DSM{_size}_hillshade.tif",
+    dtm_file = raster_dtm_interp
+    dtm_hs_file = os.path.join(
+        os.path.join(output_dir, "DTM_shade"),
+        f"{input_las_name[:-4]}_DTM{_size}_hillshade.tif",
     )
     hillshade_from_raster(
-        input_raster=DSM_file,
-        output_raster=DSM_hs_file,
+        input_raster=dtm_file,
+        output_raster=dtm_hs_file,
     )
 
-    log.info("Success.")
+    log.debug(os.path.join(output_dir, dtm_hs_file))
 
-    # Colorisation
+    # Add color
 
-    log.info("Add color...")
+    log.info("Build DTM hillshade color")
 
-    nb_raster_color = int(input("How many raster colorised ? : "))
+    cpt = 1
 
-    for i in range(nb_raster_color):
+    for cycle in list_c:
 
-        cycle = int(input(f"Raster {i+1}/{nb_raster_color} : how many cycles ? : "))
-
-        log.info(f"Build raster {i+1}/{nb_raster_color}...")
+        log.info(f"{cpt}/{len(list_c)}...")
 
         color_MNT_with_cycles(
             las_input_file=input_las_name,
             output_dir=output_dir,
-            raster_MNT_file=DSM_hs_file,
+            raster_MNT_file=dtm_hs_file,
             nb_cycle=cycle,
         )
 
-        log.info("Success.")
+        cpt += 1
 
-    log.info("End.")
+    log.debug("End DTM.")
 
 
 if __name__ == "__main__":

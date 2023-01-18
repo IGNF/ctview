@@ -334,6 +334,24 @@ def color_MNT_with_cycles(
     )
 
 
+class File:
+    def __init__(self, filename, mode):
+        self.filename = filename
+        self.mode = mode
+
+    def __enter__(self):
+        print(f'Opening the file {self.filename}.')
+        self.__file = open(self.filename, self.mode)
+        return self.__file
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        print(f'Closing the file {self.filename}.')
+        if not self.__file.closed:
+            self.__file.close()
+
+        return False
+
+
 def create_map_one_las(
     input_las: str, output_dir: str, interpMETHOD: str, list_c: list
 ):
@@ -410,9 +428,25 @@ def create_map_one_las(
     )
     log.info("End interpolation.")
 
-    log.debug("Tableau d'interpolation : ")
+    log.debug("Interpolation table : ")
     log.debug(ras)
 
+    # Write interpolation table in a text file
+    fileRas = os.path.join(output_dir,os.path.join(dico_folder["folder_interp_table"]),f"ras_{os.path.splitext(input_las_name)[0]}.txt")  
+    with File(fileRas, "w") as f :
+        l, c = ras.shape
+        s = ""
+        for i in range(l):
+            ligne = ""
+            for j in range(c):
+                ELEMENTras = ras[i, j]
+                ligne += f"{round(ELEMENTras,5) : >20}"
+            s += ligne
+            s += ""
+
+        f.write(s)
+    log.debug(f"All in :{fileRas}")
+    
     log.info("Build DTM brut...")
 
     raster_dtm_interp = write_geotiff_withbuffer(
