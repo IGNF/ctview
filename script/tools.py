@@ -1,4 +1,4 @@
-#Autor : ELucon
+# Autor : ELucon
 
 # IMPORT
 import pdal
@@ -8,12 +8,8 @@ DICO_CLASS = "../dico/dictionnary_alamano.txt"
 DICO_TEST = "../dico/ramp.txt"
 
 
-
-
-
-
-
 # FONCTION
+
 
 def read_las(file_las):
     """Read a las file and put it in an array"""
@@ -21,10 +17,12 @@ def read_las(file_las):
     pipeline.execute()
     return pipeline.arrays[0]
 
+
 def write_las(input_points, output_las):
     """Write a las file"""
-    pipeline = pdal.Writer.las(filename = output_las).pipeline(input_points)
+    pipeline = pdal.Writer.las(filename=output_las).pipeline(input_points)
     pipeline.execute()
+
 
 def write_raster(input_points, output_raster, dim):
     """
@@ -34,30 +32,29 @@ def write_raster(input_points, output_raster, dim):
     dim : dimension
     """
     pipeline = pdal.Writer.gdal(
-        filename=output_raster, 
+        filename=output_raster,
         resolution=0.5,
         dimension=dim,
-        ).pipeline(input_points)
+    ).pipeline(input_points)
     pipeline.execute()
 
 
 def write_raster_z(input_points, output_raster):
     """Generate a raster"""
     pipeline = pdal.Writer.gdal(
-        filename=output_raster, 
-        resolution=0.5,
-        dimension='Z'
-        ).pipeline(input_points)
+        filename=output_raster, resolution=0.5, dimension="Z"
+    ).pipeline(input_points)
     pipeline.execute()
+
 
 def write_raster_class(input_points, output_raster):
     """Generate a raster"""
     pipeline = pdal.Writer.gdal(
-        filename=output_raster, 
+        filename=output_raster,
         resolution=0.5,
         dimension="Classification",
-        gdaldriver = 'GTiff',
-        ).pipeline(input_points)
+        gdaldriver="GTiff",
+    ).pipeline(input_points)
     pipeline.execute()
 
 
@@ -78,24 +75,24 @@ def filter_las_version2(lasFile, outFile):
     FileOutput = outFile
     information = {}
     information = {
-    "pipeline": [
+        "pipeline": [
             {
-                "type":"readers.las",
-                "filename":fpath,
+                "type": "readers.las",
+                "filename": fpath,
                 "override_srs": "EPSG:2154",
-                "nosrs": True
+                "nosrs": True,
             },
             {
-                "type":"filters.range",
-                "limits":"Classification[2:2],Classification[66:66]"
+                "type": "filters.range",
+                "limits": "Classification[2:2],Classification[66:66]",
             },
             {
                 "type": "writers.las",
                 "a_srs": "EPSG:2154",
                 # "minor_version": 4,
                 # "dataformat_id": 6,
-                "filename": FileOutput
-            }
+                "filename": FileOutput,
+            },
         ]
     }
     ground = json.dumps(information, sort_keys=True, indent=4)
@@ -104,33 +101,32 @@ def filter_las_version2(lasFile, outFile):
     pipeline.execute()
 
 
-def color_points_by_class(input_points) :
+def color_points_by_class(input_points):
     "Color las points by class."
- #   classif = "Classification[6:6]"  # classif 6 = batiments
-    pipeline = (
-        pdal.Filter.colorinterp(
-            ramp="pestel_shades",
-            mad="true",
-            k="1.8",
-            dimension="Z",
-            ).pipeline(input_points)
-    )
+    #   classif = "Classification[6:6]"  # classif 6 = batiments
+    pipeline = pdal.Filter.colorinterp(
+        ramp="pestel_shades",
+        mad="true",
+        k="1.8",
+        dimension="Z",
+    ).pipeline(input_points)
     pipeline.execute()
     return pipeline.arrays[0]
 
 
-def color_raster_by_class_2(input_raster, output_raster) :
+def color_raster_by_class_2(input_raster, output_raster):
     "Color raster by classe"
- #   classif = "Classification[6:6]"  # classif 6 = batiments
-    
+    #   classif = "Classification[6:6]"  # classif 6 = batiments
+
     gdal.DEMProcessing(
         destName=output_raster,
         srcDS=input_raster,
-        processing = "color-relief",
-        colorFilename = DICO_CLASS,
-        )
+        processing="color-relief",
+        colorFilename=DICO_CLASS,
+    )
 
-def color_raster_with_LUT(input_raster, output_raster, LUT) :
+
+def color_raster_with_LUT(input_raster, output_raster, LUT):
     """
     Color raster with a LUT
     input_raster : path of raster to colorise
@@ -138,17 +134,31 @@ def color_raster_with_LUT(input_raster, output_raster, LUT) :
     dim : dimension to color
     LUT : dictionnary of color
     """
-    
+
     gdal.DEMProcessing(
         destName=output_raster,
         srcDS=input_raster,
-        processing = "color-relief",
-        colorFilename = LUT,
-        )
+        processing="color-relief",
+        colorFilename=LUT,
+    )
+    
 
+def give_name_resolution_raster(size):
+    """
+    Give a resolution from raster
 
+    Args:
+        size (int): raster cell size
 
-
-
-
-
+    Return:
+        _size(str): resolution from raster for output's name
+    """
+    if float(size) == 1.0:
+        _size = str("_1M")
+    elif float(size) == 0.5:
+        _size = str("_50CM")
+    elif float(size) == 5.0:
+        _size = str("_5M")
+    else:
+        _size = str(size)
+    return _size

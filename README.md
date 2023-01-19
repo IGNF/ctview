@@ -22,11 +22,11 @@ conda activate ctview
 
 # Tests
 
-## Tests unitaires des fonctions du fichier map_MNT_interp
+## Tests unitaires des fonctions du fichier map_DTM_DSM
 
 Se placer dans le dossier script/ et lancer
 ```
-python -m pytest -s test_map_MNT_interp.py
+python -m pytest -s test_map_DTM_DSM.py
 ```
 
 ## Tests unitaires des fonctions ajoutées dans le fichier utils_pdal
@@ -44,7 +44,7 @@ python -m pytest -s test_utils_pdal.py
 - Choisir une méthode d'interpolation (Laplace ou TINlinear)
 - Lancer la commande
 ```
-python map_MNT_interp.py path1/Semis_2022_0671_6912_LA93_IGN69.laz path2/DTM_test/ Laplace
+python map_DTM_DSM.py path1/Semis_2022_0671_6912_LA93_IGN69.laz path2/DTM_test/ Laplace
 ```
 Ce qui est attendu : génération de :
 - DTM_brut/ 
