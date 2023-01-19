@@ -25,6 +25,8 @@ dependencies:
 
   - tqdm
 
+  - black # reformat file
+
   # - pyproj
   # - pysimplegui
 
@@ -34,7 +36,7 @@ dependencies:
   # - requests
   # - pytest
   # - pytest-dependency
-  # - black
+  
   # - isort
   # - fiona
   # - filelock

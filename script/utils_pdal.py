@@ -6,13 +6,16 @@ from pathlib import Path
 
 # from ctclass import utils_geometry, utils_gdal
 
+
 def stem(input_file: str):
     """Extract filename without extension"""
     return Path(input_file).stem
 
+
 def parent(input_file: str):
     """Extract directory of input_file"""
     return str(Path(input_file).parent)
+
 
 def read_las_file(input_las: str):
     """Read a las file and put it in an array"""
@@ -27,27 +30,29 @@ def get_info_from_las(points):
     pipeline.execute()
     return pipeline.metadata
 
+
 def get_class_min_max_from_las(points):
     """
     Get minimum and maximum classification of a points cloud.
     """
     # Which class in OUT_FILTER_GROUND ?
     # Get Classification dictionnary
-    dico_metadata = get_info_from_las(points) # !!! an other function is used !!!
+    dico_metadata = get_info_from_las(points)  # !!! an other function is used !!!
 
     list_statistic = dico_metadata["metadata"]["filters.stats"]["statistic"]
-    
-    indice = -1 # indice will be be the indice that show the researched dictionnary
+
+    indice = -1  # indice will be be the indice that show the researched dictionnary
     for i in range(len(list_statistic)):
         if list_statistic[i]["name"] == "Classification":
             indice = i
             break
-    if indice == -1 :
+    if indice == -1:
         print("AlgoError : classification dictionnary not found")
     # Classification dictionnary is list_statistic[indice]
     minClass = list_statistic[indice]["minimum"]
     maxClass = list_statistic[indice]["maximum"]
     return minClass, maxClass
+
 
 def calc_boundary(points, size_hexbin_edge):
     """Calcul approximate boundary of points with hexbin"""
@@ -142,6 +147,7 @@ def get_ground_points_pipeline(input_las: str):
         | pdal.Filter.range(limits="HeightAboveGround[0:0.5]")
     )
     return pipeline
+
 
 def get_ground_points_only(input_las: str):
     """get ground or non classified with a height lower than 0.5"""

@@ -1,7 +1,7 @@
-#Autor : ELucon
+# Autor : ELucon
 
 
-#IMPORT
+# IMPORT
 
 # Library
 import tools
@@ -14,7 +14,8 @@ import logging as log
 from parameter import dico_folder, dico_param
 
 
-#FONCTION
+# FONCTION
+
 
 def delete_folder(dest_dir: str):
     """Delete folders "Intensity" if exist"""
@@ -22,10 +23,12 @@ def delete_folder(dest_dir: str):
     if os.path.isdir(LAS_new_dir):
         shutil.rmtree(LAS_new_dir)
 
+
 def create_folder(dest_dir: str):
     """Create folder "Intensity" if not exist"""
     LAS_new_dir = os.path.join(dest_dir, dico_folder["folder_intensity"])
     os.makedirs(LAS_new_dir, exist_ok=True)
+
 
 def create_map_intensity(input_las, raster_intensity):
 
@@ -37,14 +40,16 @@ def create_map_intensity(input_las, raster_intensity):
         input_points=in_points,
         output_raster=raster_intensity,
         dim="Intensity",
-        )
+    )
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-las", "--input_las")
-    parser.add_argument('-o', '--output_dir')
+    parser.add_argument("-o", "--output_dir")
 
     return parser.parse_args()
+
 
 def main():
 
@@ -64,13 +69,18 @@ def main():
     delete_folder(output_dir)
     create_folder(output_dir)
     # Path
-    output_filename = os.path.join(output_dir, os.path.join(dico_folder["folder_intensity"],f"{os.path.splitext(os.path.basename(input_las))[0]}_INTENSITY{extension}"))
+    output_filename = os.path.join(
+        output_dir,
+        dico_folder["folder_intensity"],
+        f"{os.path.splitext(os.path.basename(input_las))[0]}_INTENSITY{extension}",
+        )
 
     # Creation raster intensity
     create_map_intensity(input_las, output_filename)
 
-    if not os.path.exists(output_filename) :
+    if not os.path.exists(output_filename):
         log.warning("ERROR : raster of intensity not created")
+
 
 if __name__ == "__main__":
 

@@ -1,5 +1,3 @@
-
-
 import fnmatch
 import re
 import os
@@ -10,6 +8,7 @@ from osgeo import gdal, osr, ogr
 
 # import lidarutils.geometry_utils as gu
 # import lidarutils.gdal_utils as lu_gdal_utils
+
 
 def add_epsg_to_raster(raster: str, epsg: int):
     """add epsg to raster"""
@@ -55,7 +54,9 @@ def get_box_from_image(input_raster: str):
     return gu.Bbox(ulx, lrx, lry, uly)
 
 
-def rasterise(image_out: str, geo: str, image_ref_georef: str, type : gdal, options = None):
+def rasterise(
+    image_out: str, geo: str, image_ref_georef: str, type: gdal, options=None
+):
     """rasterise a geometry"""
     data_src = gdal.Open(image_ref_georef)
     drv_tiff = gdal.GetDriverByName("GTiff")
@@ -75,9 +76,10 @@ def rasterise(image_out: str, geo: str, image_ref_georef: str, type : gdal, opti
 
 def polygonize_and_add_field_name(raster_unvalide: str, epsg: int, field_name: str):
     unvalide_area = []
-    out_json_density_ground = tempfile.NamedTemporaryFile(suffix="_polygonize_and_add_field_name.json")
-    lu_gdal_utils.gdal_polygonize(
-        raster_unvalide, out_json_density_ground.name, epsg)
+    out_json_density_ground = tempfile.NamedTemporaryFile(
+        suffix="_polygonize_and_add_field_name.json"
+    )
+    lu_gdal_utils.gdal_polygonize(raster_unvalide, out_json_density_ground.name, epsg)
     with open(out_json_density_ground.name) as file:
         geo_json = geojson.load(file)
         features = geo_json["features"]
@@ -85,4 +87,3 @@ def polygonize_and_add_field_name(raster_unvalide: str, epsg: int, field_name: s
             fea["properties"]["type erreur"] = field_name
             unvalide_area.append(fea)
     return unvalide_area
-
