@@ -9,12 +9,12 @@ import logging as log
 # FONCTION
 
 
-def get_zmin_zmax_from_MNT(input_MNT: str):
+def get_zmin_zmax_from_DTM(input_DTM: str):
     """
     Get zmin and zmax of an DTM.
-    input_MNT : path of the DTM
+    input_DTM : path of the DTM
     """
-    recupStat = subprocess.getstatusoutput("gdalinfo -stats " + input_MNT)
+    recupStat = subprocess.getstatusoutput("gdalinfo -stats " + input_DTM)
 
     info = recupStat[1]
 
@@ -38,7 +38,7 @@ def get_zmin_zmax_from_MNT(input_MNT: str):
     return zmax, zmin
 
 
-def generate_LUT_X_cycle(file_las: str, file_MNT: str, nb_cycle: int):
+def generate_LUT_X_cycle(file_las: str, file_DTM: str, nb_cycle: int):
     """
     Generate a LUT in link with a DTM.
     file_las : points cloud
@@ -47,16 +47,16 @@ def generate_LUT_X_cycle(file_las: str, file_MNT: str, nb_cycle: int):
     return   : path of the LUT
     """
 
-    log.info(f"Generate LUT of file {file_MNT}")
+    log.info(f"Generate LUT of file {file_DTM}")
 
     path = f"../LUT/LUT_{nb_cycle}cycle_{file_las[-31:-4]}.txt"
 
-    zmin, zmax = get_zmin_zmax_from_MNT(input_MNT=file_MNT)
+    zmin, zmax = get_zmin_zmax_from_DTM(input_DTM=file_DTM)
 
-    MNT_LUTcycle_FILE = open(path, "w")
+    DTM_LUTcycle_FILE = open(path, "w")
 
-    MNT_LUTcycle_FILE.write(f"#LUT of {file_MNT}\n")
-    MNT_LUTcycle_FILE.write(f"#number of cycles :{nb_cycle}\n")
+    DTM_LUTcycle_FILE.write(f"#LUT of {file_DTM}\n")
+    DTM_LUTcycle_FILE.write(f"#number of cycles :{nb_cycle}\n")
 
     log.info(f"Number of cycles : {nb_cycle}")
 
@@ -66,21 +66,21 @@ def generate_LUT_X_cycle(file_las: str, file_MNT: str, nb_cycle: int):
 
     for c in range(nb_cycle):
 
-        MNT_LUTcycle_FILE.write(str(round(zmin + c * pasCycle, 1)) + " 64 128 128\n")
-        MNT_LUTcycle_FILE.write(
+        DTM_LUTcycle_FILE.write(str(round(zmin + c * pasCycle, 1)) + " 64 128 128\n")
+        DTM_LUTcycle_FILE.write(
             str(round(zmin + c * pasCycle + pasCouleur, 1)) + " 255 255 0\n"
         )
-        MNT_LUTcycle_FILE.write(
+        DTM_LUTcycle_FILE.write(
             str(round(zmin + c * pasCycle + 2 * pasCouleur, 1)) + " 255 128 0\n"
         )
-        MNT_LUTcycle_FILE.write(
+        DTM_LUTcycle_FILE.write(
             str(round(zmin + c * pasCycle + 3 * pasCouleur, 1)) + " 128 64 0\n"
         )
-        MNT_LUTcycle_FILE.write(
+        DTM_LUTcycle_FILE.write(
             str(round(zmin + c * pasCycle + 4 * pasCouleur, 1)) + " 240 240 240\n"
         )
 
-    MNT_LUTcycle_FILE.close()
+    DTM_LUTcycle_FILE.close()
 
     return path
 
@@ -89,6 +89,6 @@ if __name__ == "__main__":
 
     generate_LUT_X_cycle(
         file_las="../LAS/C5_OK.las",
-        file_MNT="../test_raster/DTM/C5_OK_DTM_hillshade.tif",
+        file_DTM="../test_raster/DTM/C5_OK_DTM_hillshade.tif",
         nb_cycle=6,
     )

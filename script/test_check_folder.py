@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from check_folder import delete_folder, create_folder
+from check_folder import create_folder, dico_folder
 
 # PATH TO FOLDER "TEST"
 TEST_DIR = os.path.join("..", "test")
@@ -15,15 +15,10 @@ else:
 
 
 # FOLDER TO TEST
-folder1 = "LAS_ground"
-folder2 = "DTM_brut"
-folder3 = "DTM_shade"
-folder4 = "DTM_color"
+list_dir_expected = []
 
-dir_folder1 = os.path.join(TEST_DIR, folder1)
-dir_folder2 = os.path.join(TEST_DIR, folder2)
-dir_folder3 = os.path.join(TEST_DIR, folder3)
-dir_folder4 = os.path.join(TEST_DIR, folder4)
+for f_name in dico_folder:
+    list_dir_expected.append(os.path.join(TEST_DIR, dico_folder[f_name]))
 
 
 def test_create_folder(dest_dir=TEST_DIR):
@@ -32,19 +27,5 @@ def test_create_folder(dest_dir=TEST_DIR):
     # Create folders
     create_folder(dest_dir)
 
-    assert os.path.exists(dir_folder1)
-    assert os.path.exists(dir_folder2)
-    assert os.path.exists(dir_folder3)
-    assert os.path.exists(dir_folder4)
-
-
-def test_delete_folder(dest_dir=TEST_DIR):
-    """Verify :
-    - folders are deleted"""
-    # Delete folders
-    delete_folder(dest_dir)
-
-    assert not os.path.exists(dir_folder1)
-    assert not os.path.exists(dir_folder2)
-    assert not os.path.exists(dir_folder3)
-    assert not os.path.exists(dir_folder4)
+    for dir_expected in list_dir_expected:
+        assert os.path.exists(dir_expected)

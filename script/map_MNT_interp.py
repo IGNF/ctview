@@ -270,27 +270,6 @@ def get_origin(las_input_file: str):
     )
 
 
-def give_name_resolution_raster(size):
-    """
-    Give a resolution from raster
-
-    Args:
-        size (int): raster cell size
-
-    Return:
-        _size(str): resolution from raster for output's name
-    """
-    if float(size) == 1.0:
-        _size = str("_1M")
-    elif float(size) == 0.5:
-        _size = str("_50CM")
-    elif float(size) == 5.0:
-        _size = str("_5M")
-    else:
-        _size = str(size)
-    return _size
-
-
 def hillshade_from_raster(input_raster: str, output_raster: str):
     """Add hillshade to raster"""
     gdal.DEMProcessing(
@@ -300,43 +279,75 @@ def hillshade_from_raster(input_raster: str, output_raster: str):
     )
 
 
-def color_MNT_with_cycles(
-    las_input_file: str, output_dir: str, raster_MNT_file: str, nb_cycle: int
+def color_DTM_with_cycles(
+    las_input_file: str, output_dir: str, raster_DTM_file: str, nb_cycle: int
 ):
     """Color a raster with a LUT created depending of a choice of cycles
 
     Argss :
         file_las : str : points cloud
-        file_MNT : str : MNT corresponding to the points cloud
+        file_DTM : str : DTM corresponding to the points cloud
         nb_cycle : int : the number of cycle that determine the LUT
     """
-    log.info("Generate MNT colorised :")
+    log.info(f"Generate DTM colorised :")
     log.info("(1/2) Generate LUT.")
     # Create LUT
     LUT = gen_LUT_X_cycle.generate_LUT_X_cycle(
-        file_las=las_input_file, file_MNT=raster_MNT_file, nb_cycle=nb_cycle
+        file_las=las_input_file, file_DTM=raster_DTM_file, nb_cycle=nb_cycle
     )
 
-    # Path MNT colorised
-    raster_MNT_color_file = os.path.join(
-        output_dir, 
-        "DTM_color",
+    # Path DTM colorised
+    raster_DTM_color_file = os.path.join(
+        output_dir,
         f"{las_input_file[:-4]}_DTM_hillshade_color{nb_cycle}c.tif",
     )
 
-    log.info("MNT color : " + raster_MNT_color_file)
+    log.info("DTM color : " + raster_DTM_color_file)
     log.info("(2/2) Colorise raster.")
 
     # Colorisation
     tools.color_raster_with_LUT(
-        input_raster=raster_MNT_file,
-        output_raster=raster_MNT_color_file,
+        input_raster=raster_DTM_file,
+        output_raster=raster_DTM_color_file,
         LUT=LUT,
     )
 
 
+def cluster(input_points: str):
+
+    pipeline = pdal.Filter.cluster(
+        min_points=3,
+        max_points=200,
+        tolerance=1,
+        is3d=True,
+    ).pipeline(input_points)
+    pipeline.execute()
+    return pipeline.arrays[0]
+
+
+def sample(input_points):
+    """Filtre points closest to 0.5m"""
+    pipeline = pdal.Filter.sample(radius="0.5").pipeline(input_points)
+    pipeline.execute()
+    return pipeline.arrays[0]
+
+
+def resample(input_las: str, res: float, output_filename: str):
+    """Resample with a given resolution.
+    Args :
+        input_las : las file
+        res : resolution in meter
+    """
+    pipeline = pdal.Reader.las(filename=input_las) | pdal.Writer.las(
+        resolution=res,
+        filename=output_filename,
+        a_srs=f"EPSG:{EPSG}",
+    )
+    pipeline.execute()
+
+
 def create_map_one_las(
-    input_las: str, output_dir: str, interpMETHOD: str, list_c: list
+    input_las: str, output_dir: str, interpMETHOD: str, list_c: list, type_raster: str
 ):
     """
     Create a DTM with Laplace or Linear method of interpolation. This function create a brut DTM, a shade DTM and a colored shade DTM.
@@ -349,11 +360,25 @@ def create_map_one_las(
     log.basicConfig(level=log.INFO)
 
     # Paramètres
-    size = dico_param["resolution_MNT"]  # meter = resolution from raster
-    _size = give_name_resolution_raster(size)
+    size = dico_param[f"resolution_{type_raster}"]  # meter = resolution from raster
+    _size = tools.give_name_resolution_raster(size)
 
-    # Complete path (exemple : "data" become "data/")
-    output_dir = os.path.join(output_dir, "")
+    DXM = type_raster
+    if type_raster == "DTM_dens":
+        DXM = "DTM"
+        folder_DXM_brut = dico_folder["folder_DTM_DENS_brut"]
+        log.info(f"{type_raster} (brut) at resolution {size} meter(s)\n")
+    elif type_raster == "DSM":
+        folder_DXM_brut = dico_folder["folder_DSM_brut"]
+        folder_DXM_shade = dico_folder["folder_DSM_shade"]
+        log.info(f"{type_raster} (brut, shade) at resolution {size} meter(s)\n")
+    elif type_raster == "DTM":
+        folder_DXM_brut = dico_folder["folder_DTM_brut"]
+        folder_DXM_shade = dico_folder["folder_DTM_shade"]
+        folder_DXM_color = dico_folder["folder_DTM_color"]
+        log.info(f"{type_raster} (brut, shade, color) at resolution {size} meter(s)\n")
+    else :
+        raise ValueError("Function create_map_one_las Parameter type_raster. Must be \"DTM\", \"DSM\" or \"DTM_dens\"")
 
     # Get directory
     input_dir = os.path.dirname(input_las)
@@ -362,8 +387,8 @@ def create_map_one_las(
     input_las_name = os.path.basename(input_las)
     input_las_name = f"{utils_pdal.stem(input_las)}.la{input_las[-1]}"
 
-    # Fichier de sortie MNT brut
-    out_dtm_raster = f"{output_dir}{input_las_name}_DTM.tif"
+    # Fichier de sortie DXM brut
+    out_dtm_raster = f"{output_dir}{input_las_name}_{DXM}.tif"
 
     # # Extraction infos du las
     # origin_x, origin_y, ProjSystem, AltiSystem = get_origin(input_las_name)
@@ -375,27 +400,35 @@ def create_map_one_las(
     # log.info(f"System of projection : {ProjSystem}")
     # log.info(f"Altimetric system : {AltiSystem}")
 
-    log.info("Filtering ground and virtual points...")
-    # Filtre les points sol de classif 2 et 66
-    # tools.filter_las_version2(las,las_pts_ground)
-    ground_pts = filter_las_ground(input_dir=input_dir, filename=input_las_name)
+    if DXM == "DTM" :
 
-    log.info("Build las filtered...")
-    # LAS points sol non interpolés
-    FileLasGround = write_las(
-        input_points=ground_pts,
-        filename=input_las_name,
-        output_dir=output_dir,
-        name="ground",
-    )
+        log.info("Filtering ground and virtual points...")
+        # Filtre les points sol de classif 2 et 66
+        # tools.filter_las_version2(las,las_pts_ground)
+        ground_pts = filter_las_ground(input_dir=input_dir, filename=input_las_name)
+
+        log.info("Build las filtered...")
+        # LAS points sol non interpolés
+        FileLasGround = write_las(
+            input_points=ground_pts,
+            filename=input_las_name,
+            output_dir=output_dir,
+            name="ground",
+        )
+
+        FileToInterpolate = FileLasGround
+
+    else : # DXM == DSM
+
+        FileToInterpolate = input_las
 
     log.info(f"Interpolation method : {interpMETHOD}")
 
     log.info(f"Re-sampling : resolution {size} meter...")
     # Extraction coord points cloud
-    log.debug(f"input : {FileLasGround}")
+    log.debug(f"input : {FileToInterpolate}")
     extents_calc, res_calc, origin_calc = las_prepare_1_file(
-        input_file=FileLasGround, size=size
+        input_file=FileToInterpolate, size=size
     )
 
     log.debug(f"Extents {extents_calc}")
@@ -434,7 +467,7 @@ def create_map_one_las(
         f.write(s)
     log.debug(f"All in :{fileRas}")
 
-    log.info("Build DTM brut...")
+    log.info(f"Build {DXM} brut...")
 
     raster_dtm_interp = write_geotiff_withbuffer(
         raster=ras,
@@ -442,8 +475,8 @@ def create_map_one_las(
         size=size,
         output_file=os.path.join(
             output_dir, 
-            "DTM_brut",
-            input_las_name[:-4] + _size + f"_{interpMETHOD}.tif",
+            folder_DXM_brut,
+            f"{os.path.splitext(input_las_name)[0]}_{DXM}{_size}_{interpMETHOD}.tif",
         ),
     )
 
@@ -451,41 +484,47 @@ def create_map_one_las(
 
     # Add hillshade
 
-    log.info("Build DTM hillshade...")
+    if type_raster != "DTM_dens" : # not hillshade DTM for density map 
 
-    dtm_file = raster_dtm_interp
-    dtm_hs_file = os.path.join(
-        output_dir, 
-        "DTM_shade",
-        f"{input_las_name[:-4]}_DTM{_size}_hillshade.tif",
-    )
-    hillshade_from_raster(
-        input_raster=dtm_file,
-        output_raster=dtm_hs_file,
-    )
+        log.info(f"Build {DXM} hillshade...")
 
-    log.debug(os.path.join(output_dir, dtm_hs_file))
+        dtm_file = raster_dtm_interp
+        dtm_hs_file = os.path.join(
+            output_dir, 
+            folder_DXM_shade,
+            f"{os.path.splitext(input_las_name)[0]}_{DXM}{_size}_hillshade.tif",
+        )
+        hillshade_from_raster(
+            input_raster=dtm_file,
+            output_raster=dtm_hs_file,
+        )
+
+        log.debug(os.path.join(output_dir, dtm_hs_file))
 
     # Add color
 
-    log.info("Build DTM hillshade color")
+    if type_raster == "DTM" : # color only DTM for map class fusion
 
-    cpt = 1
+        log.info("Build DTM hillshade color")
 
-    for cycle in list_c:
+        cpt = 1
 
-        log.info(f"{cpt}/{len(list_c)}...")
+        for cycle in list_c:
 
-        color_MNT_with_cycles(
-            las_input_file=input_las_name,
-            output_dir=output_dir,
-            raster_MNT_file=dtm_hs_file,
-            nb_cycle=cycle,
-        )
+            log.info(f"{cpt}/{len(list_c)}...")
 
-        cpt += 1
+            color_DTM_with_cycles(
+                las_input_file=input_las_name,
+                output_dir=os.path.join(output_dir,folder_DXM_color),
+                raster_DTM_file=dtm_hs_file,
+                nb_cycle=cycle,
+            )
 
-    log.debug("End DTM.")
+            cpt += 1
+
+    log.debug(f"End {type_raster}.\n")
+
+    log.info("\n\n")
 
 
 if __name__ == "__main__":
