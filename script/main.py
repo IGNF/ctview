@@ -8,7 +8,7 @@ import sys
 import shutil
 
 # Internal function
-import map_MNT_interp
+import map_DTM_DSM
 from parameter import dico_param
 from check_folder import create_folder
 
@@ -71,7 +71,7 @@ def main():
         cpt += 1
         log.info(f"FILE {cpt}/{len(list_las)}: {f}\n\n")
 
-        map_MNT_interp.create_map_one_las(
+        map_DTM_DSM.create_map_one_las(
             input_las=os.path.join(in_dir, f),
             output_dir=out_dir,
             interpMETHOD=interp_Method,
@@ -79,7 +79,7 @@ def main():
             type_raster="DTM_dens"
         )
 
-        map_MNT_interp.create_map_one_las(
+        map_DTM_DSM.create_map_one_las(
             input_las=os.path.join(in_dir, f),
             output_dir=out_dir,
             interpMETHOD=interp_Method,
@@ -87,7 +87,7 @@ def main():
             type_raster="DTM"
         )
 
-        map_MNT_interp.create_map_one_las(
+        map_DTM_DSM.create_map_one_las(
             input_las=os.path.join(in_dir, f),
             output_dir=out_dir,
             interpMETHOD=interp_Method,

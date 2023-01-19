@@ -2,7 +2,7 @@ import os
 import shutil
 import numpy as np
 
-from map_MNT_interp import (
+from map_DTM_DSM import (
     filter_las_ground,
     write_las,
     las_prepare_1_file,
