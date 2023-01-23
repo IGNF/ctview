@@ -30,7 +30,7 @@ import logging as log
 EPSG = dico_param["EPSG"]
 
 
-def filter_las_ground(input_dir: str, filename: str):
+def filter_las_ground_virtual(input_dir: str, filename: str):
     """Reads the LAS file and filter only grounds from LIDAR.
 
     Args:
@@ -70,12 +70,10 @@ def write_las(input_points, filename: str, output_dir: str, name: str):
     """
     file_root = os.path.splitext(filename)[0]  # filename without extension
 
-    dst = os.path.join(output_dir, dico_folder["folder_LAS_ground"])
+    os.makedirs(output_dir, exist_ok=True)  # create directory LAS/ if not exists
 
-    os.makedirs(dst, exist_ok=True)  # create directory LAS/ if not exists
-
-    log.debug("dst : " + dst)
-    FileOutput = os.path.join(dst, f"{file_root}_{name}.las")
+    log.debug("output_dir : " + output_dir)
+    FileOutput = os.path.join(output_dir, f"{file_root}_{name}.las")
 
     log.debug("filename : " + FileOutput)
     pipeline = pdal.Writer.las(filename=FileOutput, a_srs=f"EPSG:{EPSG}").pipeline(
@@ -357,7 +355,6 @@ def create_map_one_las(
         interpMETHOD : method of interpolation (Laplace or TINLinear)
         list_c: liste of number of cycles for each DTM colored. This list allows to create several DTM with differents colorisations.
     """
-    log.basicConfig(level=log.INFO)
 
     # Paramètres
     size = dico_param[f"resolution_{type_raster}"]  # meter = resolution from raster
@@ -382,10 +379,8 @@ def create_map_one_las(
 
     # Get directory
     input_dir = os.path.dirname(input_las)
-    input_dir = utils_pdal.parent(input_las)
     # Get filename without extension
     input_las_name = os.path.basename(input_las)
-    input_las_name = f"{utils_pdal.stem(input_las)}.la{input_las[-1]}"
 
     # Fichier de sortie DXM brut
     out_dtm_raster = f"{output_dir}{input_las_name}_{DXM}.tif"
@@ -405,14 +400,14 @@ def create_map_one_las(
         log.info("Filtering ground and virtual points...")
         # Filtre les points sol de classif 2 et 66
         # tools.filter_las_version2(las,las_pts_ground)
-        ground_pts = filter_las_ground(input_dir=input_dir, filename=input_las_name)
+        ground_pts = filter_las_ground_virtual(input_dir=input_dir, filename=input_las_name)
 
         log.info("Build las filtered...")
         # LAS points sol non interpolés
         FileLasGround = write_las(
             input_points=ground_pts,
             filename=input_las_name,
-            output_dir=output_dir,
+            output_dir=os.path.join(output_dir, dico_folder["folder_LAS_ground_virtual"]),
             name="ground",
         )
 
@@ -480,11 +475,13 @@ def create_map_one_las(
         ),
     )
 
-    log.debug(os.path.join(output_dir, raster_dtm_interp))
+    log.debug(raster_dtm_interp)
 
-    # Add hillshade
+    if type_raster == "DTM_dens" : # not hillshade DTM for density map 
 
-    if type_raster != "DTM_dens" : # not hillshade DTM for density map 
+        return raster_dtm_interp # DTM brut for density 
+
+    else : # Add hillshade
 
         log.info(f"Build {DXM} hillshade...")
 
@@ -525,6 +522,8 @@ def create_map_one_las(
     log.debug(f"End {type_raster}.\n")
 
     log.info("\n\n")
+
+    return dtm_hs_file # DTM/DSM with hillshade
 
 
 if __name__ == "__main__":

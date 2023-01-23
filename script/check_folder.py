@@ -7,7 +7,7 @@ RES_DTM_DENS = tools.give_name_resolution_raster(dico_param["resolution_DTM_dens
 RES_DSM = tools.give_name_resolution_raster(dico_param["resolution_DSM"])
 
 dico_folder = {
-    "folder_LAS_ground": "LAS_ground",
+    "folder_LAS_ground_virtual": "LAS_filterGrdVirt",
     "folder_DTM_brut": f"DTM{RES_DTM}_brut",
     "folder_DTM_shade": f"DTM{RES_DTM}_shade",
     "folder_DTM_color": f"DTM{RES_DTM}_color",
@@ -17,7 +17,8 @@ dico_folder = {
     "folder_intensity": "INTENSITY",
     "folder_interp_table": "TABLE_INTERP",
     "folder_density_value" : "DENS_VAL",
-    "folder_density_color" : "DENS_COL"
+    "folder_density_color" : "DENS_COL",
+    "folder_density_final" : "DENS_FINAL"
 }
 
 

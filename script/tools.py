@@ -3,6 +3,7 @@
 # IMPORT
 import pdal
 from osgeo import gdal
+import os
 
 DICO_CLASS = "../dico/dictionnary_alamano.txt"
 DICO_TEST = "../dico/ramp.txt"
@@ -162,3 +163,12 @@ def give_name_resolution_raster(size):
     else:
         _size = str(size)
     return _size
+
+def repare_files(las_dir: str):
+    for f in os.listdir(las_dir):
+        filename = os.path.join(las_dir, f)
+        f = open(filename, "rb+")
+        f.seek(6)
+        f.write(bytes([17, 0, 0, 0]))
+        f.close()
+        print(f"fichier {filename} repare")
