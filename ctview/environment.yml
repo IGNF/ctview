@@ -5,8 +5,8 @@ channels:
 dependencies:
   - python=3.9.*
   - pip
-  - conda-forge:pdal==2.3.*
-  - conda-forge:python-pdal==3.0.*
+  - conda-forge:pdal==2.5.*
+  - conda-forge:python-pdal==3.2.*
   - gdal
   - laspy
   - geojson

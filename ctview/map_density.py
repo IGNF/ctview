@@ -8,6 +8,7 @@ import tools
     # Library
 import os
 import pdal
+import numpy
 import argparse
 import subprocess
 import logging as log
@@ -31,6 +32,7 @@ FOLDER_DENS_FINAL = dico_folder["folder_density_final"]
 def generate_raster_of_density(
     input_las: str,
     output_dir: str,
+    bounds: str = None
 ):
     """
     Build a raster of density colored.
@@ -46,7 +48,7 @@ def generate_raster_of_density(
     input_filename = os.path.basename(input_las)
 
     # Build raster count point
-    raster_name_dens = os.path.join(output_dir,FOLDER_DENS_VALUE,f"{os.path.splitext(input_filename)[0]}_DENS_BRUT{extension}")
+    raster_name_count = os.path.join(output_dir,FOLDER_DENS_VALUE,f"{os.path.splitext(input_filename)[0]}_COUNT{extension}")
     #raster_name_dens = os.path.join(output_dir, f"{os.path.splitext(input_filename)[0]}_DENS{extension}")
 
     # Parameters
@@ -55,13 +57,17 @@ def generate_raster_of_density(
     
     # Raster of density : count points in resolution*resolution m² (Default=25 m²)
     log.info(f"Raster count points at resolution {size} meter(s)")
-    method_writer_gdal(input_las=input_las, output_file=raster_name_dens)
+    method_writer_gdal(input_las=input_las, output_file=raster_name_count, bounds=bounds)
+
+    # Crop raster
+
 
     # Overwrite and change unity of count from "per 25 m²" to "per m²"
+    raster_name_dens = os.path.join(output_dir,FOLDER_DENS_VALUE,f"{os.path.splitext(input_filename)[0]}_DENS_BRUT{extension}")
     gdal_calc.Calc(
         "A/25",
         outfile=raster_name_dens,
-        A=raster_name_dens,
+        A=raster_name_count,
         quiet=True,
     )
 
@@ -80,20 +86,37 @@ def generate_raster_of_density(
 
 def method_writer_gdal(
     input_las: str,
-    output_file: str
+    output_file: str,
+    bounds: str = None
 ):
-    pipeline = (
-        pdal.Reader.las(filename=input_las)
-        | pdal.Filter.range(
-                        limits="Classification[2:2]"
-                        )
-        | pdal.Writer.gdal(
-                        filename = output_file, 
-                        resolution = resolution,
-                        radius = resolution,
-                        output_type = "count"
-                        )
-    )
+    log.info(f"Bounds forced (remove 1 pixel at resolution density) :{bounds}")
+    if bounds is None :
+        pipeline = (
+            pdal.Reader.las(filename=input_las)
+            | pdal.Filter.range(
+                            limits="Classification[2:2]"
+                            )
+            | pdal.Writer.gdal(
+                            filename = output_file, 
+                            resolution = resolution,
+                            radius = resolution,
+                            output_type = "count"
+                            )
+        )
+    else :
+        pipeline = (
+            pdal.Reader.las(filename=input_las)
+            | pdal.Filter.range(
+                            limits="Classification[2:2]"
+                            )
+            | pdal.Writer.gdal(
+                            filename = output_file, 
+                            resolution = resolution,
+                            radius = 0.1,
+                            output_type = "count",
+                            bounds = str(bounds),
+                            )
+        )
     pipeline.execute()
 
 
