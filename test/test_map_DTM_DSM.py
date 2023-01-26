@@ -21,7 +21,7 @@ PTS_TO_INTERPOL = "oneclass_2.las"
 
 
 # PATH TO FOLDER TEST
-TEST_DIR = "labo"
+TEST_DIR = os.path.join("data","labo")
 
 if os.path.exists(TEST_DIR):
     # Clean folder test if exists
@@ -85,6 +85,9 @@ def test_write_las():
 
     assert os.path.exists(output_filename)  # file created
     assert os.path.splitext(output_filename)[1] == ".las"  # extension is las
+
+    # Clean folder test 
+    shutil.rmtree(TEST_DIR)
 
 
 def test_las_prepare_1_file():
