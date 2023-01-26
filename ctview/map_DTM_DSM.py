@@ -3,11 +3,11 @@
 # IMPORT
 
 # File
-import utils_tools
-import utils_pdal
-import utils_gdal
-from parameter import dico_param
-from utils_folder import dico_folder
+import ctview.utils_tools
+import ctview.utils_pdal
+from ctview.parameter import dico_param
+from ctview.check_folder import dico_folder
+import ctview.gen_LUT_X_cycle as gen_LUT_X_cycle
 
 # Library
 import sys
@@ -22,7 +22,6 @@ from multiprocessing import Pool, cpu_count
 import json
 import laspy
 import math
-import gen_LUT_X_cycle
 from tqdm import tqdm
 import logging as log
 
@@ -127,9 +126,8 @@ def las_prepare_1_file(input_file: str, size: float):
     in_file = laspy.read(input_file)
     header = in_file.header
     in_np = np.vstack(
-        (in_file.classification, in_file.x, in_file.y, in_file.z)
+        (in_file.x, in_file.y, in_file.z)
     ).transpose()
-    in_np = in_np[in_np[:, 0] == 2].copy()[:, 1:]
     extents = [[header.min[0], header.max[0]], [header.min[1], header.max[1]]]
     res = [
         math.ceil((extents[0][1] - extents[0][0]) / size),
@@ -288,7 +286,7 @@ def color_DTM_with_cycles(
         file_DTM : str : DTM corresponding to the points cloud
         nb_cycle : int : the number of cycle that determine the LUT
     """
-    log.info(f"Generate DTM colorised :")
+    log.info("Generate DTM colorised :")
     log.info("(1/2) Generate LUT.")
     # Create LUT
     LUT = gen_LUT_X_cycle.generate_LUT_X_cycle(

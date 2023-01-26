@@ -1,6 +1,11 @@
 import os
+<<<<<<<< HEAD:ctview/utils_folder.py
 import utils_tools
 from parameter import dico_param
+========
+import ctview.tools as tools
+from ctview.parameter import dico_param
+>>>>>>>> d1d5114 (Re-organize tests : new folder test/, orga test data, folder ci/ for lauch all tests together):ctview/check_folder.py
 
 RES_DTM = utils_tools.give_name_resolution_raster(dico_param["resolution_DTM"])
 RES_DTM_DENS = utils_tools.give_name_resolution_raster(dico_param["resolution_DTM_dens"])

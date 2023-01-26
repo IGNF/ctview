@@ -1,10 +1,14 @@
 import os
 import shutil
 
+<<<<<<<< HEAD:ctview/test_utils_folder.py
 from utils_folder import create_folder, dico_folder
+========
+from ctview.check_folder import create_folder, dico_folder
+>>>>>>>> d1d5114 (Re-organize tests : new folder test/, orga test data, folder ci/ for lauch all tests together):test/test_check_folder.py
 
 # PATH TO FOLDER "TEST"
-TEST_DIR = os.path.join("..", "test")
+TEST_DIR = os.path.join("data", "labo")
 
 if os.path.exists(TEST_DIR):
     # Clean folder test if exists
