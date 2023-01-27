@@ -10,10 +10,10 @@ import tools
 import utils_pdal
 
 # Internal function
-import map_DTM_DSM
-from parameter import dico_param
-from check_folder import create_folder, dico_folder
-import map_density
+import ctview.map_DTM_DSM
+from ctview.parameter import dico_param
+from ctview.check_folder import create_folder, dico_folder
+import ctview.map_density
 
 # Parameters
 extension = dico_param["raster_extension"]
