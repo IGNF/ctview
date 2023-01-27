@@ -11,7 +11,7 @@ import shutil
 import logging as log
 
 # Parameters
-from parameter import dico_folder, dico_param
+from ctview.parameter import dico_folder, dico_param
 
 
 # FONCTION

@@ -14,9 +14,9 @@ import argparse
 import subprocess
 import logging as log
     # Dictionnary
-from parameter import dico_param
-from utils_folder import dico_folder
-import lidarutils.gdal_calc as gdal_calc
+from ctview.parameter import dico_param
+from ctview.utils_folder import dico_folder
+import ctview.lidarutils.gdal_calc as gdal_calc
 
 # PARAMETERS
 
