@@ -23,12 +23,20 @@ PTS_TO_INTERPOL = "oneclass_2.las"
 # PATH TO FOLDER TEST
 TEST_DIR = os.path.join("data","labo")
 
-if os.path.exists(TEST_DIR):
-    # Clean folder test if exists
-    shutil.rmtree(TEST_DIR)
-else:
+def setUpModule(): # run before the first test
+    try : # Clean folder test if exists
+        shutil.rmtree(TEST_DIR)
+    except (FileNotFoundError):
+        pass
     # Create folder test if not exists
     os.makedirs(TEST_DIR)
+
+
+def tearDownModule(): # run after the last test
+    try : # Clean folder test if exists
+        shutil.rmtree(TEST_DIR)
+    except (FileNotFoundError):
+        pass
 
 
 def test_1_filter_las_ground_virtual(INPUT_DIR=DATA_DIR, filename=FILE_MUTLI_1_TO_5):
@@ -86,9 +94,6 @@ def test_write_las():
     assert os.path.exists(output_filename)  # file created
     assert os.path.splitext(output_filename)[1] == ".las"  # extension is las
 
-    # Clean folder test 
-    shutil.rmtree(TEST_DIR)
-
 
 def test_las_prepare_1_file():
     """
@@ -107,7 +112,7 @@ def test_las_prepare_1_file():
     assert isinstance(origin, list) and len(resolution) == 2  # type is list and len==2
 
 
-def test_execute_startin():
+def execute_test_mnt(method: str):
     """
     Verify :
         - return an array
@@ -120,24 +125,14 @@ def test_execute_startin():
     )
 
     ras = execute_startin(
-        pts=pts_to_interpol, res=resolution, origin=origin, size=1.0, method="Laplace"
+        pts=pts_to_interpol, res=resolution, origin=origin, size=1.0, method=method
     )
     assert isinstance(ras, np.ndarray)  # type is array
+
+
+def test_execute_startin():
+    execute_test_mnt("Laplace")
 
 
 def test_execute_startin_2():
-    """
-    Verify :
-        - return an array
-    """
-    input_file = os.path.join(DATA_DIR,PTS_TO_INTERPOL)
-    size = 1.0
-
-    pts_to_interpol, resolution, origin = las_prepare_1_file(
-        input_file=input_file, size=size
-    )
-
-    ras = execute_startin(
-        pts=pts_to_interpol, res=resolution, origin=origin, size=1.0, method="TINlinear"
-    )
-    assert isinstance(ras, np.ndarray)  # type is array
+    execute_test_mnt("TINlinear")
