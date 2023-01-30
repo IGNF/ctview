@@ -6,12 +6,12 @@ import os
 import logging as log
 import sys
 import shutil
-import tools
+import utils_tools
 
 # Internal function
 import map_DTM_DSM
 from parameter import dico_param
-from check_folder import create_folder, dico_folder
+from utils_folder import create_folder, dico_folder
 import map_density
 
 # Parameters
@@ -69,7 +69,7 @@ def main():
         log.info(os.path.basename(f))
 
     # Repare file
-    tools.repare_files(las_dir=in_dir)
+    utils_tools.repare_files(las_dir=in_dir)
 
     # Scan las/laz file from input directory
     cpt=0

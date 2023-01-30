@@ -6,15 +6,107 @@ from pathlib import Path
 
 # from ctclass import utils_geometry, utils_gdal
 
+def read_las(file_las):
+    """Read a las file and put it in an array"""
+    pipeline = pdal.Pipeline() | pdal.Reader.las(filename=file_las)
+    pipeline.execute()
+    return pipeline.arrays[0]
 
-def stem(input_file: str):
-    """Extract filename without extension"""
-    return Path(input_file).stem
+
+def write_las_simple(input_points, output_las):
+    """Write a las file"""
+    pipeline = pdal.Writer.las(filename=output_las).pipeline(input_points)
+    pipeline.execute()
 
 
-def parent(input_file: str):
-    """Extract directory of input_file"""
-    return str(Path(input_file).parent)
+def write_raster(input_points, output_raster, dim,):
+    """
+    Generate a raster.
+    input_points : input
+    output_raster : output
+    dim : dimension
+    """
+    pipeline = pdal.Writer.gdal(
+        filename=output_raster,
+        resolution=0.5,
+        dimension=dim,
+    ).pipeline(input_points)
+    pipeline.execute()
+
+
+def write_raster_z(input_points, output_raster):
+    """Generate a raster"""
+    pipeline = pdal.Writer.gdal(
+        filename=output_raster, resolution=0.5, dimension="Z"
+    ).pipeline(input_points)
+    pipeline.execute()
+
+
+def write_raster_class(input_points, output_raster):
+    """Generate a raster"""
+    pipeline = pdal.Writer.gdal(
+        filename=output_raster,
+        resolution=0.5,
+        dimension="Classification",
+        gdaldriver="GTiff",
+    ).pipeline(input_points)
+    pipeline.execute()
+
+
+def filter_las(points, classif):
+    """Filter with the classification classif"""
+    classif = f"Classification[{classif}:{classif}]"  # classif 6 = batiments
+    pipeline = (
+        pdal.Filter.range(limits=classif).pipeline(points)
+        | pdal.Filter.hag_nn()
+        | pdal.Filter.range(limits=classif)
+    )
+    pipeline.execute()
+    return pipeline.arrays[0]
+
+
+def filter_las_version2(lasFile, outFile):
+    fpath = lasFile
+    FileOutput = outFile
+    information = {}
+    information = {
+        "pipeline": [
+            {
+                "type": "readers.las",
+                "filename": fpath,
+                "override_srs": "EPSG:2154",
+                "nosrs": True,
+            },
+            {
+                "type": "filters.range",
+                "limits": "Classification[2:2],Classification[66:66]",
+            },
+            {
+                "type": "writers.las",
+                "a_srs": "EPSG:2154",
+                # "minor_version": 4,
+                # "dataformat_id": 6,
+                "filename": FileOutput,
+            },
+        ]
+    }
+    ground = json.dumps(information, sort_keys=True, indent=4)
+    print(ground)
+    pipeline = pdal.Pipeline(ground)
+    pipeline.execute()
+
+
+def color_points_by_class(input_points):
+    "Color las points by class."
+    #   classif = "Classification[6:6]"  # classif 6 = batiments
+    pipeline = pdal.Filter.colorinterp(
+        ramp="pestel_shades",
+        mad="true",
+        k="1.8",
+        dimension="Z",
+    ).pipeline(input_points)
+    pipeline.execute()
+    return pipeline.arrays[0]
 
 
 def read_las_file(input_las: str):

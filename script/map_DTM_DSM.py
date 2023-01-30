@@ -3,10 +3,11 @@
 # IMPORT
 
 # File
-import tools
+import utils_tools
 import utils_pdal
+import utils_gdal
 from parameter import dico_param
-from check_folder import dico_folder
+from utils_folder import dico_folder
 
 # Library
 import sys
@@ -304,7 +305,7 @@ def color_DTM_with_cycles(
     log.info("(2/2) Colorise raster.")
 
     # Colorisation
-    tools.color_raster_with_LUT(
+    utils_gdal.color_raster_with_LUT(
         input_raster=raster_DTM_file,
         output_raster=raster_DTM_color_file,
         LUT=LUT,
@@ -344,6 +345,27 @@ def resample(input_las: str, res: float, output_filename: str):
     pipeline.execute()
 
 
+def name_folder_DTM_dens():
+    """Assign folder name from dictionnary"""
+    folder_DXM_brut = dico_folder["folder_DTM_DENS_brut"]
+    return folder_DXM_brut
+
+
+def name_folder_DSM():
+    """Assign folder name from dictionnary"""
+    folder_DXM_brut = dico_folder["folder_DSM_brut"]
+    folder_DXM_shade = dico_folder["folder_DSM_shade"]
+    return folder_DXM_brut,folder_DXM_shade
+
+
+def name_folder_DTM():
+    """Assign folder name from dictionnary"""
+    folder_DXM_brut = dico_folder["folder_DTM_brut"]
+    folder_DXM_shade = dico_folder["folder_DTM_shade"]
+    folder_DXM_color = dico_folder["folder_DTM_color"]
+    return folder_DXM_brut, folder_DXM_shade, folder_DXM_color
+
+
 def create_map_one_las(
     input_las: str, output_dir: str, interpMETHOD: str, list_c: list, type_raster: str
 ):
@@ -358,21 +380,18 @@ def create_map_one_las(
 
     # Paramètres
     size = dico_param[f"resolution_{type_raster}"]  # meter = resolution from raster
-    _size = tools.give_name_resolution_raster(size)
+    _size = utils_tools.give_name_resolution_raster(size)
 
     DXM = type_raster
     if type_raster == "DTM_dens":
         DXM = "DTM"
-        folder_DXM_brut = dico_folder["folder_DTM_DENS_brut"]
+        folder_DXM_brut = name_folder_DTM_dens()
         log.info(f"{type_raster} (brut) at resolution {size} meter(s)\n")
     elif type_raster == "DSM":
-        folder_DXM_brut = dico_folder["folder_DSM_brut"]
-        folder_DXM_shade = dico_folder["folder_DSM_shade"]
+        folder_DXM_brut, folder_DXM_shade = name_folder_DSM()
         log.info(f"{type_raster} (brut, shade) at resolution {size} meter(s)\n")
     elif type_raster == "DTM":
-        folder_DXM_brut = dico_folder["folder_DTM_brut"]
-        folder_DXM_shade = dico_folder["folder_DTM_shade"]
-        folder_DXM_color = dico_folder["folder_DTM_color"]
+        folder_DXM_brut, folder_DXM_shade, folder_DXM_color = name_folder_DTM()
         log.info(f"{type_raster} (brut, shade, color) at resolution {size} meter(s)\n")
     else :
         raise ValueError("Function create_map_one_las Parameter type_raster. Must be \"DTM\", \"DSM\" or \"DTM_dens\"")
@@ -399,7 +418,7 @@ def create_map_one_las(
 
         log.info("Filtering ground and virtual points...")
         # Filtre les points sol de classif 2 et 66
-        # tools.filter_las_version2(las,las_pts_ground)
+        # utils_pdal.filter_las_version2(las,las_pts_ground)
         ground_pts = filter_las_ground_virtual(input_dir=input_dir, filename=input_las_name)
 
         log.info("Build las filtered...")
@@ -486,17 +505,17 @@ def create_map_one_las(
         log.info(f"Build {DXM} hillshade...")
 
         dtm_file = raster_dtm_interp
-        dtm_hs_file = os.path.join(
+        raster_dtm_hs = os.path.join(
             output_dir, 
             folder_DXM_shade,
             f"{os.path.splitext(input_las_name)[0]}_{DXM}{_size}_hillshade.tif",
         )
         hillshade_from_raster(
             input_raster=dtm_file,
-            output_raster=dtm_hs_file,
+            output_raster=raster_dtm_hs,
         )
 
-        log.debug(os.path.join(output_dir, dtm_hs_file))
+        log.debug(os.path.join(output_dir, raster_dtm_hs))
 
     # Add color
 
@@ -513,7 +532,7 @@ def create_map_one_las(
             color_DTM_with_cycles(
                 las_input_file=input_las_name,
                 output_dir=os.path.join(output_dir,folder_DXM_color),
-                raster_DTM_file=dtm_hs_file,
+                raster_DTM_file=raster_dtm_hs,
                 nb_cycle=cycle,
             )
 
@@ -523,7 +542,7 @@ def create_map_one_las(
 
     log.info("\n\n")
 
-    return raster_dtm_hs_file # DTM/DSM with hillshade
+    return raster_dtm_hs # DTM/DSM with hillshade
 
 
 if __name__ == "__main__":

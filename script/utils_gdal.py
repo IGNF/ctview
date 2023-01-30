@@ -6,6 +6,8 @@ import geojson
 
 from osgeo import gdal, osr, ogr
 
+DICO_CLASS = os.path.join("..","LUT","LUT_CLASS.txt")
+
 # import lidarutils.geometry_utils as gu
 # import lidarutils.gdal_utils as lu_gdal_utils
 
@@ -116,3 +118,33 @@ def transform_CornerCoord_to_Bounds(corner_coord: tuple):
     _Y.sort()
 
     return (_X,_Y)
+
+
+
+def color_raster_by_class_2(input_raster, output_raster):
+    "Color raster by classe"
+    #   classif = "Classification[6:6]"  # classif 6 = batiments
+
+    gdal.DEMProcessing(
+        destName=output_raster,
+        srcDS=input_raster,
+        processing="color-relief",
+        colorFilename=DICO_CLASS,
+    )
+
+
+def color_raster_with_LUT(input_raster, output_raster, LUT):
+    """
+    Color raster with a LUT
+    input_raster : path of raster to colorise
+    output_raster : path of raster colorised
+    dim : dimension to color
+    LUT : dictionnary of color
+    """
+
+    gdal.DEMProcessing(
+        destName=output_raster,
+        srcDS=input_raster,
+        processing="color-relief",
+        colorFilename=LUT,
+    )

@@ -4,7 +4,7 @@
 # IMPORT
 
 # Library
-import tools
+import utils_pdal
 import os
 import argparse
 import shutil
@@ -33,10 +33,10 @@ def create_folder(dest_dir: str):
 def create_map_intensity(input_las, raster_intensity):
 
     # Read las
-    in_points = tools.read_las(input_las)
+    in_points = utils_pdal.read_las(input_las)
 
     # Create raster of intensity
-    tools.write_raster(
+    utils_pdal.write_raster(
         input_points=in_points,
         output_raster=raster_intensity,
         dim="Intensity",

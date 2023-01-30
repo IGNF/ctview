@@ -4,7 +4,8 @@
 
 # File
 import utils_pdal
-import tools
+import utils_gdal
+import utils_tools
     # Library
 import os
 import pdal
@@ -13,7 +14,7 @@ import subprocess
 import logging as log
     # Dictionnary
 from parameter import dico_param
-from check_folder import dico_folder
+from utils_folder import dico_folder
 import lidarutils.gdal_calc as gdal_calc
 
 # PARAMETERS
@@ -51,7 +52,7 @@ def generate_raster_of_density(
 
     # Parameters
     size = resolution  # meter = resolution from raster
-    _size = tools.give_name_resolution_raster(size)
+    _size = utils_tools.give_name_resolution_raster(size)
     
     # Raster of density : count points in resolution*resolution m² (Default=25 m²)
     log.info(f"Raster count points at resolution {size} meter(s)")
@@ -67,7 +68,7 @@ def generate_raster_of_density(
     raster_name_dens_color = os.path.join(output_dir, FOLDER_DENS_COLOR,f"{os.path.splitext(input_filename)[0]}_DENS_COLOR{extension}")
 
     log.info("Colorisation...")
-    tools.color_raster_with_LUT(
+    utils_gdal.color_raster_with_LUT(
         input_raster = raster_name_dens,
         output_raster = raster_name_dens_color,
         LUT = os.path.join("..",os.path.join("LUT","LUT_DENSITY.txt"))
