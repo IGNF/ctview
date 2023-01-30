@@ -6,12 +6,16 @@ import os
 import logging as log
 import sys
 import shutil
+import utils_tools
 
 # Internal function
 import map_DTM_DSM
 from parameter import dico_param
-from check_folder import create_folder
+from utils_folder import create_folder, dico_folder
+import map_density
 
+# Parameters
+extension = dico_param["raster_extension"]
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -64,21 +68,37 @@ def main():
     for f in list_las:
         log.info(os.path.basename(f))
 
+    # Repare file
+    utils_tools.repare_files(las_dir=in_dir)
+
     # Scan las/laz file from input directory
     cpt=0
     for f in list_las:
 
         cpt += 1
         log.info(f"FILE {cpt}/{len(list_las)}: {f}\n\n")
-
-        map_DTM_DSM.create_map_one_las(
+        # DENSITY (DTM brut + density)
+        # Step 1 : DTM brut
+        raster_DTM_dens = map_DTM_DSM.create_map_one_las(
             input_las=os.path.join(in_dir, f),
             output_dir=out_dir,
             interpMETHOD=interp_Method,
             list_c=list_cycles,
             type_raster="DTM_dens"
         )
-
+        # Step 2 : raster of density
+        raster_dens = map_density.generate_raster_of_density(
+            input_las=os.path.join(in_dir, f),
+            output_dir=out_dir
+        )
+        # # Step 3 : multiply density and DTM layers
+        # map_density.multiply_DTM_density(
+        #     input_DTM=raster_DTM_dens, 
+        #     input_dens_raster=raster_dens, 
+        #     filename=f,
+        #     output_dir=out_dir
+        # )
+        # DTM hillshade color
         map_DTM_DSM.create_map_one_las(
             input_las=os.path.join(in_dir, f),
             output_dir=out_dir,
@@ -86,7 +106,7 @@ def main():
             list_c=list_cycles,
             type_raster="DTM"
         )
-
+        # DSM hillshade
         map_DTM_DSM.create_map_one_las(
             input_las=os.path.join(in_dir, f),
             output_dir=out_dir,

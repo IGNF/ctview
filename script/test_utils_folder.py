@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from check_folder import create_folder, dico_folder
+from utils_folder import create_folder, dico_folder
 
 # PATH TO FOLDER "TEST"
 TEST_DIR = os.path.join("..", "test")

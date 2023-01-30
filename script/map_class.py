@@ -4,7 +4,8 @@
 
 # Library
 import pdal
-import tools
+import utils_tools
+import utils_pdal
 import sys
 import logging as log
 import os
@@ -89,7 +90,7 @@ def main():
 
     input_las_name = os.path.basename(input_las)
     input_las_name_without_extension = os.path.splitext(input_las_name)[0]  # Read las
-    in_points = tools.read_las(input_las)
+    in_points = utils_pdal.read_las(input_las)
 
     log.info(f"\n\nMAP OF CLASS : file : {input_las_name}")
 
@@ -97,7 +98,7 @@ def main():
     output_raster = os.path.join(
         output_dir, f"{input_las_name_without_extension}_raster.tif"
     )
-    tools.write_raster_class(in_points, output_raster)
+    utils_pdal.write_raster_class(in_points, output_raster)
 
     log.info("Create raster of class brut : ")
     log.info(output_raster)
@@ -128,7 +129,7 @@ def main():
     color_fillgap_raster = os.path.join(
         output_dir, f"{input_las_name_without_extension}_raster_fillgap_color.tif"
     )
-    tools.color_raster_by_class_2(
+    utils_gdal.color_raster_by_class_2(
         input_raster=fillgap_raster,
         output_raster=color_fillgap_raster,
     )
@@ -144,7 +145,7 @@ def main():
     color_raster = os.path.join(
         output_dir, f"{input_las_name_without_extension}_raster_color_.tif"
     )
-    tools.color_raster_by_class_2(
+    utils_gdal.color_raster_by_class_2(
         input_raster=output_raster,
         output_raster=color_raster,
     )

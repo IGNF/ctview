@@ -6,6 +6,8 @@ import geojson
 
 from osgeo import gdal, osr, ogr
 
+DICO_CLASS = os.path.join("..","LUT","LUT_CLASS.txt")
+
 # import lidarutils.geometry_utils as gu
 # import lidarutils.gdal_utils as lu_gdal_utils
 
@@ -87,3 +89,62 @@ def polygonize_and_add_field_name(raster_unvalide: str, epsg: int, field_name: s
             fea["properties"]["type erreur"] = field_name
             unvalide_area.append(fea)
     return unvalide_area
+
+
+def get_raster_corner_coord(in_raster: str):
+    """
+    Get corners coordinates from a raster
+    Return :
+        tuple(upper_left_x,upper_left_y,lower_right_x,lower_right_y)
+        """
+    gtif = gdal.Open(in_raster)
+    ulx, xres, xskew, uly, yskew, yres  = gtif.GetGeoTransform()
+    lrx = ulx + (gtif.RasterXSize * xres)
+    lry = uly + (gtif.RasterYSize * yres)
+    return (ulx,uly,lrx,lry)
+
+def transform_CornerCoord_to_Bounds(corner_coord: tuple):
+    """
+    Transform corners coordinates to maximum and minimum x and y
+    Warning : 
+        corner_coord must be in this order : (upper_left_x,upper_left_y,lower_right_x,lower_right_y)
+    Return :
+        ([minx,maxx],[miny,maxy])
+    """
+    _X = [corner_coord[0],corner_coord[2]]
+    _Y = [corner_coord[1],corner_coord[3]]
+
+    _X.sort() # arrange in ascending order
+    _Y.sort()
+
+    return (_X,_Y)
+
+
+
+def color_raster_by_class_2(input_raster, output_raster):
+    "Color raster by classe"
+    #   classif = "Classification[6:6]"  # classif 6 = batiments
+
+    gdal.DEMProcessing(
+        destName=output_raster,
+        srcDS=input_raster,
+        processing="color-relief",
+        colorFilename=DICO_CLASS,
+    )
+
+
+def color_raster_with_LUT(input_raster, output_raster, LUT):
+    """
+    Color raster with a LUT
+    input_raster : path of raster to colorise
+    output_raster : path of raster colorised
+    dim : dimension to color
+    LUT : dictionnary of color
+    """
+
+    gdal.DEMProcessing(
+        destName=output_raster,
+        srcDS=input_raster,
+        processing="color-relief",
+        colorFilename=LUT,
+    )
