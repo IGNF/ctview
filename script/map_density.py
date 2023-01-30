@@ -58,12 +58,10 @@ def generate_raster_of_density(
     method_writer_gdal(input_las=input_las, output_file=raster_name_dens)
 
     # Overwrite and change unity of count from "per 25 m²" to "per m²"
-    gdal_calc.Calc(
-        "A/25",
-        outfile=raster_name_dens,
-        A=raster_name_dens,
-        quiet=True,
-    )
+    change_unit(
+        raster_name=raster_name_dens,
+        res=resolution
+        )
 
     # Color density
     raster_name_dens_color = os.path.join(output_dir, FOLDER_DENS_COLOR,f"{os.path.splitext(input_filename)[0]}_DENS_COLOR{extension}")
@@ -95,6 +93,21 @@ def method_writer_gdal(
                         )
     )
     pipeline.execute()
+
+
+def change_unit(raster_name: str, res: int):
+    """
+    Overwrite and change unity of count from "per res*res m²" to "per m²
+    Args :
+        raster_name : raster of density with units res*res m²
+        res : resolution of the raster
+    """
+    gdal_calc.Calc(
+        f"A/{res*res}",
+        outfile=raster_name,
+        A=raster_name,
+        quiet=True,
+    )
 
 
 def multiply_DTM_density(input_DTM: str, input_dens_raster: str, filename: str, output_dir: str):
