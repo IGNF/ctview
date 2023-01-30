@@ -523,7 +523,7 @@ def create_map_one_las(
 
     log.info("\n\n")
 
-    return dtm_hs_file # DTM/DSM with hillshade
+    return raster_dtm_hs_file # DTM/DSM with hillshade
 
 
 if __name__ == "__main__":
