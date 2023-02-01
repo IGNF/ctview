@@ -1,7 +1,11 @@
 import os
 import shutil
 
+<<<<<<<< HEAD:test/test_utils_folder.py
 from ctview.utils_folder import create_folder, dico_folder
+========
+from ctview.check_folder import create_folder, dico_folder
+>>>>>>>> af18971c5ad9f6217f1619175b98c75e030488e7:test/test_check_folder.py
 
 # PATH TO FOLDER "TEST"
 TEST_DIR = os.path.join("data", "labo")
