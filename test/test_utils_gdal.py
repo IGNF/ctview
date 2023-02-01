@@ -31,4 +31,3 @@ def test_transform_CornerCoord_to_Bounds():
     assert maxx == maxx_expected
     assert miny == miny_expected
     assert maxy == maxy_expected
-

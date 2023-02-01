@@ -6,13 +6,14 @@ import os
 import logging as log
 import sys
 import shutil
-import utils_tools
+import ctview.utils_tools as utils_tools
+import ctview.utils_pdal as utils_pdal
 
 # Internal function
-import map_DTM_DSM
-from parameter import dico_param
-from utils_folder import create_folder, dico_folder
-import map_density
+import ctview.map_DTM_DSM as map_DTM_DSM
+from ctview.parameter import dico_param
+from ctview.utils_folder import create_folder, dico_folder
+import ctview.map_density as map_density
 
 # Parameters
 extension = dico_param["raster_extension"]
@@ -77,21 +78,27 @@ def main():
 
         cpt += 1
         log.info(f"FILE {cpt}/{len(list_las)}: {f}\n\n")
-        # DENSITY (DTM brut + density)
-        # Step 1 : DTM brut
-        raster_DTM_dens = map_DTM_DSM.create_map_one_las(
-            input_las=os.path.join(in_dir, f),
-            output_dir=out_dir,
-            interpMETHOD=interp_Method,
-            list_c=list_cycles,
-            type_raster="DTM_dens"
-        )
-        # Step 2 : raster of density
+        ## DENSITY (DTM brut + density)
+        # ## Step 1 : DTM brut
+        # raster_DTM_dens = map_DTM_DSM.create_map_one_las(
+        #     input_las=os.path.join(in_dir, f),
+        #     output_dir=out_dir,
+        #     interpMETHOD=interp_Method,
+        #     list_c=list_cycles,
+        #     type_raster="DTM_dens"
+        # )
+        ## Step 2 : raster of density
+        bounds_las = utils_pdal.get_bounds_from_las(os.path.join(in_dir, f)) # get boundaries
+        log.info(f"Bounds : {bounds_las}")
+        # bounds_las[0][1] -= dico_param["resolution_DTM_dens"] # remove 1 pixel in x
+        # bounds_las[1][1] -= dico_param["resolution_DTM_dens"] # remove 1 pixel in y
+
         raster_dens = map_density.generate_raster_of_density(
             input_las=os.path.join(in_dir, f),
-            output_dir=out_dir
+            output_dir=out_dir,
+            bounds = bounds_las
         )
-        # # Step 3 : multiply density and DTM layers
+        # ## Step 3 : multiply density and DTM layers
         # map_density.multiply_DTM_density(
         #     input_DTM=raster_DTM_dens, 
         #     input_dens_raster=raster_dens, 

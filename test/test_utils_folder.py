@@ -1,10 +1,10 @@
 import os
 import shutil
 
-from utils_folder import create_folder, dico_folder
+from ctview.utils_folder import create_folder, dico_folder
 
 # PATH TO FOLDER "TEST"
-TEST_DIR = os.path.join("..", "test")
+TEST_DIR = os.path.join("data", "labo")
 
 if os.path.exists(TEST_DIR):
     # Clean folder test if exists

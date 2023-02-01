@@ -1,6 +1,6 @@
 import os
-import utils_tools
-from parameter import dico_param
+import ctview.utils_tools as utils_tools
+from ctview.parameter import dico_param
 
 RES_DTM = utils_tools.give_name_resolution_raster(dico_param["resolution_DTM"])
 RES_DTM_DENS = utils_tools.give_name_resolution_raster(dico_param["resolution_DTM_dens"])

@@ -3,18 +3,19 @@
 # IMPORT
 
 # File
-import utils_pdal
-import utils_gdal
-import utils_tools
+import ctview.utils_pdal as utils_pdal
+import ctview.utils_gdal as utils_gdal
+import ctview.utils_tools as utils_tools
     # Library
 import os
 import pdal
+import numpy
 import argparse
 import subprocess
 import logging as log
     # Dictionnary
-from parameter import dico_param
-from utils_folder import dico_folder
+from ctview.parameter import dico_param
+from ctview.utils_folder import dico_folder
 import lidarutils.gdal_calc as gdal_calc
 
 # PARAMETERS
@@ -32,6 +33,7 @@ FOLDER_DENS_FINAL = dico_folder["folder_density_final"]
 def generate_raster_of_density(
     input_las: str,
     output_dir: str,
+    bounds: str = None
 ):
     """
     Build a raster of density colored.
@@ -47,8 +49,8 @@ def generate_raster_of_density(
     input_filename = os.path.basename(input_las)
 
     # Build raster count point
-    raster_name_dens = os.path.join(output_dir,FOLDER_DENS_VALUE,f"{os.path.splitext(input_filename)[0]}_DENS_BRUT{extension}")
-    #raster_name_dens = os.path.join(output_dir, f"{os.path.splitext(input_filename)[0]}_DENS{extension}")
+    raster_name_count = os.path.join(output_dir,FOLDER_DENS_VALUE,f"{os.path.splitext(input_filename)[0]}_COUNT{extension}")
+    raster_name_dens = os.path.join(output_dir, FOLDER_DENS_VALUE,f"{os.path.splitext(input_filename)[0]}_DENS{extension}")
 
     # Parameters
     size = resolution  # meter = resolution from raster
@@ -56,11 +58,15 @@ def generate_raster_of_density(
     
     # Raster of density : count points in resolution*resolution m² (Default=25 m²)
     log.info(f"Raster count points at resolution {size} meter(s)")
-    method_writer_gdal(input_las=input_las, output_file=raster_name_dens)
+    method_writer_gdal(input_las=input_las, output_file=raster_name_count, bounds=bounds)
+
+    # Crop raster
+
 
     # Overwrite and change unity of count from "per 25 m²" to "per m²"
     change_unit(
-        raster_name=raster_name_dens,
+        input_raster=raster_name_count,
+        output_raster=raster_name_dens,
         res=resolution
         )
 
@@ -79,24 +85,41 @@ def generate_raster_of_density(
 
 def method_writer_gdal(
     input_las: str,
-    output_file: str
+    output_file: str,
+    bounds: str = None
 ):
-    pipeline = (
-        pdal.Reader.las(filename=input_las)
-        | pdal.Filter.range(
-                        limits="Classification[2:2]"
-                        )
-        | pdal.Writer.gdal(
-                        filename = output_file, 
-                        resolution = resolution,
-                        radius = resolution,
-                        output_type = "count"
-                        )
-    )
+    log.info(f"Bounds forced (remove 1 pixel at resolution density) :{bounds}")
+    if bounds is None :
+        pipeline = (
+            pdal.Reader.las(filename=input_las)
+            | pdal.Filter.range(
+                            limits="Classification[2:2]"
+                            )
+            | pdal.Writer.gdal(
+                            filename = output_file, 
+                            resolution = resolution,
+                            radius = resolution,
+                            output_type = "count"
+                            )
+        )
+    else :
+        pipeline = (
+            pdal.Reader.las(filename=input_las)
+            | pdal.Filter.range(
+                            limits="Classification[2:2]"
+                            )
+            | pdal.Writer.gdal(
+                            filename = output_file, 
+                            resolution = resolution,
+                            radius = 0.1,
+                            output_type = "count",
+                            bounds = str(bounds),
+                            )
+        )
     pipeline.execute()
 
 
-def change_unit(raster_name: str, res: int):
+def change_unit(input_raster: str, output_raster: str, res: int):
     """
     Overwrite and change unity of count from "per res*res m²" to "per m²
     Args :
@@ -105,8 +128,8 @@ def change_unit(raster_name: str, res: int):
     """
     gdal_calc.Calc(
         f"A/{res*res}",
-        outfile=raster_name,
-        A=raster_name,
+        outfile=output_raster,
+        A=input_raster,
         quiet=True,
     )
 
