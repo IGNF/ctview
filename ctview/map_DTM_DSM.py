@@ -278,7 +278,7 @@ def hillshade_from_raster(input_raster: str, output_raster: str):
 
 
 def color_DTM_with_cycles(
-    las_input_file: str, output_dir: str, raster_DTM_file: str, nb_cycle: int
+    las_input_file: str, output_dir_raster: str, output_dir_LUT: str, raster_DTM_file: str, nb_cycle: int
 ):
     """Color a raster with a LUT created depending of a choice of cycles
 
@@ -291,13 +291,13 @@ def color_DTM_with_cycles(
     log.info("(1/2) Generate LUT.")
     # Create LUT
     LUT = gen_LUT_X_cycle.generate_LUT_X_cycle(
-        file_las=las_input_file, file_DTM=raster_DTM_file, nb_cycle=nb_cycle
+        file_las=las_input_file, file_DTM=raster_DTM_file, nb_cycle=nb_cycle, output_dir_LUT=output_dir_LUT
     )
 
     # Path DTM colorised
     raster_DTM_color_file = os.path.join(
-        output_dir,
-        f"{las_input_file[:-4]}_DTM_hillshade_color{nb_cycle}c.tif",
+        output_dir_raster,
+        f"{os.path.splitext(las_input_file)[0]}_DTM_hillshade_color{nb_cycle}c.tif",
     )
 
     log.info("DTM color : " + raster_DTM_color_file)
@@ -530,7 +530,8 @@ def create_map_one_las(
 
             color_DTM_with_cycles(
                 las_input_file=input_las_name,
-                output_dir=os.path.join(output_dir,folder_DXM_color),
+                output_dir_raster=os.path.join(output_dir,folder_DXM_color),
+                output_dir_LUT=os.path.join(output_dir,dico_folder["folder_LUT"]),
                 raster_DTM_file=raster_dtm_hs,
                 nb_cycle=cycle,
             )

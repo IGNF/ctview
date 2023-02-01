@@ -6,6 +6,7 @@ import subprocess
 import numpy
 import logging as log
 import os
+from ctview.utils_folder import dico_folder
 
 # FONCTION
 
@@ -78,7 +79,7 @@ def write_LUT_X_cycle(LUT_dir: str, file_DTM: str, nb_cycle: int, zmax: int, zmi
             )
 
 
-def generate_LUT_X_cycle(file_las: str, file_DTM: str, nb_cycle: int):
+def generate_LUT_X_cycle(file_las: str, file_DTM: str, nb_cycle: int, output_dir_LUT: str):
     """
     Generate a LUT in link with a DTM.
     file_las : points cloud
@@ -89,12 +90,12 @@ def generate_LUT_X_cycle(file_las: str, file_DTM: str, nb_cycle: int):
 
     log.info(f"Generate LUT of file {file_DTM}")
 
-    path = os.path.join("LUT",f"LUT_{nb_cycle}cycle_{file_las[-31:-4]}.txt")
+    path = os.path.join(output_dir_LUT,f"LUT_{nb_cycle}cycle_{os.path.splitext(os.path.basename(file_las))[0]}.txt")
 
     zmin, zmax = get_zmin_zmax_from_DTM(input_DTM=file_DTM)
 
     write_LUT_X_cycle(
-        filename=path, 
+        LUT_dir=path, 
         file_DTM=file_DTM, 
         nb_cycle=nb_cycle, 
         zmax=zmax, zmin=zmin

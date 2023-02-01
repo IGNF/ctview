@@ -18,7 +18,8 @@ dico_folder = {
     "folder_interp_table": "TABLE_INTERP",
     "folder_density_value" : "DENS_VAL",
     "folder_density_color" : "DENS_COL",
-    "folder_density_final" : "DENS_FINAL"
+    "folder_density_final" : "DENS_FINAL",
+    "folder_LUT" : "LUT"
 }
 
 
