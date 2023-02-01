@@ -4,7 +4,7 @@
 # IMPORT
 
 # Library
-import utils_pdal
+import ctview.utils_pdal as utils_pdal
 import os
 import argparse
 import shutil

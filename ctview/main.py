@@ -6,14 +6,14 @@ import os
 import logging as log
 import sys
 import shutil
-import utils_tools
-import utils_pdal
+import ctview.utils_tools as utils_tools
+import ctview.utils_pdal as utils_pdal
 
 # Internal function
-import ctview.map_DTM_DSM
+import ctview.map_DTM_DSM as map_DTM_DSM
 from ctview.parameter import dico_param
-from ctview.check_folder import create_folder, dico_folder
-import ctview.map_density
+from ctview.utils_folder import create_folder, dico_folder
+import ctview.map_density as map_density
 
 # Parameters
 extension = dico_param["raster_extension"]

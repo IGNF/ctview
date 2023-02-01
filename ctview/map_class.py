@@ -4,8 +4,8 @@
 
 # Library
 import pdal
-import utils_tools
-import utils_pdal
+import ctview.utils_tools as utils_tools
+import ctview.utils_pdal as utils_pdal
 import sys
 import logging as log
 import os
@@ -17,7 +17,7 @@ from numbers import Real
 
 
 # Library intern
-import ctview.utils_gdal
+import ctview.utils_gdal as utils_gdal
 from osgeo_utils import gdal_fillnodata
 
 

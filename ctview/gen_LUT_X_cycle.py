@@ -5,6 +5,7 @@
 import subprocess
 import numpy
 import logging as log
+import os
 
 # FONCTION
 
@@ -49,7 +50,7 @@ def generate_LUT_X_cycle(file_las: str, file_DTM: str, nb_cycle: int):
 
     log.info(f"Generate LUT of file {file_DTM}")
 
-    path = f"../LUT/LUT_{nb_cycle}cycle_{file_las[-31:-4]}.txt"
+    path = os.path.join("LUT",f"LUT_{nb_cycle}cycle_{file_las[-31:-4]}.txt")
 
     zmin, zmax = get_zmin_zmax_from_DTM(input_DTM=file_DTM)
 

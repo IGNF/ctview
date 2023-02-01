@@ -3,9 +3,9 @@
 # IMPORT
 
 # File
-import utils_pdal
-import utils_gdal
-import utils_tools
+import ctview.utils_pdal as utils_pdal
+import ctview.utils_gdal as utils_gdal
+import ctview.utils_tools as utils_tools
     # Library
 import os
 import pdal
@@ -16,7 +16,7 @@ import logging as log
     # Dictionnary
 from ctview.parameter import dico_param
 from ctview.utils_folder import dico_folder
-import ctview.lidarutils.gdal_calc as gdal_calc
+import lidarutils.gdal_calc as gdal_calc
 
 # PARAMETERS
 
@@ -50,7 +50,7 @@ def generate_raster_of_density(
 
     # Build raster count point
     raster_name_count = os.path.join(output_dir,FOLDER_DENS_VALUE,f"{os.path.splitext(input_filename)[0]}_COUNT{extension}")
-    #raster_name_dens = os.path.join(output_dir, f"{os.path.splitext(input_filename)[0]}_DENS{extension}")
+    raster_name_dens = os.path.join(output_dir, FOLDER_DENS_VALUE,f"{os.path.splitext(input_filename)[0]}_DENS{extension}")
 
     # Parameters
     size = resolution  # meter = resolution from raster
@@ -65,7 +65,8 @@ def generate_raster_of_density(
 
     # Overwrite and change unity of count from "per 25 m²" to "per m²"
     change_unit(
-        raster_name=raster_name_dens,
+        input_raster=raster_name_count,
+        output_raster=raster_name_dens,
         res=resolution
         )
 
@@ -118,7 +119,7 @@ def method_writer_gdal(
     pipeline.execute()
 
 
-def change_unit(raster_name: str, res: int):
+def change_unit(input_raster: str, output_raster: str, res: int):
     """
     Overwrite and change unity of count from "per res*res m²" to "per m²
     Args :
@@ -127,8 +128,8 @@ def change_unit(raster_name: str, res: int):
     """
     gdal_calc.Calc(
         f"A/{res*res}",
-        outfile=raster_name,
-        A=raster_name,
+        outfile=output_raster,
+        A=input_raster,
         quiet=True,
     )
 
