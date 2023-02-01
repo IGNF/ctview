@@ -1,1 +1,1 @@
-python -m pytest -s ./test -v -W ignore::DeprecationWarning
+python -m pytest -s ./test -v
