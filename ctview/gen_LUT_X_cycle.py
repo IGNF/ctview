@@ -39,6 +39,45 @@ def get_zmin_zmax_from_DTM(input_DTM: str):
     return zmax, zmin
 
 
+def write_LUT_X_cycle(LUT_dir: str, file_DTM: str, nb_cycle: int, zmax: int, zmin: int):
+    """
+    Write the LUT.
+    LUT_dir : path of LUT to be create
+    file_MTN : DTM originate from the points cloud
+    nb_cycle : the number of cycle that allows to generate the LUT
+    zmax : z maximum
+    zmin : z minimum
+    """
+    with open(LUT_dir, "w") as DTM_LUTcycle_FILE :
+
+        DTM_LUTcycle_FILE.write(f"#LUT of {file_DTM}\n")
+        DTM_LUTcycle_FILE.write(f"#number of cycles :{nb_cycle}\n")
+
+        log.info(f"Number of cycles : {nb_cycle}")
+
+        pasCycle = (zmax - zmin) / nb_cycle
+
+        pasCouleur = (zmax - zmin) / (nb_cycle * 5)
+
+        for c in range(nb_cycle):
+
+            DTM_LUTcycle_FILE.write(
+                str(round(zmin + c * pasCycle, 1)) + " 64 128 128\n"
+            )
+            DTM_LUTcycle_FILE.write(
+                str(round(zmin + c * pasCycle + pasCouleur, 1)) + " 255 255 0\n"
+            )
+            DTM_LUTcycle_FILE.write(
+                str(round(zmin + c * pasCycle + 2 * pasCouleur, 1)) + " 255 128 0\n"
+            )
+            DTM_LUTcycle_FILE.write(
+                str(round(zmin + c * pasCycle + 3 * pasCouleur, 1)) + " 128 64 0\n"
+            )
+            DTM_LUTcycle_FILE.write(
+                str(round(zmin + c * pasCycle + 4 * pasCouleur, 1)) + " 240 240 240\n"
+            )
+
+
 def generate_LUT_X_cycle(file_las: str, file_DTM: str, nb_cycle: int):
     """
     Generate a LUT in link with a DTM.
@@ -54,33 +93,12 @@ def generate_LUT_X_cycle(file_las: str, file_DTM: str, nb_cycle: int):
 
     zmin, zmax = get_zmin_zmax_from_DTM(input_DTM=file_DTM)
 
-    with open(path, "w") as DTM_LUTcycle_FILE :
-
-        DTM_LUTcycle_FILE.write(f"#LUT of {file_DTM}\n")
-        DTM_LUTcycle_FILE.write(f"#number of cycles :{nb_cycle}\n")
-
-        log.info(f"Number of cycles : {nb_cycle}")
-
-        pasCycle = (zmax - zmin) / nb_cycle
-
-        pasCouleur = (zmax - zmin) / (nb_cycle * 5)
-
-        for c in range(nb_cycle):
-
-            DTM_LUTcycle_FILE.write(str(round(zmin + c * pasCycle, 1)) + " 64 128 128\n")
-            DTM_LUTcycle_FILE.write(
-                str(round(zmin + c * pasCycle + pasCouleur, 1)) + " 255 255 0\n"
-            )
-            DTM_LUTcycle_FILE.write(
-                str(round(zmin + c * pasCycle + 2 * pasCouleur, 1)) + " 255 128 0\n"
-            )
-            DTM_LUTcycle_FILE.write(
-                str(round(zmin + c * pasCycle + 3 * pasCouleur, 1)) + " 128 64 0\n"
-            )
-            DTM_LUTcycle_FILE.write(
-                str(round(zmin + c * pasCycle + 4 * pasCouleur, 1)) + " 240 240 240\n"
-            )
-
+    write_LUT_X_cycle(
+        filename=path, 
+        file_DTM=file_DTM, 
+        nb_cycle=nb_cycle, 
+        zmax=zmax, zmin=zmin
+    )
 
     return path
 
