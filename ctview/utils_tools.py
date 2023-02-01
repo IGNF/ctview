@@ -33,3 +33,24 @@ def repare_files(las_dir: str):
         f.write(bytes([17, 0, 0, 0]))
         f.close()
         print(f"fichier {filename} repare")
+
+
+def sample(input_points):
+    """Filtre points closest to 0.5m"""
+    pipeline = pdal.Filter.sample(radius="0.5").pipeline(input_points)
+    pipeline.execute()
+    return pipeline.arrays[0]
+
+
+def resample(input_las: str, res: float, output_filename: str):
+    """Resample with a given resolution.
+    Args :
+        input_las : las file
+        res : resolution in meter
+    """
+    pipeline = pdal.Reader.las(filename=input_las) | pdal.Writer.las(
+        resolution=res,
+        filename=output_filename,
+        a_srs=f"EPSG:{EPSG}",
+    )
+    pipeline.execute()
