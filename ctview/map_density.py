@@ -77,7 +77,7 @@ def generate_raster_of_density(
     utils_gdal.color_raster_with_LUT(
         input_raster = raster_name_dens,
         output_raster = raster_name_dens_color,
-        LUT = os.path.join("..",os.path.join("LUT","LUT_DENSITY.txt"))
+        LUT = os.path.join("..","LUT","LUT_DENSITY.txt")
     )
 
     return raster_name_dens_color
