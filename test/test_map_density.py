@@ -1,2 +1,2 @@
-import script.map_density
+import ctview.map_density
 
