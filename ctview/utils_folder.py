@@ -12,6 +12,7 @@ dico_folder = {
     "folder_DTM_shade": f"DTM{RES_DTM}_shade",
     "folder_DTM_color": f"DTM{RES_DTM}_color",
     "folder_DTM_DENS_brut":  f"DTM_DENS{RES_DTM_DENS}_brut",
+    "folder_DTM_DENS_shade": f"DTM_DENS{RES_DTM_DENS}_shade",
     "folder_DSM_brut":  f"DSM{RES_DSM}_brut",
     "folder_DSM_shade": f"DSM{RES_DSM}_shade",
     "folder_intensity": "INTENSITY",

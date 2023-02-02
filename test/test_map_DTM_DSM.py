@@ -7,6 +7,9 @@ from ctview.map_DTM_DSM import (
     write_las,
     las_prepare_1_file,
     execute_startin,
+    write_geotiff_withbuffer,
+    get_origin,
+    hillshade_from_raster
 )
 
 from ctview.utils_pdal import get_class_min_max_from_las, get_info_from_las, read_las_file
@@ -14,11 +17,12 @@ from ctview.utils_pdal import get_class_min_max_from_las, get_info_from_las, rea
 # from utils_pdal import get_stats_from_las
 
 # TEST FILE
-DATA_DIR = os.path.join("data","las")
+DATA_DIR_LAS = os.path.join("data","las")
 FILE_MUTLI_1_TO_5 = "multiclass_1to5.las"
 FILE_MUTLI_65_TO_66 = "multiclass_65to66.las"
 PTS_TO_INTERPOL = "oneclass_2.las"
-
+DATA_DIR_RASTER = os.path.join("data","raster")
+RASTER_DTM_BRUT = "test_data_0000_0000_LA93_IGN69_ground_DTM_1M_Laplace.tif"
 
 # PATH TO FOLDER TEST
 TEST_DIR = os.path.join("data","labo")
@@ -39,7 +43,7 @@ def tearDownModule(): # run after the last test
         pass
 
 
-def test_1_filter_las_ground_virtual(INPUT_DIR=DATA_DIR, filename=FILE_MUTLI_1_TO_5):
+def test_1_filter_las_ground_virtual(INPUT_DIR=DATA_DIR_LAS, filename=FILE_MUTLI_1_TO_5):
     """
     Input :
         las_file with points where classif in [1:5]
@@ -48,7 +52,7 @@ def test_1_filter_las_ground_virtual(INPUT_DIR=DATA_DIR, filename=FILE_MUTLI_1_T
         - no remaining points with classif != 2
     """
     # Application of the filter
-    out_filter_ground = filter_las_ground_virtual(input_dir=DATA_DIR, filename=filename)
+    out_filter_ground = filter_las_ground_virtual(input_dir=DATA_DIR_LAS, filename=filename)
     # Check Classif of each point
     for p in out_filter_ground:
         assert p[8] == 2  # Classification==2
@@ -56,7 +60,7 @@ def test_1_filter_las_ground_virtual(INPUT_DIR=DATA_DIR, filename=FILE_MUTLI_1_T
     assert isinstance(out_filter_ground, np.ndarray)  # type is array
 
 
-def test_2_filter_las_ground_virtual(INPUT_DIR=DATA_DIR, filename=FILE_MUTLI_65_TO_66):
+def test_2_filter_las_ground_virtual(INPUT_DIR=DATA_DIR_LAS, filename=FILE_MUTLI_65_TO_66):
     """
     Input :
         las_file with points where classif in [65:66]
@@ -65,7 +69,7 @@ def test_2_filter_las_ground_virtual(INPUT_DIR=DATA_DIR, filename=FILE_MUTLI_65_
         - no remaining points with classif != 66
     """
     # Application of the filter
-    out_filter_ground = filter_las_ground_virtual(input_dir=DATA_DIR, filename=filename)
+    out_filter_ground = filter_las_ground_virtual(input_dir=DATA_DIR_LAS, filename=filename)
     # Check Classif of each point
     for p in out_filter_ground:
         assert p[8] == 66  # Classification==66
@@ -80,7 +84,7 @@ def test_write_las():
         - file is created
         - extension is las
     """
-    input_file = os.path.join(DATA_DIR , FILE_MUTLI_1_TO_5)
+    input_file = os.path.join(DATA_DIR_LAS , FILE_MUTLI_1_TO_5)
     input_points = read_las_file(
         input_las=input_file
     )  # fct tested in test_utils_pdal.py
@@ -100,7 +104,7 @@ def test_las_prepare_1_file():
     Verify :
         - type and size
     """
-    input_file = os.path.join(DATA_DIR , FILE_MUTLI_1_TO_5)
+    input_file = os.path.join(DATA_DIR_LAS , FILE_MUTLI_1_TO_5)
     size = 1.0
 
     extends, resolution, origin = las_prepare_1_file(input_file=input_file, size=size)
@@ -117,7 +121,7 @@ def execute_test_mnt(method: str):
     Verify :
         - return an array
     """
-    input_file = os.path.join(DATA_DIR , PTS_TO_INTERPOL)
+    input_file = os.path.join(DATA_DIR_LAS , PTS_TO_INTERPOL)
     size = 1.0
 
     pts_to_interpol, resolution, origin = las_prepare_1_file(
@@ -136,3 +140,61 @@ def test_execute_startin():
 
 def test_execute_startin_2():
     execute_test_mnt("TINlinear")
+
+
+def execute_test_write_geotiff_withbuffer(method: str):
+    """
+    Verify :
+        - .tif is created
+    """
+    input_file = os.path.join(DATA_DIR_LAS , PTS_TO_INTERPOL)
+    size = 1.0
+
+    pts_to_interpol, resolution, origin = las_prepare_1_file(
+        input_file=input_file, size=size
+    )
+
+    ras = execute_startin(
+        pts=pts_to_interpol, res=resolution, origin=origin, size=1.0, method=method
+    )
+
+    raster_dtm_interp = write_geotiff_withbuffer(
+        raster=ras,
+        origin=origin,
+        size=size,
+        output_file=os.path.join(
+            TEST_DIR,
+            f"{os.path.splitext(PTS_TO_INTERPOL)[0]}_{method}.tif",
+        ),
+    )
+    assert os.path.exists(raster_dtm_interp)
+
+
+def test_write_geotiff_withbuffer():
+    execute_test_write_geotiff_withbuffer("Laplace")
+
+
+def test_write_geotiff_withbuffer():
+    execute_test_write_geotiff_withbuffer("TINlinear")
+
+
+def test_get_origin():
+    """
+    Verify :
+        - .tif is created
+    """
+    xcoord, ycoord, projection, sys_alti = get_origin("Semis_2021_0939_6537_LA93_IGN69.laz")
+    assert xcoord == 939
+    assert ycoord == 6537
+    assert projection == "LA93"
+    assert sys_alti == "IGN69"
+
+def test_hillshade_from_raster():
+    """
+    Verify :
+        - .tif is created
+    """
+    input_raster = os.path.join(DATA_DIR_RASTER, RASTER_DTM_BRUT)
+    output_raster = os.path.join(TEST_DIR,RASTER_DTM_BRUT)
+    hillshade_from_raster(input_raster, output_raster)
+    assert os.path.exists(output_raster)

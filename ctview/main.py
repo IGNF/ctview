@@ -79,14 +79,13 @@ def main():
         cpt += 1
         log.info(f"FILE {cpt}/{len(list_las)}: {f}\n\n")
         ## DENSITY (DTM brut + density)
-        # ## Step 1 : DTM brut
-        # raster_DTM_dens = map_DTM_DSM.create_map_one_las(
-        #     input_las=os.path.join(in_dir, f),
-        #     output_dir=out_dir,
-        #     interpMETHOD=interp_Method,
-        #     list_c=list_cycles,
-        #     type_raster="DTM_dens"
-        # )
+        ## Step 1 : DTM brut
+        raster_DTM_dens = map_DTM_DSM.create_map_one_las_DTM_dens(
+            input_las=os.path.join(in_dir, f),
+            output_dir=out_dir,
+            interpMETHOD=interp_Method,
+            type_raster="DTM_dens"
+        )
         ## Step 2 : raster of density
         bounds_las = utils_pdal.get_bounds_from_las(os.path.join(in_dir, f)) # get boundaries
         log.info(f"Bounds : {bounds_las}")
@@ -106,7 +105,7 @@ def main():
         #     output_dir=out_dir
         # )
         # DTM hillshade color
-        map_DTM_DSM.create_map_one_las(
+        map_DTM_DSM.create_map_one_las_DTM(
             input_las=os.path.join(in_dir, f),
             output_dir=out_dir,
             interpMETHOD=interp_Method,
@@ -114,11 +113,10 @@ def main():
             type_raster="DTM"
         )
         # DSM hillshade
-        map_DTM_DSM.create_map_one_las(
+        map_DTM_DSM.create_map_one_las_DSM(
             input_las=os.path.join(in_dir, f),
             output_dir=out_dir,
             interpMETHOD=interp_Method,
-            list_c=list_cycles,
             type_raster="DSM"
         )
 

@@ -85,25 +85,6 @@ def write_las(input_points, filename: str, output_dir: str, name: str):
     return FileOutput
 
 
-def write_las2(pts):
-    information = {}
-    information = {
-        "pipeline": [
-            {
-                "type": "writers.las",
-                "a_srs": f"EPSG:{EPSG}",
-                # "minor_version": 4,
-                # "dataformat_id": 6,
-                "filename": FileOutput,
-            }
-        ]
-    }
-    ground = json.dumps(information, sort_keys=True, indent=4)
-    log.info(ground)
-    pipeline = pdal.Pipeline(ground)
-    pipeline.execute()
-
-
 def las_prepare_1_file(input_file: str, size: float):
     """Takes the filepath to an input LAS (crop) file and the desired output raster cell size. Reads the LAS file and outputs
     the ground points as a numpy array. Also establishes some
@@ -246,6 +227,7 @@ def write_geotiff_withbuffer(raster, origin, size, output_file):
 
 def get_origin(las_input_file: str):
     """
+    TODO : improve with pdal.stats instead of using file name
     Returns the North-West coordinates of the las.
     Ex of file name : Semis_2021_0843_6521_LA93_IGN69.laz
     Detail :
@@ -326,7 +308,8 @@ def cluster(input_points: str):
 def name_folder_DTM_dens():
     """Assign folder name from dictionnary"""
     folder_DXM_brut = dico_folder["folder_DTM_DENS_brut"]
-    return folder_DXM_brut
+    folder_DXM_shade = dico_folder["folder_DTM_DENS_shade"]
+    return folder_DXM_brut, folder_DXM_shade
 
 
 def name_folder_DSM():
@@ -516,6 +499,421 @@ def create_map_one_las(
     log.info("\n\n")
 
     return raster_dtm_hs # DTM/DSM with hillshade
+
+
+def create_map_one_las_DTM(
+    input_las: str, output_dir: str, interpMETHOD: str, list_c: list, type_raster: str="DTM"
+):
+    """
+    Create a DTM with Laplace or Linear method of interpolation. This function create a brut DTM, a shade DTM and a colored shade DTM.
+    Args :
+        input_las: las file
+        output_dir: output directory
+        interpMETHOD : method of interpolation (Laplace or TINLinear)
+        list_c: liste of number of cycles for each DTM colored. This list allows to create several DTM with differents colorisations.
+    """
+
+    # Paramètres
+    size = dico_param[f"resolution_{type_raster}"]  # meter = resolution from raster
+    _size = utils_tools.give_name_resolution_raster(size)
+
+    DXM = type_raster
+    if type_raster == "DTM":
+        folder_DXM_brut, folder_DXM_shade, folder_DXM_color = name_folder_DTM()
+        log.info(f"{type_raster} (brut, shade, color) at resolution {size} meter(s)\n")
+    else :
+        raise ValueError("Function create_map_one_las Parameter type_raster. Must be \"DTM\", \"DSM\" or \"DTM_dens\"")
+
+    # Get directory
+    input_dir = os.path.dirname(input_las)
+    # Get filename without extension
+    input_las_name = os.path.basename(input_las)
+
+    # Fichier de sortie DXM brut
+    out_dtm_raster = f"{output_dir}{input_las_name}_{DXM}.tif"
+
+    # # Extraction infos du las
+    # origin_x, origin_y, ProjSystem, AltiSystem = get_origin(input_las_name)
+
+    # log.info(f"Dalle name : {input_las_name}")
+
+    # log.info(f"North-West X coordinate : {origin_x} km")
+    # log.info(f"North-West Y coordinate : {origin_y} km")
+    # log.info(f"System of projection : {ProjSystem}")
+    # log.info(f"Altimetric system : {AltiSystem}")
+
+    log.info("Filtering ground and virtual points...")
+    # Filtre les points sol de classif 2 et 66
+    ground_pts = filter_las_ground_virtual(input_dir=input_dir, filename=input_las_name)
+
+    log.info("Build las filtered...")
+    # LAS points sol non interpolés
+    FileLasGround = write_las(
+        input_points=ground_pts,
+        filename=input_las_name,
+        output_dir=os.path.join(output_dir, dico_folder["folder_LAS_ground_virtual"]),
+        name="ground",
+    )
+
+    FileToInterpolate = FileLasGround
+
+
+    log.info(f"Interpolation method : {interpMETHOD}")
+
+    log.info(f"Re-sampling : resolution {size} meter...")
+    # Extraction coord points cloud
+    log.debug(f"input : {FileToInterpolate}")
+    extents_calc, res_calc, origin_calc = las_prepare_1_file(
+        input_file=FileToInterpolate, size=size
+    )
+
+    log.debug(f"Extents {extents_calc}")
+    log.debug(f"Resolution in coordinates : {res_calc}")
+    log.debug(f"Loc of the relative origin : {origin_calc}")
+
+    log.info("Begin Interpolation...")
+    # Interpolation using Laplace or tin linear method
+    resolution = res_calc  # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
+    origine = origin_calc
+    ras = execute_startin(
+        pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD
+    )
+    log.info("End interpolation.")
+
+    log.debug("Interpolation table : ")
+    log.debug(type(ras))
+    log.debug(ras)
+
+    # Write interpolation table in a text file
+    fileRas = os.path.join(
+        output_dir,
+        dico_folder["folder_interp_table"],
+        f"ras_{os.path.splitext(input_las_name)[0]}.txt"
+        )  
+    
+    utils_tools.write_interp_table(
+        output_filename=fileRas, 
+        table_interp=ras
+        )
+
+    log.debug(f"All in :{fileRas}")
+
+    log.info(f"Build {DXM} brut...")
+
+    raster_dtm_interp = write_geotiff_withbuffer(
+        raster=ras,
+        origin=origine,
+        size=size,
+        output_file=os.path.join(
+            output_dir, 
+            folder_DXM_brut,
+            f"{os.path.splitext(input_las_name)[0]}_{DXM}{_size}_{interpMETHOD}.tif",
+        ),
+    )
+
+    log.debug(raster_dtm_interp)
+
+    # Add hillshade
+
+    log.info(f"Build {DXM} hillshade...")
+
+    dtm_file = raster_dtm_interp
+    raster_dtm_hs = os.path.join(
+        output_dir, 
+        folder_DXM_shade,
+        f"{os.path.splitext(input_las_name)[0]}_{DXM}{_size}_hillshade.tif",
+    )
+    hillshade_from_raster(
+        input_raster=dtm_file,
+        output_raster=raster_dtm_hs,
+    )
+
+    log.debug(os.path.join(output_dir, raster_dtm_hs))
+
+    # Add color
+    # color only DTM for map class fusion
+
+    log.info("Build DTM hillshade color")
+
+    cpt = 1
+
+    for cycle in list_c:
+
+        log.info(f"{cpt}/{len(list_c)}...")
+
+        color_DTM_with_cycles(
+            las_input_file=input_las_name,
+            output_dir_raster=os.path.join(output_dir,folder_DXM_color),
+            output_dir_LUT=os.path.join(output_dir,dico_folder["folder_LUT"]),
+            raster_DTM_file=raster_dtm_hs,
+            nb_cycle=cycle,
+        )
+
+        cpt += 1
+
+    log.debug(f"End {type_raster}.\n")
+
+    log.info("\n\n")
+
+    return raster_dtm_hs # DTM with hillshade
+
+
+def create_map_one_las_DSM(
+    input_las: str, output_dir: str, interpMETHOD: str, type_raster: str="DSM"
+):
+    """
+    Create a DSM with Laplace or Linear method of interpolation. This function create a brut DSM and a shade DSM.
+    Args :
+        input_las: las file
+        output_dir: output directory
+        interpMETHOD : method of interpolation (Laplace or TINLinear)
+    """
+
+    # Paramètres
+    size = dico_param[f"resolution_{type_raster}"]  # meter = resolution from raster
+    _size = utils_tools.give_name_resolution_raster(size)
+
+    DXM = type_raster
+    if type_raster == "DSM":
+        folder_DXM_brut, folder_DXM_shade = name_folder_DSM()
+        log.info(f"{type_raster} (brut, shade) at resolution {size} meter(s)\n")
+    else :
+        raise ValueError("Function create_map_one_las Parameter type_raster. Must be \"DTM\", \"DSM\" or \"DTM_dens\"")
+
+    # Get directory
+    input_dir = os.path.dirname(input_las)
+    # Get filename without extension
+    input_las_name = os.path.basename(input_las)
+
+    # Fichier de sortie DXM brut
+    out_dtm_raster = f"{output_dir}{input_las_name}_{DXM}.tif"
+
+    # # Extraction infos du las
+    # origin_x, origin_y, ProjSystem, AltiSystem = get_origin(input_las_name)
+
+    # log.info(f"Dalle name : {input_las_name}")
+
+    # log.info(f"North-West X coordinate : {origin_x} km")
+    # log.info(f"North-West Y coordinate : {origin_y} km")
+    # log.info(f"System of projection : {ProjSystem}")
+    # log.info(f"Altimetric system : {AltiSystem}")
+
+    # No filtering for DSM
+    FileToInterpolate = input_las
+
+    log.info(f"Interpolation method : {interpMETHOD}")
+
+    log.info(f"Re-sampling : resolution {size} meter...")
+    # Extraction coord points cloud
+    log.debug(f"input : {FileToInterpolate}")
+    extents_calc, res_calc, origin_calc = las_prepare_1_file(
+        input_file=FileToInterpolate, size=size
+    )
+
+    log.debug(f"Extents {extents_calc}")
+    log.debug(f"Resolution in coordinates : {res_calc}")
+    log.debug(f"Loc of the relative origin : {origin_calc}")
+
+    log.info("Begin Interpolation...")
+    # Interpolation using Laplace or tin linear method
+    resolution = res_calc  # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
+    origine = origin_calc
+    ras = execute_startin(
+        pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD
+    )
+    log.info("End interpolation.")
+
+    log.debug("Interpolation table : ")
+    log.debug(type(ras))
+    log.debug(ras)
+
+    # Write interpolation table in a text file
+    fileRas = os.path.join(
+        output_dir,
+        dico_folder["folder_interp_table"],
+        f"ras_{os.path.splitext(input_las_name)[0]}.txt"
+        )  
+    
+    utils_tools.write_interp_table(
+        output_filename=fileRas, 
+        table_interp=ras
+        )
+
+    log.debug(f"All in :{fileRas}")
+
+    log.info(f"Build {DXM} brut...")
+
+    raster_dtm_interp = write_geotiff_withbuffer(
+        raster=ras,
+        origin=origine,
+        size=size,
+        output_file=os.path.join(
+            output_dir, 
+            folder_DXM_brut,
+            f"{os.path.splitext(input_las_name)[0]}_{DXM}{_size}_{interpMETHOD}.tif",
+        ),
+    )
+
+    log.debug(raster_dtm_interp)
+
+    # Add hillshade
+
+    log.info(f"Build {DXM} hillshade...")
+
+    dtm_file = raster_dtm_interp
+    raster_dtm_hs = os.path.join(
+        output_dir, 
+        folder_DXM_shade,
+        f"{os.path.splitext(input_las_name)[0]}_{DXM}{_size}_hillshade.tif",
+    )
+    hillshade_from_raster(
+        input_raster=dtm_file,
+        output_raster=raster_dtm_hs,
+    )
+
+    log.debug(os.path.join(output_dir, raster_dtm_hs))
+
+
+    log.debug(f"End {type_raster}.\n")
+
+    log.info("\n\n")
+
+    return raster_dtm_hs # DSM with hillshade
+
+
+def create_map_one_las_DTM_dens(
+    input_las: str, output_dir: str, interpMETHOD: str, type_raster: str="DTM_dens"
+):
+    """
+    Create a DTM with Laplace or Linear method of interpolation. This function create a brut DTM and a shade DTM.
+    Args :
+        input_las: las file
+        output_dir: output directory
+        interpMETHOD : method of interpolation (Laplace or TINLinear)
+    """
+
+    # Paramètres
+    size = dico_param[f"resolution_{type_raster}"]  # meter = resolution from raster
+    _size = utils_tools.give_name_resolution_raster(size)
+
+    DXM = type_raster
+    if type_raster == "DTM_dens":
+        DXM = "DTM"
+        folder_DXM_brut, folder_DXM_shade = name_folder_DTM_dens()
+        log.info(f"{type_raster} (brut) at resolution {size} meter(s)\n")
+    else :
+        raise ValueError("Function create_map_one_las Parameter type_raster. Must be \"DTM\", \"DSM\" or \"DTM_dens\"")
+
+    # Get directory
+    input_dir = os.path.dirname(input_las)
+    # Get filename without extension
+    input_las_name = os.path.basename(input_las)
+
+    # Fichier de sortie DXM brut
+    out_dtm_raster = f"{output_dir}{input_las_name}_{DXM}.tif"
+
+    # # Extraction infos du las
+    # origin_x, origin_y, ProjSystem, AltiSystem = get_origin(input_las_name)
+
+    # log.info(f"Dalle name : {input_las_name}")
+
+    # log.info(f"North-West X coordinate : {origin_x} km")
+    # log.info(f"North-West Y coordinate : {origin_y} km")
+    # log.info(f"System of projection : {ProjSystem}")
+    # log.info(f"Altimetric system : {AltiSystem}")
+
+    log.info("Filtering ground and virtual points...")
+    # Filtre les points sol de classif 2 et 66
+    ground_pts = filter_las_ground_virtual(input_dir=input_dir, filename=input_las_name)
+
+    log.info("Build las filtered...")
+    # LAS points sol non interpolés
+    FileLasGround = write_las(
+        input_points=ground_pts,
+        filename=input_las_name,
+        output_dir=os.path.join(output_dir, dico_folder["folder_LAS_ground_virtual"]),
+        name="ground",
+    )
+
+    FileToInterpolate = FileLasGround
+
+    log.info(f"Interpolation method : {interpMETHOD}")
+
+    log.info(f"Re-sampling : resolution {size} meter...")
+    # Extraction coord points cloud
+    log.debug(f"input : {FileToInterpolate}")
+    extents_calc, res_calc, origin_calc = las_prepare_1_file(
+        input_file=FileToInterpolate, size=size
+    )
+
+    log.debug(f"Extents {extents_calc}")
+    log.debug(f"Resolution in coordinates : {res_calc}")
+    log.debug(f"Loc of the relative origin : {origin_calc}")
+
+    log.info("Begin Interpolation...")
+    # Interpolation using Laplace or tin linear method
+    resolution = res_calc  # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
+    origine = origin_calc
+    ras = execute_startin(
+        pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD
+    )
+    log.info("End interpolation.")
+
+    log.debug("Interpolation table : ")
+    log.debug(type(ras))
+    log.debug(ras)
+
+    # Write interpolation table in a text file
+    fileRas = os.path.join(
+        output_dir,
+        dico_folder["folder_interp_table"],
+        f"ras_{os.path.splitext(input_las_name)[0]}.txt"
+        )  
+    
+    utils_tools.write_interp_table(
+        output_filename=fileRas, 
+        table_interp=ras
+        )
+
+    log.debug(f"All in :{fileRas}")
+
+    log.info(f"Build {DXM} brut...")
+
+    raster_dtm_interp = write_geotiff_withbuffer(
+        raster=ras,
+        origin=origine,
+        size=size,
+        output_file=os.path.join(
+            output_dir, 
+            folder_DXM_brut,
+            f"{os.path.splitext(input_las_name)[0]}_{DXM}{_size}_{interpMETHOD}.tif",
+        ),
+    )
+
+    log.debug(raster_dtm_interp)
+
+    # Add hillshade
+
+    log.info(f"Build {DXM} hillshade...")
+
+    dtm_file = raster_dtm_interp
+    raster_dtm_hs = os.path.join(
+        output_dir, 
+        folder_DXM_shade,
+        f"{os.path.splitext(input_las_name)[0]}_{DXM}{_size}_hillshade.tif",
+    )
+    hillshade_from_raster(
+        input_raster=dtm_file,
+        output_raster=raster_dtm_hs,
+    )
+
+    log.debug(os.path.join(output_dir, raster_dtm_hs))
+
+    log.debug(f"End {type_raster}.\n")
+
+    log.info("\n\n")
+
+    return raster_dtm_hs # DTM with hillshade
 
 
 if __name__ == "__main__":
