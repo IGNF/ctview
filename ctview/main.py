@@ -38,7 +38,7 @@ def parse_args():
 
 def main():
 
-    log.basicConfig(level=log.INFO)
+    log.basicConfig(level=log.INFO, format='%(message)s')
 
     # Get las file, output directory and interpolation method
     args = parse_args()
