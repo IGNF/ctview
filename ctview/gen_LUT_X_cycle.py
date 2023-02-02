@@ -49,10 +49,10 @@ def write_LUT_X_cycle(LUT_dir: str, file_DTM: str, nb_cycle: int, zmax: int, zmi
     zmax : z maximum
     zmin : z minimum
     """
-    with open(LUT_dir, "w") as DTM_LUTcycle_FILE :
+    with open(LUT_dir, "w") as DTM_LUTcycle_file :
 
-        DTM_LUTcycle_FILE.write(f"#LUT of {file_DTM}\n")
-        DTM_LUTcycle_FILE.write(f"#number of cycles :{nb_cycle}\n")
+        DTM_LUTcycle_file.write(f"#LUT of {file_DTM}\n")
+        DTM_LUTcycle_file.write(f"#number of cycles :{nb_cycle}\n")
 
         log.info(f"Number of cycles : {nb_cycle}")
 
@@ -62,19 +62,19 @@ def write_LUT_X_cycle(LUT_dir: str, file_DTM: str, nb_cycle: int, zmax: int, zmi
 
         for c in range(nb_cycle):
 
-            DTM_LUTcycle_FILE.write(
+            DTM_LUTcycle_file.write(
                 str(round(zmin + c * pasCycle, 1)) + " 64 128 128\n"
             )
-            DTM_LUTcycle_FILE.write(
+            DTM_LUTcycle_file.write(
                 str(round(zmin + c * pasCycle + pasCouleur, 1)) + " 255 255 0\n"
             )
-            DTM_LUTcycle_FILE.write(
+            DTM_LUTcycle_file.write(
                 str(round(zmin + c * pasCycle + 2 * pasCouleur, 1)) + " 255 128 0\n"
             )
-            DTM_LUTcycle_FILE.write(
+            DTM_LUTcycle_file.write(
                 str(round(zmin + c * pasCycle + 3 * pasCouleur, 1)) + " 128 64 0\n"
             )
-            DTM_LUTcycle_FILE.write(
+            DTM_LUTcycle_file.write(
                 str(round(zmin + c * pasCycle + 4 * pasCouleur, 1)) + " 240 240 240\n"
             )
 
