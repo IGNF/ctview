@@ -2,6 +2,7 @@
 
 # IMPORT
 import os
+import numpy as np
 
 
 # FONCTION
@@ -24,6 +25,7 @@ def give_name_resolution_raster(size):
     else:
         _size = str(size)
     return _size
+
 
 def repare_files(las_dir: str):
     for f in os.listdir(las_dir):
@@ -54,3 +56,23 @@ def resample(input_las: str, res: float, output_filename: str):
         a_srs=f"EPSG:{EPSG}",
     )
     pipeline.execute()
+
+
+def write_interp_table(output_filename: str, table_interp: np.ndarray):
+    """Write table of interpolation on a text file
+    Args :
+        output_filename : directory of text file
+        table_interp : table of interpolation
+    """
+    with open(output_filename, "w") as f:
+        l, c = table_interp.shape
+        s = ""
+        for i in range(l):
+            ligne = ""
+            for j in range(c):
+                ELEMENTtable = table_interp[i, j]
+                ligne += f"{round(ELEMENTtable,5) : >20}"
+            s += ligne
+            s += ""
+
+        f.write(s)

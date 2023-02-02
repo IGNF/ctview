@@ -396,7 +396,6 @@ def create_map_one_las(
 
         log.info("Filtering ground and virtual points...")
         # Filtre les points sol de classif 2 et 66
-        # utils_pdal.filter_las_version2(las,las_pts_ground)
         ground_pts = filter_las_ground_virtual(input_dir=input_dir, filename=input_las_name)
 
         log.info("Build las filtered...")
@@ -437,6 +436,7 @@ def create_map_one_las(
     log.info("End interpolation.")
 
     log.debug("Interpolation table : ")
+    log.debug(type(ras))
     log.debug(ras)
 
     # Write interpolation table in a text file
@@ -445,18 +445,12 @@ def create_map_one_las(
         dico_folder["folder_interp_table"],
         f"ras_{os.path.splitext(input_las_name)[0]}.txt"
         )  
-    with open(fileRas, "w") as f :
-        l, c = ras.shape
-        s = ""
-        for i in range(l):
-            ligne = ""
-            for j in range(c):
-                ELEMENTras = ras[i, j]
-                ligne += f"{round(ELEMENTras,5) : >20}"
-            s += ligne
-            s += ""
+    
+    utils_tools.write_interp_table(
+        output_filename=fileRas, 
+        table_interp=ras
+        )
 
-        f.write(s)
     log.debug(f"All in :{fileRas}")
 
     log.info(f"Build {DXM} brut...")
