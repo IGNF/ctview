@@ -26,6 +26,7 @@ extension = dico_param["raster_extension"]
 FOLDER_DENS_VALUE = dico_folder["folder_density_value"]
 FOLDER_DENS_COLOR = dico_folder["folder_density_color"]
 FOLDER_DENS_FINAL = dico_folder["folder_density_final"]
+_radius = dico_param["radius_PC_dens"]
 
 # FONCTION
 
@@ -82,7 +83,7 @@ def generate_raster_of_density(
     utils_gdal.color_raster_with_LUT(
         input_raster = raster_name_dens,
         output_raster = raster_name_dens_color,
-        LUT = os.path.join("..","LUT","LUT_DENSITY.txt")
+        LUT = os.path.join("LUT","LUT_DENSITY.txt")
     )
 
     return raster_name_dens_color
@@ -91,7 +92,8 @@ def generate_raster_of_density(
 def method_writer_gdal(
     input_las: str,
     output_file: str,
-    bounds: str = None
+    bounds: str = None,
+    radius=_radius
 ):
     log.info(f"Bounds forced (remove 1 pixel at resolution density) :{bounds}")
     if bounds is None :
@@ -103,7 +105,7 @@ def method_writer_gdal(
             | pdal.Writer.gdal(
                             filename = output_file, 
                             resolution = resolution,
-                            radius = resolution,
+                            radius = radius,
                             output_type = "count"
                             )
         )
@@ -116,7 +118,7 @@ def method_writer_gdal(
             | pdal.Writer.gdal(
                             filename = output_file, 
                             resolution = resolution,
-                            radius = 0.1,
+                            radius = radius,
                             output_type = "count",
                             bounds = str(bounds),
                             )
@@ -140,7 +142,7 @@ def change_unit(input_raster: str, output_raster: str, res: int):
 
 
 def multiply_DTM_density(input_DTM: str, input_dens_raster: str, filename: str, output_dir: str):
-
+    log.info("Multiplication with DTM")
     # Output file
     out_raster = os.path.join(output_dir, FOLDER_DENS_FINAL, f"{os.path.splitext(filename)[0]}_DENS{extension}")
     # Mutiply 
