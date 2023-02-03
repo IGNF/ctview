@@ -20,7 +20,7 @@ extension = dico_param["raster_extension"]
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-idir", "--input_dir", default=None)
+    parser.add_argument("-i", "--input_file", default=None)
     parser.add_argument("-odir", "--output_dir", default=None)
     parser.add_argument(
         "-m", "--interp_method", default=dico_param["interpolation_method"]
@@ -42,10 +42,13 @@ def main():
 
     # Get las file, output directory and interpolation method
     args = parse_args()
-    in_dir = args.input_dir
+    in_las = args.input_file
     out_dir = args.output_dir
     interp_Method = args.interp_method
     list_cycles = args.cycles_DTM_colored
+
+    in_dir = os.path.dirname(in_las)
+    filename = os.path.basename(in_las)
 
     if os.path.exists(out_dir):
         # Clean folder test if exists
@@ -54,71 +57,50 @@ def main():
         # Create folder test if not exists
         os.makedirs(out_dir)
 
-    # CReate folders of dico_folder in out_dir
+    # Create folders of dico_folder in out_dir
     create_folder(out_dir)
 
-    # Scan las/laz file from input directory
-    list_las = []
-    for f in os.listdir(in_dir):
-        # Only look at file with las/laz extension
-        if os.path.splitext(f)[1] in [".las", ".laz"]:
-            list_las.append(f)
+    ## DENSITY (DTM brut + density)
+    ## Step 1 : DTM brut
+    raster_DTM_dens = map_DTM_DSM.create_map_one_las_DTM_dens(
+        input_las=os.path.join(in_dir, filename),
+        output_dir=out_dir,
+        interpMETHOD=interp_Method,
+        type_raster="DTM_dens"
+    )
+    ## Step 2 : raster of density
+    bounds_las = utils_pdal.get_bounds_from_las(os.path.join(in_dir, filename)) # get boundaries
+    log.info(f"Bounds : {bounds_las}")
+    # bounds_las[0][1] -= dico_param["resolution_DTM_dens"] # remove 1 pixel in x
+    # bounds_las[1][1] -= dico_param["resolution_DTM_dens"] # remove 1 pixel in y
 
-    # Print file founded
-    log.info(f"{len(list_las)} las/laz founded :\n")
-    for f in list_las:
-        log.info(os.path.basename(f))
-
-    # Repare file
-    utils_tools.repare_files(las_dir=in_dir)
-
-    # Scan las/laz file from input directory
-    cpt=0
-    for f in list_las:
-
-        cpt += 1
-        log.info(f"FILE {cpt}/{len(list_las)}: {f}\n\n")
-        ## DENSITY (DTM brut + density)
-        ## Step 1 : DTM brut
-        raster_DTM_dens = map_DTM_DSM.create_map_one_las_DTM_dens(
-            input_las=os.path.join(in_dir, f),
-            output_dir=out_dir,
-            interpMETHOD=interp_Method,
-            type_raster="DTM_dens"
-        )
-        ## Step 2 : raster of density
-        bounds_las = utils_pdal.get_bounds_from_las(os.path.join(in_dir, f)) # get boundaries
-        log.info(f"Bounds : {bounds_las}")
-        # bounds_las[0][1] -= dico_param["resolution_DTM_dens"] # remove 1 pixel in x
-        # bounds_las[1][1] -= dico_param["resolution_DTM_dens"] # remove 1 pixel in y
-
-        raster_dens = map_density.generate_raster_of_density(
-            input_las=os.path.join(in_dir, f),
-            output_dir=out_dir,
-            bounds = bounds_las
-        )
-        # ## Step 3 : multiply density and DTM layers
-        # map_density.multiply_DTM_density(
-        #     input_DTM=raster_DTM_dens, 
-        #     input_dens_raster=raster_dens, 
-        #     filename=f,
-        #     output_dir=out_dir
-        # )
-        # DTM hillshade color
-        map_DTM_DSM.create_map_one_las_DTM(
-            input_las=os.path.join(in_dir, f),
-            output_dir=out_dir,
-            interpMETHOD=interp_Method,
-            list_c=list_cycles,
-            type_raster="DTM"
-        )
-        # DSM hillshade
-        map_DTM_DSM.create_map_one_las_DSM(
-            input_las=os.path.join(in_dir, f),
-            output_dir=out_dir,
-            interpMETHOD=interp_Method,
-            type_raster="DSM"
-        )
+    raster_dens = map_density.generate_raster_of_density(
+        input_las=os.path.join(in_dir, filename),
+        output_dir=out_dir,
+        bounds = bounds_las
+    )
+    # ## Step 3 : multiply density and DTM layers
+    # map_density.multiply_DTM_density(
+    #     input_DTM=raster_DTM_dens, 
+    #     input_dens_raster=raster_dens, 
+    #     filename=filename,
+    #     output_dir=out_dir
+    # )
+    # DTM hillshade color
+    map_DTM_DSM.create_map_one_las_DTM(
+        input_las=os.path.join(in_dir, filename),
+        output_dir=out_dir,
+        interpMETHOD=interp_Method,
+        list_c=list_cycles,
+        type_raster="DTM"
+    )
+    # DSM hillshade
+    map_DTM_DSM.create_map_one_las_DSM(
+        input_las=os.path.join(in_dir, filename),
+        output_dir=out_dir,
+        interpMETHOD=interp_Method,
+        type_raster="DSM"
+    )
 
 
 if __name__ == "__main__":
