@@ -92,13 +92,14 @@ def generate_LUT_X_cycle(file_las: str, file_DTM: str, nb_cycle: int, output_dir
 
     path = os.path.join(output_dir_LUT,f"LUT_{nb_cycle}cycle_{os.path.splitext(os.path.basename(file_las))[0]}.txt")
 
-    zmin, zmax = get_zmin_zmax_from_DTM(input_DTM=file_DTM)
+    _zmin, _zmax = get_zmin_zmax_from_DTM(input_DTM=file_DTM)
 
     write_LUT_X_cycle(
         LUT_dir=path, 
         file_DTM=file_DTM, 
         nb_cycle=nb_cycle, 
-        zmax=zmax, zmin=zmin
+        zmax=_zmax, 
+        zmin=_zmin
     )
 
     return path
