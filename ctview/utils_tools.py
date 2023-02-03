@@ -76,3 +76,15 @@ def write_interp_table(output_filename: str, table_interp: np.ndarray):
             s += ""
 
         f.write(s)
+
+    
+def remove_1_pixel(bounds: tuple, resolution: int):
+    """
+    Remove 1 pixel from the bounds at the choose resolution
+    Args :
+        bounds : ([xmin, xmax], [ymin, ymax])
+        resolution : in meters
+    """
+    bounds[0][1] -= resolution # remove 1 pixel in x
+    bounds[1][1] -= resolution # remove 1 pixel in y
+    return bounds

@@ -69,15 +69,13 @@ def main():
         type_raster="DTM_dens"
     )
     ## Step 2 : raster of density
-    bounds_las = utils_pdal.get_bounds_from_las(os.path.join(in_dir, filename)) # get boundaries
-    log.info(f"Bounds : {bounds_las}")
-    # bounds_las[0][1] -= dico_param["resolution_DTM_dens"] # remove 1 pixel in x
-    # bounds_las[1][1] -= dico_param["resolution_DTM_dens"] # remove 1 pixel in y
+    
+    
+    
 
     raster_dens = map_density.generate_raster_of_density(
         input_las=os.path.join(in_dir, filename),
-        output_dir=out_dir,
-        bounds = bounds_las
+        output_dir=out_dir
     )
     # ## Step 3 : multiply density and DTM layers
     # map_density.multiply_DTM_density(

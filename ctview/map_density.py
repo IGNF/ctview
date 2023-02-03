@@ -32,8 +32,7 @@ FOLDER_DENS_FINAL = dico_folder["folder_density_final"]
 
 def generate_raster_of_density(
     input_las: str,
-    output_dir: str,
-    bounds: str = None
+    output_dir: str
 ):
     """
     Build a raster of density colored.
@@ -55,10 +54,16 @@ def generate_raster_of_density(
     # Parameters
     size = resolution  # meter = resolution from raster
     _size = utils_tools.give_name_resolution_raster(size)
+
+    # Get bounds
+    bounds_las = utils_pdal.get_bounds_from_las(input_las) # get boundaries
+    log.info(f"Bounds : {bounds_las}")
+    # Remove 1 pixel from bounds
+    bounds_las_crop = utils_tools.remove_1_pixel(bounds=bounds_las, resolution=dico_param["resolution_DTM_dens"])
     
     # Raster of density : count points in resolution*resolution m² (Default=25 m²)
     log.info(f"Raster count points at resolution {size} meter(s)")
-    method_writer_gdal(input_las=input_las, output_file=raster_name_count, bounds=bounds)
+    method_writer_gdal(input_las=input_las, output_file=raster_name_count, bounds=bounds_las_crop)
 
     # Crop raster
 
