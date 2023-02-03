@@ -48,7 +48,7 @@ def main():
     list_cycles = args.cycles_DTM_colored
 
     in_dir = os.path.dirname(in_las)
-    f = os.path.basename(in_las)
+    filename = os.path.basename(in_las)
 
     if os.path.exists(out_dir):
         # Clean folder test if exists
@@ -63,19 +63,19 @@ def main():
     ## DENSITY (DTM brut + density)
     ## Step 1 : DTM brut
     raster_DTM_dens = map_DTM_DSM.create_map_one_las_DTM_dens(
-        input_las=os.path.join(in_dir, f),
+        input_las=os.path.join(in_dir, filename),
         output_dir=out_dir,
         interpMETHOD=interp_Method,
         type_raster="DTM_dens"
     )
     ## Step 2 : raster of density
-    bounds_las = utils_pdal.get_bounds_from_las(os.path.join(in_dir, f)) # get boundaries
+    bounds_las = utils_pdal.get_bounds_from_las(os.path.join(in_dir, filename)) # get boundaries
     log.info(f"Bounds : {bounds_las}")
     # bounds_las[0][1] -= dico_param["resolution_DTM_dens"] # remove 1 pixel in x
     # bounds_las[1][1] -= dico_param["resolution_DTM_dens"] # remove 1 pixel in y
 
     raster_dens = map_density.generate_raster_of_density(
-        input_las=os.path.join(in_dir, f),
+        input_las=os.path.join(in_dir, filename),
         output_dir=out_dir,
         bounds = bounds_las
     )
@@ -83,12 +83,12 @@ def main():
     # map_density.multiply_DTM_density(
     #     input_DTM=raster_DTM_dens, 
     #     input_dens_raster=raster_dens, 
-    #     filename=f,
+    #     filename=filename,
     #     output_dir=out_dir
     # )
     # DTM hillshade color
     map_DTM_DSM.create_map_one_las_DTM(
-        input_las=os.path.join(in_dir, f),
+        input_las=os.path.join(in_dir, filename),
         output_dir=out_dir,
         interpMETHOD=interp_Method,
         list_c=list_cycles,
@@ -96,7 +96,7 @@ def main():
     )
     # DSM hillshade
     map_DTM_DSM.create_map_one_las_DSM(
-        input_las=os.path.join(in_dir, f),
+        input_las=os.path.join(in_dir, filename),
         output_dir=out_dir,
         interpMETHOD=interp_Method,
         type_raster="DSM"
