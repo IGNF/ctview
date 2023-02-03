@@ -69,10 +69,6 @@ def main():
         type_raster="DTM_dens"
     )
     ## Step 2 : raster of density
-    
-    
-    
-
     raster_dens = map_density.generate_raster_of_density(
         input_las=os.path.join(in_dir, filename),
         output_dir=out_dir
