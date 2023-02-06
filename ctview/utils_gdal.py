@@ -2,7 +2,6 @@ import fnmatch
 import re
 import os
 import tempfile
-import geojson
 
 from osgeo import gdal, osr, ogr
 
@@ -40,13 +39,6 @@ def build_vrt(
     my_vrt = None
 
 
-# def extract_from_vrt(in_vrt: str, out_put_image: str, bbox: gu.Bbox):
-#     """extract part of DTM"""
-#     gdal.Translate(
-#         out_put_image, in_vrt, projWin=[bbox.xmin, bbox.ymax, bbox.xmax, bbox.ymin]
-#     )
-
-
 def get_box_from_image(input_raster: str):
     """get image bbox"""
     src = gdal.Open(input_raster)
@@ -74,21 +66,6 @@ def rasterise(
         else:
             gdal.RasterizeLayer(ds_out, [1], source_layer, None)
     data_src, ds_out = None, None
-
-
-def polygonize_and_add_field_name(raster_unvalide: str, epsg: int, field_name: str):
-    unvalide_area = []
-    out_json_density_ground = tempfile.NamedTemporaryFile(
-        suffix="_polygonize_and_add_field_name.json"
-    )
-    lu_gdal_utils.gdal_polygonize(raster_unvalide, out_json_density_ground.name, epsg)
-    with open(out_json_density_ground.name) as file:
-        geo_json = geojson.load(file)
-        features = geo_json["features"]
-        for fea in features:
-            fea["properties"]["type erreur"] = field_name
-            unvalide_area.append(fea)
-    return unvalide_area
 
 
 def get_raster_corner_coord(in_raster: str):

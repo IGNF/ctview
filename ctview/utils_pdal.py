@@ -1,7 +1,5 @@
 import pdal
 import tempfile
-
-from shapely.geometry import shape
 from pathlib import Path
 
 # from ctclass import utils_geometry, utils_gdal
@@ -155,22 +153,6 @@ def get_class_min_max_from_las(points):
     return minClass, maxClass
 
 
-def calc_boundary(points, size_hexbin_edge):
-    """Calcul approximate boundary of points with hexbin"""
-    if len(points) == 0:
-        return None
-    pipeline = pdal.Filter.hexbin(smooth=False, edge_size=size_hexbin_edge).pipeline(
-        points
-    )
-    pipeline.execute()
-    metadata_hexbin = pipeline.metadata["metadata"]["filters.hexbin"]
-    if not "boundary_json" in metadata_hexbin:
-        print(metadata_hexbin["error"])
-        return None
-    area = metadata_hexbin["boundary_json"]
-    return shape(area)
-
-
 def assign_classification(points):
     """assign classification to the entire las"""
     pipeline = pdal.Filter.assign(value="Classification = 0").pipeline(points)
@@ -191,29 +173,6 @@ def range_classification_points(points_ini, class_filtre: [int]):
     pipeline = pdal.Filter.range(
         limits=tab_class_to_str_pdal_class(class_filtre)
     ).pipeline(points_ini)
-    pipeline.execute()
-    return pipeline.arrays[0]
-
-
-def filter_points_within_geom(points, geom: shape, class_filtre: [int]):
-    def build_multipolygon_from_polygon_or_multipolygon(geo: shape):
-        """Build a list of polygones from a geometry (polygon or multipolygon)"""
-        poly_tab = []
-        if geo.geom_type == "Polygon":
-            poly_tab.append(geo)
-        if geo.geom_type == "MultiPolygon":
-            for poly in geo.geoms:
-                poly_tab.append(poly)
-        return poly_tab
-
-    """filter points on a geometry"""
-    poly_tab = build_multipolygon_from_polygon_or_multipolygon(geom)
-    poly_tab_wkt = []
-    for poly in poly_tab:
-        poly_tab_wkt.append(poly.wkt)
-    pipeline = pdal.Filter.range(
-        limits=tab_class_to_str_pdal_class(class_filtre)
-    ).pipeline(points) | pdal.Filter.crop(polygon=poly_tab_wkt)
     pipeline.execute()
     return pipeline.arrays[0]
 
