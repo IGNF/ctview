@@ -4,10 +4,7 @@
 import argparse
 import os
 import logging as log
-import sys
-import shutil
 import ctview.utils_tools as utils_tools
-import ctview.utils_pdal as utils_pdal
 
 # Internal function
 import ctview.map_DTM_DSM as map_DTM_DSM
@@ -59,8 +56,6 @@ def get_las_liste(input_las, input_dir):
     else : 
         input_dir = os.path.dirname(input_las)
         filename = os.path.basename(input_las)
-        print("indir",input_dir)
-        print("basename",filename)
         las_input_file = input_las
         if os.path.isfile(las_input_file) & las_input_file.lower().endswith(
             (".las", ".laz")

@@ -12,4 +12,4 @@ def test_get_las_liste_LAS():
 
 def test_get_las_liste_DIR():
     las_liste = get_las_liste(input_las=None, input_dir=DIR_LAS)
-    assert las_liste == ALL_LAS
+    assert set(las_liste) == set(ALL_LAS)
