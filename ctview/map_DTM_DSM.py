@@ -649,9 +649,7 @@ def create_map_one_las_DTM(
 
         cpt += 1
 
-    log.debug(f"End {type_raster}.\n")
-
-    log.info("\n\n")
+    log.info(f"End {type_raster}.\n")
 
     return raster_dtm_hs # DTM with hillshade
 
@@ -772,9 +770,7 @@ def create_map_one_las_DSM(
     log.debug(os.path.join(output_dir, raster_dtm_hs))
 
 
-    log.debug(f"End {type_raster}.\n")
-
-    log.info("\n\n")
+    log.info(f"End {type_raster}.\n")
 
     return raster_dtm_hs # DSM with hillshade
 
@@ -803,7 +799,7 @@ def create_map_one_las_DTM_dens(
     if type_raster == "DTM_dens":
         DXM = "DTM"
         folder_DXM_brut, folder_DXM_shade = name_folder_DTM_dens()
-        log.info(f"\n{input_las_name} {type_raster} (brut) at resolution {size} meter(s)\n")
+        log.info(f"\n{type_raster} (brut) at resolution {size} meter(s) : {input_las_name}\n")
     else :
         raise ValueError("Function create_map_one_las Parameter type_raster. Must be \"DTM\", \"DSM\" or \"DTM_dens\"")
 
@@ -907,9 +903,7 @@ def create_map_one_las_DTM_dens(
 
     log.debug(os.path.join(output_dir, raster_dtm_hs))
 
-    log.debug(f"End {type_raster}.\n")
-
-    log.info("\n\n")
+    log.info(f"End {type_raster}.\n")
 
     return raster_dtm_hs # DTM with hillshade
 

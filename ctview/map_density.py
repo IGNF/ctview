@@ -56,6 +56,8 @@ def generate_raster_of_density(
     size = resolution  # meter = resolution from raster
     _size = utils_tools.give_name_resolution_raster(size)
 
+    log.info(f"\nRaster of density at resolution {size} meter(s) : {input_filename}\n")
+
     # Get bounds
     bounds_las = utils_pdal.get_bounds_from_las(input_las) # get boundaries
     log.info(f"Bounds : {bounds_las}")
