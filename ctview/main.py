@@ -5,6 +5,7 @@ import argparse
 import os
 import logging as log
 import ctview.utils_tools as utils_tools
+import time
 
 # Internal function
 import ctview.map_DTM_DSM as map_DTM_DSM
@@ -70,7 +71,7 @@ def get_las_liste(input_las, input_dir):
             "Erreur: Aucun fichier .las ou .laz dans le dossier: " + input_dir
         )
 
-    return las_list
+    return las_list, input_dir
 
 def main():
 
@@ -101,7 +102,14 @@ def main():
     create_folder(out_dir)
 
     # List las/laz
-    las_liste = get_las_liste(in_las, in_dir)
+    las_liste, in_dir = get_las_liste(in_las, in_dir)
+
+    # ## ACTIVATE IF NECESSARY
+    # log.warning("#########")
+    # log.warning("ATTENTION : modification LAS/LAZ file with function utils_tools.repare_file")
+    # log.warning("#########")
+    # utils_tools.repare_files(las_liste, in_dir)
+    # time.sleep(2)
 
     for filename in las_liste :
         
