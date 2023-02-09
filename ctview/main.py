@@ -47,8 +47,8 @@ def get_las_liste(input_las, input_dir):
     Return :
         las_list : list of las/laz (basename, not filename) ex : '/folder1/folder2/Semis_4145_5556_IGN69.las' -> ['Semis_4145_5556_IGN69.las']
     """
+    las_list = []
     if input_las==None :
-        las_list = []
         for filename in os.listdir(input_dir):
             las_input_file = os.path.join(input_dir, filename)
             if os.path.isfile(las_input_file) & las_input_file.lower().endswith(
@@ -57,7 +57,6 @@ def get_las_liste(input_las, input_dir):
                 log.info(filename)
                 las_list.append(filename)
     else : 
-        las_list = []
         input_dir = os.path.dirname(input_las)
         filename = os.path.basename(input_las)
         print("indir",input_dir)
