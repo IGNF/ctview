@@ -104,12 +104,12 @@ def main():
     # List las/laz
     las_liste, in_dir = get_las_liste(in_las, in_dir)
 
-    ## ACTIVATE IF NECESSARY
-    log.warning("#########")
-    log.warning("ATTENTION : modification LAS/LAZ file with function utils_tools.repare_file")
-    log.warning("#########")
-    utils_tools.repare_files(las_liste, in_dir)
-    time.sleep(2)
+    # ## ACTIVATE IF NECESSARY
+    # log.warning("#########")
+    # log.warning("ATTENTION : modification LAS/LAZ file with function utils_tools.repare_file")
+    # log.warning("#########")
+    # utils_tools.repare_files(las_liste, in_dir)
+    # time.sleep(2)
 
     for filename in las_liste :
         
