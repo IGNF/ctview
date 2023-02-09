@@ -38,12 +38,12 @@ def parse_args():
     return parser.parse_args()
 
 
-def get_las_liste(input_las: str, input_dir: str):
+def get_las_liste(input_las, input_dir):
     """
     Extract list of las/laz file of the input (input_las with arg -i or input_dir with arg -idir
     Args :
-        input_las : las in input
-        input_dir : directory in input
+        input_las : las in input (can be string or NoneType)
+        input_dir : directory in input (can be string or NoneType)
     Return :
         las_list : list of las/laz (basename, not filename) ex : '/folder1/folder2/Semis_4145_5556_IGN69.las' -> ['Semis_4145_5556_IGN69.las']
     """
