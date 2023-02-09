@@ -27,10 +27,9 @@ def give_name_resolution_raster(size):
     return _size
 
 
-def repare_files(las_dir: str):
-    for f in os.listdir(las_dir):
-        filename = os.path.join(las_dir, f)
-        f = open(filename, "rb+")
+def repare_files(las_liste: str, input_dir):
+    for filename in las_liste:
+        f = open(os.path.join(input_dir,filename), "rb+")
         f.seek(6)
         f.write(bytes([17, 0, 0, 0]))
         f.close()
