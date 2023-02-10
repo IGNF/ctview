@@ -82,7 +82,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def step1_create_raster_brut(in_points: np.ndarray, output_dir: str, filename: str, res: int):
+def step1_create_raster_brut(in_points: np.ndarray, output_dir: str, filename: str, res: int, i: int):
     """
     Create raster of class brut.
     Args :
@@ -90,6 +90,7 @@ def step1_create_raster_brut(in_points: np.ndarray, output_dir: str, filename: s
         output_dir : output directory
         filename : name of las file whithout extension
         res : resolution in meters
+        i : index step
     Return :
         Full path of raster of class brut
     """
@@ -105,20 +106,21 @@ def step1_create_raster_brut(in_points: np.ndarray, output_dir: str, filename: s
     return raster_brut
 
 
-def step2_create_raster_fillgap(in_raster, output_dir, filename):
+def step2_create_raster_fillgap(in_raster, output_dir, filename, i):
     """
     Fill gaps on a raster using gdal.
     Args :
         in_raster : raster to fill
         output_dir : output directory
         filename : name of las file whithout extension
+        i : index step
     Return :
         Full path of raster filled
     """
     fillgap_raster = os.path.join(
         output_dir, f"{filename}_raster_fillgap.tif"
     )
-    log.info(f"Step 2/5 : Fill gaps : {fillgap_raster}")
+    log.info(f"Step {i}/5 : Fill gaps : {fillgap_raster}")
 
     fill_no_data(
         src_raster=in_raster,
@@ -130,6 +132,23 @@ def step2_create_raster_fillgap(in_raster, output_dir, filename):
         raise FileNotFoundError (f"{fillgap_raster} not found")
 
     return fillgap_raster
+
+
+def step3_color_raster(in_raster, output_dir, filename, verbose, i):
+    raster_colored = os.path.join(
+        output_dir, f"{filename}_{verbose}.tif"
+    )
+    log.info(f"Step {i}/5 : {verbose} : {raster_colored}")
+
+    utils_gdal.color_raster_by_class_2(
+        input_raster=in_raster,
+        output_raster=raster_colored,
+    )
+
+    if not os.path.exists(raster_colored): # if raster not create, next step with fail
+        raise FileNotFoundError (f"{raster_colored} not found")
+
+    return raster_colored
 
 
 def main(input_las: str(), output_dir: str()):
@@ -145,48 +164,23 @@ def main(input_las: str(), output_dir: str()):
 
     # Output_folder_names
     output_folder_1 = os.path.join(output_dir,dico_folder["folder_CC_brut"])
-    output_folder_2 = os.path.join(output_dir,dico_folder["folder_CC_fillgap"])
-    output_folder_3 = os.path.join(output_dir,dico_folder["folder_CC_brut_color"])
+    output_folder_2 = os.path.join(output_dir,dico_folder["folder_CC_brut_color"])
+    output_folder_3 = os.path.join(output_dir,dico_folder["folder_CC_fillgap"])
     output_folder_4 = os.path.join(output_dir,dico_folder["folder_CC_fillgap_color"])
     output_folder_5 = os.path.join(output_dir,dico_folder["folder_CC_fusion"])
 
     # Step 1 : Write raster brut
-    raster_brut = step1_create_raster_brut(in_points, output_folder_1, input_las_name_without_extension, resolution_class)
+    raster_brut = step1_create_raster_brut(in_points, output_folder_1, input_las_name_without_extension, resolution_class, i=1)
 
-    # Step 2 :  Fill gaps
-    fillgap_raster = step2_create_raster_fillgap(raster_brut, output_folder_2, input_las_name_without_extension)
+    # Step 2 : Color brut
+    color_brut_raster = step3_color_raster(in_raster=raster_brut, output_dir=output_folder_2, filename=input_las_name_without_extension, verbose="raster_color", i=2)
 
-    # Color fill gaps
-    color_fillgap_raster = os.path.join(
-        output_dir, f"{input_las_name_without_extension}_raster_fillgap_color.tif"
-    )
-    utils_gdal.color_raster_by_class_2(
-        input_raster=fillgap_raster,
-        output_raster=color_fillgap_raster,
-    )
+    # Step 3 :  Fill gaps
+    fillgap_raster = step2_create_raster_fillgap(raster_brut, output_folder_3, input_las_name_without_extension, i=3)
 
-    log.info("Color fill gaps raster : ")
-    log.info(color_fillgap_raster)
+    # Step 4 : Color fill gaps
+    color_fillgap_raster = step3_color_raster(in_raster=fillgap_raster, output_dir=output_folder_4, filename=input_las_name_without_extension, verbose="raster_fillgap_color", i=4)
 
-    if not os.path.exists(color_fillgap_raster):
-        print(f"FileNotFoundError : {color_fillgap_raster} not found")
-        sys.exit()
-
-    # Color fill
-    color_raster = os.path.join(
-        output_dir, f"{input_las_name_without_extension}_raster_color_.tif"
-    )
-    utils_gdal.color_raster_by_class_2(
-        input_raster=raster_brut,
-        output_raster=color_raster,
-    )
-
-    log.info("Color raster brut: ")
-    log.info(color_raster)
-
-    if not os.path.exists(color_raster):
-        print(f"FileNotFoundError : {color_raster} not found")
-        sys.exit()
 
 
 if __name__ == "__main__":
