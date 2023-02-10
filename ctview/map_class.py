@@ -6,7 +6,6 @@
 import pdal
 import ctview.utils_tools as utils_tools
 import ctview.utils_pdal as utils_pdal
-import sys
 import logging as log
 import os
 import argparse
@@ -19,6 +18,13 @@ from numbers import Real
 # Library intern
 import ctview.utils_gdal as utils_gdal
 from osgeo_utils import gdal_fillnodata
+
+# Dictionnary
+from ctview.utils_folder import dico_folder
+from ctview.parameter import dico_param
+
+# Parameters
+resolution_class = dico_param["resolution_mapclass"]
 
 
 # FONCTION
@@ -75,37 +81,35 @@ def parse_args():
     return parser.parse_args()
 
 
-def main():
+def main(input_las: str(), output_dir: str()):
 
-    log.basicConfig(level=log.INFO)
+    log.basicConfig(level=log.INFO, format='%(message)s')
 
-    # Get las file, output directory and interpolation method
-    args = parse_args()
-    input_las = args.input_las
-    output_dir = args.output_dir
-
-    # Clean folder
-    for filename in os.listdir(output_dir):
-        os.remove(os.path.join(output_dir, filename))
-
+    # File names
     input_las_name = os.path.basename(input_las)
     input_las_name_without_extension = os.path.splitext(input_las_name)[0]  # Read las
     in_points = utils_pdal.read_las(input_las)
 
-    log.info(f"\n\nMAP OF CLASS : file : {input_las_name}")
+    log.info(f"\nMAP OF CLASS : file : {input_las_name}")
+
+    # Output_folder_names
+    output_folder_1 = os.path.join(output_dir,dico_folder["folder_CC_brut"])
+    output_folder_2 = os.path.join(output_dir,dico_folder["folder_CC_brut_color"])
+    output_folder_3 = os.path.join(output_dir,dico_folder["folder_CC_fillgap"])
+    output_folder_4 = os.path.join(output_dir,dico_folder["folder_CC_fillgap_color"])
+    output_folder_5 = os.path.join(output_dir,dico_folder["folder_CC_fusion"])
 
     # Write raster
     output_raster = os.path.join(
         output_dir, f"{input_las_name_without_extension}_raster.tif"
     )
-    utils_pdal.write_raster_class(in_points, output_raster)
+    utils_pdal.write_raster_class(input_points=in_points, output_raster=output_raster, res=resolution_class)
 
     log.info("Create raster of class brut : ")
     log.info(output_raster)
 
     if not os.path.exists(output_raster):
-        print(f"FileNotFoundError : {output_raster} not found")
-        sys.exit()
+        raise FileNotFoundError (f"{output_raster} not found")
 
     # Fill gaps
     fillgap_raster = os.path.join(
@@ -160,4 +164,9 @@ def main():
 
 if __name__ == "__main__":
 
-    main()
+    # Get las file, output directory and interpolation method
+    args = parse_args()
+    in_las = args.input_las
+    out_dir = args.output_dir
+
+    main(in_las, out_dir)

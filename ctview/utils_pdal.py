@@ -40,11 +40,11 @@ def write_raster_z(input_points, output_raster):
     pipeline.execute()
 
 
-def write_raster_class(input_points, output_raster):
+def write_raster_class(input_points, output_raster, res):
     """Generate a raster"""
     pipeline = pdal.Writer.gdal(
         filename=output_raster,
-        resolution=0.5,
+        resolution=res,
         dimension="Classification",
         gdaldriver="GTiff",
     ).pipeline(input_points)
