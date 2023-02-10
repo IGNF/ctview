@@ -523,7 +523,7 @@ def create_map_one_las_DTM(
     DXM = type_raster
     if type_raster == "DTM":
         folder_DXM_brut, folder_DXM_shade, folder_DXM_color = name_folder_DTM()
-        log.info(f"\n{input_las_name} {type_raster} (brut, shade, color) at resolution {size} meter(s)\n")
+        log.info(f"\n{type_raster} (brut, shade, color) at resolution {size} meter(s) : {input_las_name}\n")
     else :
         raise ValueError("Function create_map_one_las Parameter type_raster. Must be \"DTM\", \"DSM\" or \"DTM_dens\"")
     
@@ -677,7 +677,7 @@ def create_map_one_las_DSM(
     DXM = type_raster
     if type_raster == "DSM":
         folder_DXM_brut, folder_DXM_shade = name_folder_DSM()
-        log.info(f"\n{input_las_name} {type_raster} (brut, shade) at resolution {size} meter(s)\n")
+        log.info(f"\n{type_raster} (brut, shade) at resolution {size} meter(s) : {input_las_name}\n")
     else :
         raise ValueError("Function create_map_one_las Parameter type_raster. Must be \"DTM\", \"DSM\" or \"DTM_dens\"")
 
