@@ -94,27 +94,26 @@ def main(input_las: str(), output_dir: str()):
 
     # Output_folder_names
     output_folder_1 = os.path.join(output_dir,dico_folder["folder_CC_brut"])
-    output_folder_2 = os.path.join(output_dir,dico_folder["folder_CC_brut_color"])
-    output_folder_3 = os.path.join(output_dir,dico_folder["folder_CC_fillgap"])
+    output_folder_2 = os.path.join(output_dir,dico_folder["folder_CC_fillgap"])
+    output_folder_3 = os.path.join(output_dir,dico_folder["folder_CC_brut_color"])
     output_folder_4 = os.path.join(output_dir,dico_folder["folder_CC_fillgap_color"])
     output_folder_5 = os.path.join(output_dir,dico_folder["folder_CC_fusion"])
 
     # Step 1 : Write raster brut
     raster_brut = os.path.join(
-        output_dir, f"{input_las_name_without_extension}_raster.tif"
+        output_folder_1, f"{input_las_name_without_extension}_raster.tif"
     )
+    log.info(f"Step 1/5 : Raster of class brut : {raster_brut}")
     utils_pdal.write_raster_class(input_points=in_points, output_raster=raster_brut, res=resolution_class)
 
-    log.info("Create raster of class brut : ")
-    log.info(raster_brut)
-
-    if not os.path.exists(raster_brut):
+    if not os.path.exists(raster_brut): # if raster_brut not create, next step with fail
         raise FileNotFoundError (f"{raster_brut} not found")
 
     # Step 2 :  Fill gaps
     fillgap_raster = os.path.join(
-        output_dir, f"{input_las_name_without_extension}_raster_fillgap.tif"
+        output_folder_2, f"{input_las_name_without_extension}_raster_fillgap.tif"
     )
+    log.info(f"Step 2/5 : Fill gaps : {fillgap_raster}")
 
     fill_no_data(
         src_raster=raster_brut,
@@ -122,12 +121,8 @@ def main(input_las: str(), output_dir: str()):
         max_Search_Distance=2,  # modif 10/01/2023
     )
 
-    log.info("Fill gaps : ")
-    log.info(fillgap_raster)
-
-    if not os.path.exists(fillgap_raster):
-        print(f"FileNotFoundError : {fillgap_raster} not found")
-        sys.exit()
+    if not os.path.exists(fillgap_raster): # if raster_brut not create, next step with fail
+        raise FileNotFoundError (f"{fillgap_raster} not found")
 
     # Color fill gaps
     color_fillgap_raster = os.path.join(
@@ -168,5 +163,12 @@ if __name__ == "__main__":
     args = parse_args()
     in_las = args.input_las
     out_dir = args.output_dir
+
+    # Create folders
+    os.makedirs(os.path.join(out_dir,dico_folder["folder_CC_brut"]), exist_ok=True)
+    os.makedirs(os.path.join(out_dir,dico_folder["folder_CC_fillgap"]), exist_ok=True)
+    os.makedirs(os.path.join(out_dir,dico_folder["folder_CC_brut_color"]), exist_ok=True)
+    os.makedirs(os.path.join(out_dir,dico_folder["folder_CC_fillgap_color"]), exist_ok=True)
+    os.makedirs(os.path.join(out_dir,dico_folder["folder_CC_fusion"]), exist_ok=True)
 
     main(in_las, out_dir)
