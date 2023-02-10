@@ -9,6 +9,7 @@ import ctview.utils_pdal as utils_pdal
 import logging as log
 import os
 import argparse
+import numpy as np
 
 from osgeo import gdal
 from typing import Optional
@@ -81,6 +82,56 @@ def parse_args():
     return parser.parse_args()
 
 
+def step1_create_raster_brut(in_points: np.ndarray, output_dir: str, filename: str, res: int):
+    """
+    Create raster of class brut.
+    Args :
+        in_points : points of las file
+        output_dir : output directory
+        filename : name of las file whithout extension
+        res : resolution in meters
+    Return :
+        Full path of raster of class brut
+    """
+    raster_brut = os.path.join(
+        output_dir, f"{filename}_raster.tif"
+    )
+    log.info(f"Step 1/5 : Raster of class brut : {raster_brut}")
+    utils_pdal.write_raster_class(input_points=in_points, output_raster=raster_brut, res=res)
+
+    if not os.path.exists(raster_brut): # if raster not create, next step with fail
+        raise FileNotFoundError (f"{raster_brut} not found")
+
+    return raster_brut
+
+
+def step2_create_raster_fillgap(in_raster, output_dir, filename):
+    """
+    Fill gaps on a raster using gdal.
+    Args :
+        in_raster : raster to fill
+        output_dir : output directory
+        filename : name of las file whithout extension
+    Return :
+        Full path of raster filled
+    """
+    fillgap_raster = os.path.join(
+        output_dir, f"{filename}_raster_fillgap.tif"
+    )
+    log.info(f"Step 2/5 : Fill gaps : {fillgap_raster}")
+
+    fill_no_data(
+        src_raster=in_raster,
+        dst_raster=fillgap_raster,
+        max_Search_Distance=2,  # modif 10/01/2023
+    )
+
+    if not os.path.exists(fillgap_raster): # if raster not create, next step with fail
+        raise FileNotFoundError (f"{fillgap_raster} not found")
+
+    return fillgap_raster
+
+
 def main(input_las: str(), output_dir: str()):
 
     log.basicConfig(level=log.INFO, format='%(message)s')
@@ -100,29 +151,10 @@ def main(input_las: str(), output_dir: str()):
     output_folder_5 = os.path.join(output_dir,dico_folder["folder_CC_fusion"])
 
     # Step 1 : Write raster brut
-    raster_brut = os.path.join(
-        output_folder_1, f"{input_las_name_without_extension}_raster.tif"
-    )
-    log.info(f"Step 1/5 : Raster of class brut : {raster_brut}")
-    utils_pdal.write_raster_class(input_points=in_points, output_raster=raster_brut, res=resolution_class)
-
-    if not os.path.exists(raster_brut): # if raster_brut not create, next step with fail
-        raise FileNotFoundError (f"{raster_brut} not found")
+    raster_brut = step1_create_raster_brut(in_points, output_folder_1, input_las_name_without_extension, resolution_class)
 
     # Step 2 :  Fill gaps
-    fillgap_raster = os.path.join(
-        output_folder_2, f"{input_las_name_without_extension}_raster_fillgap.tif"
-    )
-    log.info(f"Step 2/5 : Fill gaps : {fillgap_raster}")
-
-    fill_no_data(
-        src_raster=raster_brut,
-        dst_raster=fillgap_raster,
-        max_Search_Distance=2,  # modif 10/01/2023
-    )
-
-    if not os.path.exists(fillgap_raster): # if raster_brut not create, next step with fail
-        raise FileNotFoundError (f"{fillgap_raster} not found")
+    fillgap_raster = step2_create_raster_fillgap(raster_brut, output_folder_2, input_las_name_without_extension)
 
     # Color fill gaps
     color_fillgap_raster = os.path.join(
