@@ -113,30 +113,31 @@ def main():
     # time.sleep(2)
 
     for filename in las_liste :
+        las_input_file = os.path.join(in_dir, filename)
         
-        ## DENSITY (DTM brut + density)
-        ## Step 1 : DTM brut
-        raster_DTM_dens = map_DTM_DSM.create_map_one_las_DTM_dens(
-            input_las=os.path.join(in_dir, filename),
-            output_dir=out_dir,
-            interpMETHOD=interp_Method,
-            type_raster="DTM_dens"
-        )
-        ## Step 2 : raster of density
-        raster_dens = map_density.generate_raster_of_density(
-            input_las=os.path.join(in_dir, filename),
-            output_dir=out_dir
-        )
-        ## Step 3 : multiply density and DTM layers
-        map_density.multiply_DTM_density(
-            input_DTM=raster_DTM_dens, 
-            input_dens_raster=raster_dens, 
-            filename=filename,
-            output_dir=out_dir
-        )
+        # ## DENSITY (DTM brut + density)
+        # ## Step 1 : DTM brut
+        # raster_DTM_dens = map_DTM_DSM.create_map_one_las_DTM_dens(
+        #     input_las=las_input_file,
+        #     output_dir=out_dir,
+        #     interpMETHOD=interp_Method,
+        #     type_raster="DTM_dens"
+        # )
+        # ## Step 2 : raster of density
+        # raster_dens = map_density.generate_raster_of_density(
+        #     input_las=las_input_file,
+        #     output_dir=out_dir
+        # )
+        # ## Step 3 : multiply density and DTM layers
+        # map_density.multiply_DTM_density(
+        #     input_DTM=raster_DTM_dens, 
+        #     input_dens_raster=raster_dens, 
+        #     filename=filename,
+        #     output_dir=out_dir
+        # )
         # ## DTM hillshade color
         # map_DTM_DSM.create_map_one_las_DTM(
-        #     input_las=os.path.join(in_dir, filename),
+        #     input_las=las_input_file,
         #     output_dir=out_dir,
         #     interpMETHOD=interp_Method,
         #     list_c=list_cycles,
@@ -144,11 +145,19 @@ def main():
         # )
         # ## DSM hillshade
         # map_DTM_DSM.create_map_one_las_DSM(
-        #     input_las=os.path.join(in_dir, filename),
+        #     input_las=las_input_file,
         #     output_dir=out_dir,
         #     interpMETHOD=interp_Method,
         #     type_raster="DSM"
         # )
+        ## Map class color
+        ## Step 1 : create map fill gaps color
+        map_class.create_map_class(
+            input_las=las_input_file, 
+            output_dir=out_dir
+        )
+        ## Step 2 : fusion with MNS
+        
 
 
 if __name__ == "__main__":

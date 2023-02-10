@@ -182,6 +182,18 @@ def create_map_class(input_las: str(), output_dir: str()):
     color_fillgap_raster = step3_color_raster(in_raster=fillgap_raster, output_dir=output_folder_4, filename=input_las_name_without_extension, verbose="raster_fillgap_color", i=4)
 
 
+def multiply_DTM_density(input_DTM: str, input_dens_raster: str, filename: str, output_dir: str):
+    log.info("Multiplication with DTM")
+    # Output file
+    out_raster = os.path.join(output_dir, FOLDER_DENS_FINAL, f"{os.path.splitext(filename)[0]}_DENS{extension}")
+    # Mutiply 
+    gdal_calc.Calc(
+        A=input_DTM,
+        B=input_dens_raster,
+        calc="((A-1)<0)*B*(A/255)+((A-1)>=0)*B*((A-1)/255)",
+        outfile=out_raster
+    )
+
 if __name__ == "__main__":
 
     # Get las file, output directory and interpolation method
