@@ -516,9 +516,6 @@ def create_map_one_las_DTM(
     # Get filename without extension
     input_las_name = os.path.basename(input_las)
 
-    # Fichier de sortie DXM brut
-    out_dtm_raster = f"{output_dir}{input_las_name}_{DXM}.tif"
-
     # Paramètres
     size = dico_param[f"resolution_{type_raster}"]  # meter = resolution from raster
     _size = utils_tools.give_name_resolution_raster(size)
@@ -526,9 +523,12 @@ def create_map_one_las_DTM(
     DXM = type_raster
     if type_raster == "DTM":
         folder_DXM_brut, folder_DXM_shade, folder_DXM_color = name_folder_DTM()
-        log.info(f"\n{input_las_name} {type_raster} (brut, shade, color) at resolution {size} meter(s)\n")
+        log.info(f"\n{type_raster} (brut, shade, color) at resolution {size} meter(s) : {input_las_name}\n")
     else :
         raise ValueError("Function create_map_one_las Parameter type_raster. Must be \"DTM\", \"DSM\" or \"DTM_dens\"")
+    
+    # Fichier de sortie DXM brut
+    out_dtm_raster = f"{output_dir}{input_las_name}_{DXM}.tif"
 
     # # Extraction infos du las
     # origin_x, origin_y, ProjSystem, AltiSystem = get_origin(input_las_name)
@@ -677,7 +677,7 @@ def create_map_one_las_DSM(
     DXM = type_raster
     if type_raster == "DSM":
         folder_DXM_brut, folder_DXM_shade = name_folder_DSM()
-        log.info(f"\n{input_las_name} {type_raster} (brut, shade) at resolution {size} meter(s)\n")
+        log.info(f"\n{type_raster} (brut, shade) at resolution {size} meter(s) : {input_las_name}\n")
     else :
         raise ValueError("Function create_map_one_las Parameter type_raster. Must be \"DTM\", \"DSM\" or \"DTM_dens\"")
 
