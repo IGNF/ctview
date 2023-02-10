@@ -25,12 +25,12 @@ ou
 
 <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>
 
-Installation de l'environnement conda : se placer dans le dossier `ctView` (attention pas ctView/ctview)
+Installation de l'environnement conda : se placer dans le dossier `ctView` (attention pas `ctView/ctview`)
 ```
 conda env create -n ctview -f environnement.yml
 conda activate ctview
 ```
-# Génération des vues
+# Utilisation
 
 CtView peut se lancer sur un seul fichier LAS/LAZ ou sur un dossier contenant plusieurs fichiers LAS/LAZ.
 
@@ -48,23 +48,29 @@ python -m ctview.main -idir path/to/input_directory/ -odir path/to/output_direct
 
 Ces commandes vont lancer la génération des vues détaillées ci-après. Si la commande est lancée sur un dossier, l'ensemble des vues seront générées pour le premier LAS, puis pour le suivant, etc.
 
+Pour voir tous les paramètres modifiables :
+
+```
+python -m ctview.main --help
+```
+
 # Génération des vues
 
 Le plus chronophage est la génération de MNT/MNS.
 
 ## Carte de densité
 
-Step 1 : MNT ombragé de résolution 5m
+Step 1 : MNT ombragé de résolution 5m -> `DTM_DENS_5M_shade`
 
-Step 2 : Carte de densité de résolution 5m
+Step 2 : Carte de densité colorisée de résolution 5m -> `DENS_COL`
 
-Step 3 : Fusion du MNT et de la carte de densité
+Step 3 : Fusion du MNT et de la carte de densité -> `DENS_FINAL`
 
 ## MNT ombragé colorisé
 
-Step 1 : MNT ombragé de résolution 1m
+Step 1 : MNT ombragé de résolution 1m -> `DTM_1M_shade`
 
-Step 2 : Colorisation
+Step 2 : Colorisation -> `DTM_1M_color`
 
 Pour la colorisation il est possible d'en générer plusieurs et de choisir pour chacune le nombre de cycle de couleur à appliquer. Par exemple pour avoir 2 colorisations avec respectivement 5 et 12 cycles :
 
@@ -72,13 +78,15 @@ Pour la colorisation il est possible d'en générer plusieurs et de choisir pour
 python -m ctview.main -i path/to/one_file.las -odir path/to/output_directory/ -c 5 12
 ```
 
+Par défaut, il n'y a qu'une seule colorisation avec un seul cycle.
+
 ## Carte de classe colorisée
 
-Step 1 : MNS ombragé
+Step 1 : MNS ombragé -> `DSM_50CM_shade`
 
-Step 2 : Carte de classe colorisée
+Step 2 : Carte de classe colorisée -> `CC_4_fgcolor`
 
-Step 3 : Fusion du MNT et de la carte de classe
+Step 3 : Fusion du MNT et de la carte de classe -> `CC_5_fusion`
 
 
 # Tests unitaires
