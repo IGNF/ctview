@@ -1,74 +1,92 @@
 # CtView
 
-Ce projet a pour but de créer différentes vues opérateurs pour différents contrôles de classification. 
+Ce projet permet de créer différentes vues opérateurs pour du contrôle de classification. 
 
-## Vues demandées 
-- OCS Lidar, composée d'une OCS "brute" colorisée par classe combinée à une image d'intensité normalisée et un MNS
+## Vues
+- OCS Lidar, composée d'une OCS "brute" colorisée par classe combinée à un MNS
 - MNT ombragé colorisé avec nombre de cycles variable
 - image de densité colorisée
-- COG
+
+
+# Informations
+
+CtView a été développé sous linux et n'a pas encore été testé sous windows. Les commandes proposées dans la suite correspondent à un terminal linux.
+CtView s'utilise en via un terminal et les commandent doivent être lancées à la racine (dans le dossier `ctView`).
 
 # Installation
 
-Installation de l'environnement conda
+Installer conda
+
+```
+install conda
+```
+
+ou
+
+<https://conda.io/projects/conda/en/latest/user-guide/install/index.html>
+
+Installation de l'environnement conda : se placer dans le dossier `ctView` (attention pas ctView/ctview)
 ```
 conda env create -n ctview -f environnement.yml
-```
-
-Activation de l'environnement
-```
 conda activate ctview
 ```
+# Génération des vues
 
-# Tests
+CtView peut se lancer sur un seul fichier LAS/LAZ ou sur un dossier contenant plusieurs fichiers LAS/LAZ.
 
-## Tests unitaires des fonctions du fichier map_DTM_DSM
+## Sur un seul fichier
 
-Se placer dans le dossier script/ et lancer
 ```
-python -m pytest -s test_map_DTM_DSM.py
+python -m ctview.main -i path/to/one_file.las -odir path/to/output_directory/
 ```
 
-## Tests unitaires des fonctions ajoutées dans le fichier utils_pdal
-Se placer dans le dossier script/ et lancer
+## Sur un dossier
+
 ```
-python -m pytest -s test_utils_pdal.py
+python -m ctview.main -idir path/to/input_directory/ -odir path/to/output_directory/
 ```
+
+Ces commandes vont lancer la génération des vues détaillées ci-après. Si la commande est lancée sur un dossier, l'ensemble des vues seront générées pour le premier LAS, puis pour le suivant, etc.
 
 # Génération des vues
 
-## Génération de MNT
-- Se placer dans le dossier script/
-- Choisir un LAS ou un LAZ à tester. Exemple : path1/Semis_2022_0671_6912_LA93_IGN69.laz
-- Choisir un dossier de sortie et le créer. Exemple : path2/DTM_test/
-- Choisir une méthode d'interpolation (Laplace ou TINlinear)
-- Lancer la commande
-```
-python map_DTM_DSM.py path1/Semis_2022_0671_6912_LA93_IGN69.laz path2/DTM_test/ Laplace
-```
-Ce qui est attendu : génération de :
-- DTM_brut/ 
-    - 1 fichier tif MNT brut
-- DTM_color/
-    - x fichiers tif MNTs ombragés colorisés
-- DTM_shade/
-    - 1 fichier tif MNT ombragé
-- LAS/
-    - 1 fichier las des points sol et virtuels (classif 2 et 66)
-    - 1 fichier las des points sol et virtuels (classif 2 et 66) avec interpolation
-- ras.txt (contient la grille d'interpolation)
+Le plus chronophage est la génération de MNT/MNS.
 
-## Génération de carte de classe
-- Se placer dans le dossier script/
-- Choisir un LAS ou un LAZ à tester. Exemple : path1/Semis_2022_0671_6912_LA93_IGN69.laz
-- Choisir un dossier de sortie et le créer. Exemple : path2/class_test/
-- Lancer la commande
+## Carte de densité
+
+Step 1 : MNT ombragé de résolution 5m
+
+Step 2 : Carte de densité de résolution 5m
+
+Step 3 : Fusion du MNT et de la carte de densité
+
+## MNT ombragé colorisé
+
+Step 1 : MNT ombragé de résolution 1m
+
+Step 2 : Colorisation
+
+Pour la colorisation il est possible d'en générer plusieurs et de choisir pour chacune le nombre de cycle de couleur à appliquer. Par exemple pour avoir 2 colorisations avec respectivement 5 et 12 cycles :
+
 ```
-python map_class.py path1/Semis_2022_0671_6912_LA93_IGN69.laz path2/class_test/
+python -m ctview.main -i path/to/one_file.las -odir path/to/output_directory/ -c 5 12
 ```
-Ce qui est attendu : génération de :
-4 tif :
-- raster brut
-- raster colorisé par classe
-- raster avec fillgap
-- raster colorisé par classe avec fillgap
+
+## Carte de classe colorisée
+
+Step 1 : MNS ombragé
+
+Step 2 : Carte de classe colorisée
+
+Step 3 : Fusion du MNT et de la carte de classe
+
+
+# Tests unitaires
+
+```
+./ci/test.sh
+```
+
+## TODO
+- prise en compte du voisinage
+- COG
