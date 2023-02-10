@@ -5,7 +5,7 @@ import tempfile
 
 from osgeo import gdal, osr, ogr
 
-DICO_CLASS = os.path.join("..","LUT","LUT_CLASS.txt")
+DICO_CLASS = os.path.join("LUT","LUT_CLASS.txt")
 
 # import lidarutils.geometry_utils as gu
 # import lidarutils.gdal_utils as lu_gdal_utils

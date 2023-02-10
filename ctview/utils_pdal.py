@@ -4,13 +4,6 @@ from pathlib import Path
 
 # from ctclass import utils_geometry, utils_gdal
 
-def read_las(file_las):
-    """Read a las file and put it in an array"""
-    pipeline = pdal.Pipeline() | pdal.Reader.las(filename=file_las)
-    pipeline.execute()
-    return pipeline.arrays[0]
-
-
 def write_las_simple(input_points, output_las):
     """Write a las file"""
     pipeline = pdal.Writer.las(filename=output_las).pipeline(input_points)
@@ -40,11 +33,11 @@ def write_raster_z(input_points, output_raster):
     pipeline.execute()
 
 
-def write_raster_class(input_points, output_raster):
+def write_raster_class(input_points, output_raster, res):
     """Generate a raster"""
     pipeline = pdal.Writer.gdal(
         filename=output_raster,
-        resolution=0.5,
+        resolution=res,
         dimension="Classification",
         gdaldriver="GTiff",
     ).pipeline(input_points)

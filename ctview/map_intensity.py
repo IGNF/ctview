@@ -33,7 +33,7 @@ def create_folder(dest_dir: str):
 def create_map_intensity(input_las, raster_intensity):
 
     # Read las
-    in_points = utils_pdal.read_las(input_las)
+    in_points = utils_pdal.read_las_file(input_las)
 
     # Create raster of intensity
     utils_pdal.write_raster(

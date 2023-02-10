@@ -5,6 +5,7 @@ import argparse
 import os
 import logging as log
 import ctview.utils_tools as utils_tools
+import ctview.utils_pdal as utils_pdal
 import time
 
 # Internal function
@@ -12,6 +13,7 @@ import ctview.map_DTM_DSM as map_DTM_DSM
 from ctview.parameter import dico_param
 from ctview.utils_folder import create_folder, dico_folder
 import ctview.map_density as map_density
+import ctview.map_class as map_class
 
 # Parameters
 extension = dico_param["raster_extension"]
@@ -112,42 +114,58 @@ def main():
     # time.sleep(2)
 
     for filename in las_liste :
+        las_input_file = os.path.join(in_dir, filename)
+        bounds_las = utils_pdal.get_bounds_from_las(las_input_file) # get boundaries
         
-        ## DENSITY (DTM brut + density)
-        ## Step 1 : DTM brut
-        raster_DTM_dens = map_DTM_DSM.create_map_one_las_DTM_dens(
-            input_las=os.path.join(in_dir, filename),
-            output_dir=out_dir,
-            interpMETHOD=interp_Method,
-            type_raster="DTM_dens"
-        )
-        ## Step 2 : raster of density
-        raster_dens = map_density.generate_raster_of_density(
-            input_las=os.path.join(in_dir, filename),
-            output_dir=out_dir
-        )
-        ## Step 3 : multiply density and DTM layers
-        map_density.multiply_DTM_density(
-            input_DTM=raster_DTM_dens, 
-            input_dens_raster=raster_dens, 
-            filename=filename,
-            output_dir=out_dir
-        )
+        # ## DENSITY (DTM brut + density)
+        # ## Step 1 : DTM brut
+        # raster_DTM_dens = map_DTM_DSM.create_map_one_las_DTM_dens(
+        #     input_las=las_input_file,
+        #     output_dir=out_dir,
+        #     interpMETHOD=interp_Method,
+        #     type_raster="DTM_dens"
+        # )
+        # ## Step 2 : raster of density
+        # raster_dens = map_density.generate_raster_of_density(
+        #     input_las=las_input_file,
+        #     output_dir=out_dir
+        # )
+        # ## Step 3 : multiply density and DTM layers
+        # map_density.multiply_DTM_density(
+        #     input_DTM=raster_DTM_dens, 
+        #     input_dens_raster=raster_dens, 
+        #     filename=filename,
+        #     output_dir=out_dir
+        # )
         # ## DTM hillshade color
         # map_DTM_DSM.create_map_one_las_DTM(
-        #     input_las=os.path.join(in_dir, filename),
+        #     input_las=las_input_file,
         #     output_dir=out_dir,
         #     interpMETHOD=interp_Method,
         #     list_c=list_cycles,
         #     type_raster="DTM"
         # )
-        # ## DSM hillshade
-        # map_DTM_DSM.create_map_one_las_DSM(
-        #     input_las=os.path.join(in_dir, filename),
-        #     output_dir=out_dir,
-        #     interpMETHOD=interp_Method,
-        #     type_raster="DSM"
-        # )
+        ## Map class color
+        ## Step 1/3 : DSM hillshade
+        raster_DSM_hs = map_DTM_DSM.create_map_one_las_DSM(
+            input_las=las_input_file,
+            output_dir=out_dir,
+            interpMETHOD=interp_Method,
+            type_raster="DSM"
+        )
+        ## Step 2/3 : create map fill gaps color
+        raster_class_fgc = map_class.create_map_class(
+            input_las=las_input_file, 
+            output_dir=out_dir
+        )
+        ## Step 3/3 : fusion with MNS
+        map_class.multiply_DSM_class(
+            input_DSM=raster_DSM_hs,
+            input_raster_class=raster_class_fgc,
+            filename=filename,
+            output_dir=out_dir,
+            bounds=bounds_las
+        )
 
 
 if __name__ == "__main__":

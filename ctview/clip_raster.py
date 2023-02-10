@@ -21,3 +21,10 @@ def crop_raster(input_raster: str, output_raster: str, bounds: str):
         projWin=window
     )
 
+
+def clip_raster(input_raster: str, output_raster: str, bounds: str):
+    minX, minY, maxX, maxY = bounds[0][0], bounds[1][0], bounds[0][1], bounds[1][1]
+    RasterFormat = 'GTiff'
+    gdal.Warp(output_raster, input_raster, format=RasterFormat, outputBounds=[minX, minY, maxX, maxY])
+
+    return output_raster
