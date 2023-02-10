@@ -4,13 +4,6 @@ from pathlib import Path
 
 # from ctclass import utils_geometry, utils_gdal
 
-def read_las(file_las):
-    """Read a las file and put it in an array"""
-    pipeline = pdal.Pipeline() | pdal.Reader.las(filename=file_las)
-    pipeline.execute()
-    return pipeline.arrays[0]
-
-
 def write_las_simple(input_points, output_las):
     """Write a las file"""
     pipeline = pdal.Writer.las(filename=output_las).pipeline(input_points)

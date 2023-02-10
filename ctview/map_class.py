@@ -139,7 +139,7 @@ def main(input_las: str(), output_dir: str()):
     # File names
     input_las_name = os.path.basename(input_las)
     input_las_name_without_extension = os.path.splitext(input_las_name)[0]  # Read las
-    in_points = utils_pdal.read_las(input_las)
+    in_points = utils_pdal.read_las_file(input_las)
 
     log.info(f"\nMAP OF CLASS : file : {input_las_name}")
 
