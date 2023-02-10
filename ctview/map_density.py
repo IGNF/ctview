@@ -6,6 +6,7 @@
 import ctview.utils_pdal as utils_pdal
 import ctview.utils_gdal as utils_gdal
 import ctview.utils_tools as utils_tools
+import ctview.clip_raster as clip_raster
     # Library
 import os
 import pdal
@@ -57,19 +58,10 @@ def generate_raster_of_density(
     _size = utils_tools.give_name_resolution_raster(size)
 
     log.info(f"\nRaster of density at resolution {size} meter(s) : {input_filename}\n")
-
-    # Get bounds
-    bounds_las = utils_pdal.get_bounds_from_las(input_las) # get boundaries
-    log.info(f"Bounds : {bounds_las}")
-    # Remove 1 pixel from bounds
-    bounds_las_crop = utils_tools.remove_1_pixel(bounds=bounds_las, resolution=dico_param["resolution_DTM_dens"])
     
     # Raster of density : count points in resolution*resolution m² (Default=25 m²)
     log.info(f"Raster count points at resolution {size} meter(s)")
-    method_writer_gdal(input_las=input_las, output_file=raster_name_count, bounds=bounds_las_crop)
-
-    # Crop raster
-
+    method_writer_gdal(input_las=input_las, output_file=raster_name_count)
 
     # Overwrite and change unity of count from "per 25 m²" to "per m²"
     change_unit(
@@ -97,7 +89,6 @@ def method_writer_gdal(
     bounds: str = None,
     radius=_radius
 ):
-    log.info(f"Bounds forced (remove 1 pixel at resolution density) :{bounds}")
     if bounds is None :
         pipeline = (
             pdal.Reader.las(filename=input_las)
@@ -112,6 +103,7 @@ def method_writer_gdal(
                             )
         )
     else :
+        log.info(f"Bounds forced (remove 1 pixel at resolution density) :{bounds}")
         pipeline = (
             pdal.Reader.las(filename=input_las)
             | pdal.Filter.range(
@@ -143,14 +135,31 @@ def change_unit(input_raster: str, output_raster: str, res: int):
     )
 
 
-def multiply_DTM_density(input_DTM: str, input_dens_raster: str, filename: str, output_dir: str):
+def multiply_DTM_density(input_DTM: str, input_dens_raster: str, filename: str, output_dir: str, bounds: tuple):
+    """
+    Fusion of 2 rasters (DTM and raster of density) with a given formula.
+    Args :
+        input_DTM : DTM
+        input_dens_raster : raster of density
+        filename : name of las file whithout path
+        output_dir : output directory
+        bounds : bounds of las file ([minx,maxx],[miny, maxy])
+    """
+    # Crop rasters
+    log.info("Crop rasters")
+    input_DTM_crop = f"{os.path.splitext(input_DTM)[0]}_crop{extension}"
+    clip_raster.clip_raster(input_raster=input_DTM, output_raster=input_DTM_crop, bounds=bounds)
+
+    input_dens_raster_crop = f"{os.path.splitext(input_dens_raster)[0]}_crop{extension}"
+    clip_raster.clip_raster(input_raster=input_dens_raster, output_raster=input_dens_raster_crop, bounds=bounds)
+
     log.info("Multiplication with DTM")
     # Output file
     out_raster = os.path.join(output_dir, FOLDER_DENS_FINAL, f"{os.path.splitext(filename)[0]}_DENS{extension}")
     # Mutiply 
     gdal_calc.Calc(
-        A=input_DTM,
-        B=input_dens_raster,
+        A=input_DTM_crop,
+        B=input_dens_raster_crop,
         calc="((A-1)<0)*B*(A/255)+((A-1)>=0)*B*((A-1)/255)",
         outfile=out_raster
     )
