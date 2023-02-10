@@ -138,35 +138,36 @@ def main():
             output_dir=out_dir,
             bounds=bounds_las
         )
-        # ## DTM hillshade color
-        # map_DTM_DSM.create_map_one_las_DTM(
-        #     input_las=las_input_file,
-        #     output_dir=out_dir,
-        #     interpMETHOD=interp_Method,
-        #     list_c=list_cycles,
-        #     type_raster="DTM"
-        # )
-        # ## Map class color
-        # ## Step 1/3 : DSM hillshade
-        # raster_DSM_hs = map_DTM_DSM.create_map_one_las_DSM(
-        #     input_las=las_input_file,
-        #     output_dir=out_dir,
-        #     interpMETHOD=interp_Method,
-        #     type_raster="DSM"
-        # )
-        # ## Step 2/3 : create map fill gaps color
-        # raster_class_fgc = map_class.create_map_class(
-        #     input_las=las_input_file, 
-        #     output_dir=out_dir
-        # )
-        # ## Step 3/3 : fusion with MNS
-        # map_class.multiply_DSM_class(
-        #     input_DSM=raster_DSM_hs,
-        #     input_raster_class=raster_class_fgc,
-        #     filename=filename,
-        #     output_dir=out_dir,
-        #     bounds=bounds_las
-        # )
+        ## DTM hillshade color
+        ## Step 1/1 :
+        map_DTM_DSM.create_map_one_las_DTM(
+            input_las=las_input_file,
+            output_dir=out_dir,
+            interpMETHOD=interp_Method,
+            list_c=list_cycles,
+            type_raster="DTM"
+        )
+        ## Map class color
+        ## Step 1/3 : DSM hillshade
+        raster_DSM_hs = map_DTM_DSM.create_map_one_las_DSM(
+            input_las=las_input_file,
+            output_dir=out_dir,
+            interpMETHOD=interp_Method,
+            type_raster="DSM"
+        )
+        ## Step 2/3 : create map fill gaps color
+        raster_class_fgc = map_class.create_map_class(
+            input_las=las_input_file, 
+            output_dir=out_dir
+        )
+        ## Step 3/3 : fusion with MNS
+        map_class.multiply_DSM_class(
+            input_DSM=raster_DSM_hs,
+            input_raster_class=raster_class_fgc,
+            filename=filename,
+            output_dir=out_dir,
+            bounds=bounds_las
+        )
 
 
 if __name__ == "__main__":
