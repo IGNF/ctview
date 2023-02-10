@@ -6,6 +6,7 @@
 import pdal
 import ctview.utils_tools as utils_tools
 import ctview.utils_pdal as utils_pdal
+import ctview.clip_raster as clip_raster
 import logging as log
 import os
 import argparse
@@ -19,6 +20,7 @@ from numbers import Real
 # Library intern
 import ctview.utils_gdal as utils_gdal
 from osgeo_utils import gdal_fillnodata
+import lidarutils.gdal_calc as gdal_calc
 
 # Dictionnary
 from ctview.utils_folder import dico_folder
@@ -26,7 +28,7 @@ from ctview.parameter import dico_param
 
 # Parameters
 resolution_class = dico_param["resolution_mapclass"]
-
+extension = dico_param["raster_extension"]
 
 # FONCTION
 
@@ -95,9 +97,9 @@ def step1_create_raster_brut(in_points: np.ndarray, output_dir: str, filename: s
         Full path of raster of class brut
     """
     raster_brut = os.path.join(
-        output_dir, f"{filename}_raster.tif"
+        output_dir, f"{filename}_raster{extension}"
     )
-    log.info(f"Step 1/4 : Raster of class brut : {raster_brut}")
+    log.info(f"Step {i}/4 : Raster of class brut : {raster_brut}")
     utils_pdal.write_raster_class(input_points=in_points, output_raster=raster_brut, res=res)
 
     if not os.path.exists(raster_brut): # if raster not create, next step with fail
@@ -118,7 +120,7 @@ def step2_create_raster_fillgap(in_raster, output_dir, filename, i):
         Full path of raster filled
     """
     fillgap_raster = os.path.join(
-        output_dir, f"{filename}_raster_fillgap.tif"
+        output_dir, f"{filename}_raster_fillgap{extension}"
     )
     log.info(f"Step {i}/4 : Fill gaps : {fillgap_raster}")
 
@@ -135,8 +137,19 @@ def step2_create_raster_fillgap(in_raster, output_dir, filename, i):
 
 
 def step3_color_raster(in_raster, output_dir, filename, verbose, i):
+    """
+    Color a raster using method gdal DEMProcessing with a specific LUT.
+    Args :
+        in_raster : raster to color
+        output_dir : output directory
+        filename : name of las file whithout extension
+        verbose : suffix for the output filename
+        i : index step
+    Return :
+        Full path of raster colored
+    """
     raster_colored = os.path.join(
-        output_dir, f"{filename}_{verbose}.tif"
+        output_dir, f"{filename}_{verbose}{extension}"
     )
     log.info(f"Step {i}/4 : {verbose} : {raster_colored}")
 
@@ -152,7 +165,14 @@ def step3_color_raster(in_raster, output_dir, filename, verbose, i):
 
 
 def create_map_class(input_las: str(), output_dir: str()):
-
+    """
+    Create a raster of class with the fill aps method of gdal and a colorisation.
+    Args :
+        input_las : las file 
+        output_dir : output directory
+    Return :
+        Full path of raster filled and colorised
+    """
     log.basicConfig(level=log.INFO, format='%(message)s')
 
     # File names
@@ -167,7 +187,6 @@ def create_map_class(input_las: str(), output_dir: str()):
     output_folder_2 = os.path.join(output_dir,dico_folder["folder_CC_brut_color"])
     output_folder_3 = os.path.join(output_dir,dico_folder["folder_CC_fillgap"])
     output_folder_4 = os.path.join(output_dir,dico_folder["folder_CC_fillgap_color"])
-    output_folder_5 = os.path.join(output_dir,dico_folder["folder_CC_fusion"])
 
     # Step 1 : Write raster brut
     raster_brut = step1_create_raster_brut(in_points, output_folder_1, input_las_name_without_extension, resolution_class, i=1)
@@ -181,17 +200,30 @@ def create_map_class(input_las: str(), output_dir: str()):
     # Step 4 : Color fill gaps
     color_fillgap_raster = step3_color_raster(in_raster=fillgap_raster, output_dir=output_folder_4, filename=input_las_name_without_extension, verbose="raster_fillgap_color", i=4)
 
+    return color_fillgap_raster
 
-def multiply_DTM_density(input_DTM: str, input_dens_raster: str, filename: str, output_dir: str):
-    log.info("Multiplication with DTM")
+
+def multiply_DSM_class(input_DSM: str, input_raster_class: str, filename: str, output_dir: str, bounds: tuple):
+    # Crop rasters
+    log.info("Crop rasters")
+    input_DSM_crop = f"{os.path.splitext(input_DSM)[0]}_crop{extension}"
+    clip_raster.clip_raster(input_raster=input_DSM, output_raster=input_DSM_crop, bounds=bounds)
+
+    input_raster_class_crop = f"{os.path.splitext(input_raster_class)[0]}_crop{extension}"
+    clip_raster.clip_raster(input_raster=input_raster_class, output_raster=input_raster_class_crop, bounds=bounds)
+
+    log.info("Multiplication with DSM")
     # Output file
-    out_raster = os.path.join(output_dir, FOLDER_DENS_FINAL, f"{os.path.splitext(filename)[0]}_DENS{extension}")
+    output_folder_5 = os.path.join(output_dir,dico_folder["folder_CC_fusion"])
+    out_raster = os.path.join(output_folder_5, f"{os.path.splitext(filename)[0]}_fusion_DSM_class{extension}")
     # Mutiply 
     gdal_calc.Calc(
-        A=input_DTM,
-        B=input_dens_raster,
-        calc="((A-1)<0)*B*(A/255)+((A-1)>=0)*B*((A-1)/255)",
-        outfile=out_raster
+        A=input_raster_class_crop,
+        B=input_DSM_crop,
+        calc="254*((A*(0.5*(B/255)+0.25))>254)+(A*(0.5*(B/255)+0.25))*((A*(0.5*(B/255)+0.25))<=254)",
+        outfile=out_raster,
+        allBands='A',
+        overwrite=True
     )
 
 if __name__ == "__main__":

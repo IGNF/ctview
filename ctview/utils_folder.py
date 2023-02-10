@@ -22,8 +22,8 @@ dico_folder = {
     "folder_density_final" : "DENS_FINAL",
     "folder_LUT" : "LUT",
     "folder_CC_brut" : "CC_1_brut",
-    "folder_CC_fillgap" : "CC_2_fg",
-    "folder_CC_brut_color" : "CC_3_bcolor",
+    "folder_CC_brut_color" : "CC_2_bcolor",
+    "folder_CC_fillgap" : "CC_3_fg",
     "folder_CC_fillgap_color" : "CC_4_fgcolor",
     "folder_CC_fusion" : "CC_5_fusion",
 }

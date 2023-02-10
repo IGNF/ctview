@@ -5,6 +5,7 @@ import argparse
 import os
 import logging as log
 import ctview.utils_tools as utils_tools
+import ctview.utils_pdal as utils_pdal
 import time
 
 # Internal function
@@ -114,6 +115,7 @@ def main():
 
     for filename in las_liste :
         las_input_file = os.path.join(in_dir, filename)
+        bounds_las = utils_pdal.get_bounds_from_las(las_input_file) # get boundaries
         
         # ## DENSITY (DTM brut + density)
         # ## Step 1 : DTM brut
@@ -144,20 +146,28 @@ def main():
         #     type_raster="DTM"
         # )
         # ## DSM hillshade
-        # map_DTM_DSM.create_map_one_las_DSM(
+        # raster_DSM_hs = map_DTM_DSM.create_map_one_las_DSM(
         #     input_las=las_input_file,
         #     output_dir=out_dir,
         #     interpMETHOD=interp_Method,
         #     type_raster="DSM"
         # )
-        ## Map class color
-        ## Step 1 : create map fill gaps color
-        map_class.create_map_class(
-            input_las=las_input_file, 
-            output_dir=out_dir
-        )
+        # ## Map class color
+        # ## Step 1 : create map fill gaps color
+        # raster_class_fgc = map_class.create_map_class(
+        #     input_las=las_input_file, 
+        #     output_dir=out_dir
+        # )
+        raster_DSM_hs = os.path.join(out_dir,"DSM_50CM_shade", "Semis_2021_0938_6537_LA93_IGN69_DSM_50CM_hillshade_crop.tif")
+        raster_class_fgc = os.path.join(out_dir,"CC_4_fgcolor", "Semis_2021_0938_6537_LA93_IGN69_raster_fillgap_color_crop.tif")
         ## Step 2 : fusion with MNS
-        
+        map_class.multiply_DSM_class(
+            input_DSM=raster_DSM_hs,
+            input_raster_class=raster_class_fgc,
+            filename=filename,
+            output_dir=out_dir,
+            bounds=bounds_las
+        )
 
 
 if __name__ == "__main__":
