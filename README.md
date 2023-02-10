@@ -6,7 +6,7 @@ Ce projet permet de créer différentes vues opérateurs pour du contrôle de cl
 - OCS Lidar, composée d'une OCS "brute" colorisée par classe combinée à une image d'intensité normalisée et un MNS
 - MNT ombragé colorisé avec nombre de cycles variable
 - image de densité colorisée
-- COG (en cours de dev)
+
 
 # Informations
 
@@ -87,3 +87,6 @@ Step 3 : Fusion du MNT et de la carte de classe
 ./ci/test.sh
 ```
 
+## TODO
+- prise en compte du voisinage
+- COG
