@@ -97,7 +97,7 @@ def step1_create_raster_brut(in_points: np.ndarray, output_dir: str, filename: s
     raster_brut = os.path.join(
         output_dir, f"{filename}_raster.tif"
     )
-    log.info(f"Step 1/5 : Raster of class brut : {raster_brut}")
+    log.info(f"Step 1/4 : Raster of class brut : {raster_brut}")
     utils_pdal.write_raster_class(input_points=in_points, output_raster=raster_brut, res=res)
 
     if not os.path.exists(raster_brut): # if raster not create, next step with fail
@@ -120,7 +120,7 @@ def step2_create_raster_fillgap(in_raster, output_dir, filename, i):
     fillgap_raster = os.path.join(
         output_dir, f"{filename}_raster_fillgap.tif"
     )
-    log.info(f"Step {i}/5 : Fill gaps : {fillgap_raster}")
+    log.info(f"Step {i}/4 : Fill gaps : {fillgap_raster}")
 
     fill_no_data(
         src_raster=in_raster,
@@ -138,7 +138,7 @@ def step3_color_raster(in_raster, output_dir, filename, verbose, i):
     raster_colored = os.path.join(
         output_dir, f"{filename}_{verbose}.tif"
     )
-    log.info(f"Step {i}/5 : {verbose} : {raster_colored}")
+    log.info(f"Step {i}/4 : {verbose} : {raster_colored}")
 
     utils_gdal.color_raster_by_class_2(
         input_raster=in_raster,
@@ -151,7 +151,7 @@ def step3_color_raster(in_raster, output_dir, filename, verbose, i):
     return raster_colored
 
 
-def main(input_las: str(), output_dir: str()):
+def create_map_class(input_las: str(), output_dir: str()):
 
     log.basicConfig(level=log.INFO, format='%(message)s')
 
@@ -182,7 +182,6 @@ def main(input_las: str(), output_dir: str()):
     color_fillgap_raster = step3_color_raster(in_raster=fillgap_raster, output_dir=output_folder_4, filename=input_las_name_without_extension, verbose="raster_fillgap_color", i=4)
 
 
-
 if __name__ == "__main__":
 
     # Get las file, output directory and interpolation method
@@ -197,4 +196,4 @@ if __name__ == "__main__":
     os.makedirs(os.path.join(out_dir,dico_folder["folder_CC_fillgap_color"]), exist_ok=True)
     os.makedirs(os.path.join(out_dir,dico_folder["folder_CC_fusion"]), exist_ok=True)
 
-    main(in_las, out_dir)
+    create_map_class(in_las, out_dir)

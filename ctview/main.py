@@ -12,6 +12,7 @@ import ctview.map_DTM_DSM as map_DTM_DSM
 from ctview.parameter import dico_param
 from ctview.utils_folder import create_folder, dico_folder
 import ctview.map_density as map_density
+import ctview.map_class as map_class
 
 # Parameters
 extension = dico_param["raster_extension"]
