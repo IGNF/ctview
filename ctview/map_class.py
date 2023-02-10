@@ -204,6 +204,15 @@ def create_map_class(input_las: str(), output_dir: str()):
 
 
 def multiply_DSM_class(input_DSM: str, input_raster_class: str, filename: str, output_dir: str, bounds: tuple):
+    """
+    Fusion of 2 rasters (DSM and raster of class filled and colored) with a given formula.
+    Args :
+        input_DSM : DSM
+        input_raster_class : raster of class filled and colored
+        filename : name of las file whithout path
+        output_dir : output directory
+        bounds : bounds of las file ([minx,maxx],[miny, maxy])
+    """
     # Crop rasters
     log.info("Crop rasters")
     input_DSM_crop = f"{os.path.splitext(input_DSM)[0]}_crop{extension}"
