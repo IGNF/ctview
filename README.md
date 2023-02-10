@@ -3,7 +3,7 @@
 Ce projet permet de créer différentes vues opérateurs pour du contrôle de classification. 
 
 ## Vues
-- OCS Lidar, composée d'une OCS "brute" colorisée par classe combinée à une image d'intensité normalisée et un MNS
+- OCS Lidar, composée d'une OCS "brute" colorisée par classe combinée à un MNS
 - MNT ombragé colorisé avec nombre de cycles variable
 - image de densité colorisée
 
@@ -11,7 +11,7 @@ Ce projet permet de créer différentes vues opérateurs pour du contrôle de cl
 # Informations
 
 CtView a été développé sous linux et n'a pas encore été testé sous windows. Les commandes proposées dans la suite correspondent à un terminal linux.
-CtView s'utilise en via un terminal et les commandent doivent être lancées à la racine (dans le dossier `ctView`)
+CtView s'utilise en via un terminal et les commandent doivent être lancées à la racine (dans le dossier `ctView`).
 
 # Installation
 
