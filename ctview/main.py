@@ -103,49 +103,31 @@ def main():
     # Create folders of dico_folder in out_dir
     create_folder(out_dir)
 
-    # List las/laz
-    
-    if in_las==None :
-        las_liste = []
-        for filename in os.listdir(in_dir):
-            las_input_file = os.path.join(in_dir, filename)
-            print(filename)
-            print(las_input_file)
-            if os.path.isfile(las_input_file) & las_input_file.lower().endswith(
-                (".las", ".laz")
-            ):
-                las_liste.append(os.path.basename(las_input_file))
-    else : 
-        las_liste = []
-        in_dir = os.path.dirname(in_las)
-        filename = os.path.basename(in_las)
-        las_input_file = in_las
-        print(filename)
-        print(las_input_file)
-        if os.path.isfile(las_input_file) & las_input_file.lower().endswith(
-            (".las", ".laz")
-        ):
-            las_liste.append(os.path.basename(las_input_file))
-    print(las_liste)
+        # List las/laz
+    las_liste, in_dir = get_las_liste(in_las, in_dir)
 
-    if len(las_liste) == 0:
-        raise RuntimeError(
-            "Erreur: Aucun fichier .las ou .laz dans le dossier: " + in_dir
-        )
+    # ## ACTIVATE IF NECESSARY
+    # log.warning("#########")
+    # log.warning("ATTENTION : modification LAS/LAZ file with function utils_tools.repare_file")
+    # log.warning("#########")
+    # utils_tools.repare_files(las_liste, in_dir)
+    # time.sleep(2)
 
     for filename in las_liste :
+        las_input_file = os.path.join(in_dir, filename)
+        bounds_las = utils_pdal.get_bounds_from_las(las_input_file) # get boundaries
         
         ## DENSITY (DTM brut + density)
-        ## Step 1 : DTM brut
+        ## Step 1/3 : DTM brut
         raster_DTM_dens = map_DTM_DSM.create_map_one_las_DTM_dens(
-            input_las=os.path.join(in_dir, filename),
+            input_las=las_input_file,
             output_dir=out_dir,
             interpMETHOD=interp_Method,
             type_raster="DTM_dens"
         )
         ## Step 2 : raster of density
         raster_dens = map_density.generate_raster_of_density(
-            input_las=os.path.join(in_dir, filename),
+            input_las=las_input_file,
             output_dir=out_dir
         )
         ## Step 3 : multiply density and DTM layers
