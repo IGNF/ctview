@@ -6,4 +6,8 @@ WORKDIR /ctView
 
 RUN conda env create -n ctview -f environment.yml
 
+SHELL ["conda", "run", "-n", "ctview", "/bin/bash", "-c"]
+
+RUN python -c "import pdal"
+
 ENTRYPOINT ["conda", "run", "-n", "ctview"]
