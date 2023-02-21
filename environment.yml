@@ -17,7 +17,6 @@ dependencies:
   - black # reformat file
 
   - pip:
-    - --extra-index-url=https://qlf-nexus.ign.fr/repository/pypi-lidarhd-hosted/simple
     - ign-gpao-project-builder
     - ign-gpao-client
     - ign-lidarutils

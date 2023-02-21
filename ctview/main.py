@@ -103,7 +103,7 @@ def main():
     # Create folders of dico_folder in out_dir
     create_folder(out_dir)
 
-    # List las/laz
+        # List las/laz
     las_liste, in_dir = get_las_liste(in_las, in_dir)
 
     # ## ACTIVATE IF NECESSARY
@@ -125,12 +125,12 @@ def main():
             interpMETHOD=interp_Method,
             type_raster="DTM_dens"
         )
-        ## Step 2/3 : raster of density
+        ## Step 2 : raster of density
         raster_dens = map_density.generate_raster_of_density(
             input_las=las_input_file,
             output_dir=out_dir
         )
-        ## Step 3/3 : multiply density and DTM layers
+        ## Step 3 : multiply density and DTM layers
         map_density.multiply_DTM_density(
             input_DTM=raster_DTM_dens, 
             input_dens_raster=raster_dens, 
