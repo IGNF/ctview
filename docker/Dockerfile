@@ -10,4 +10,4 @@ SHELL ["conda", "run", "-n", "ctview", "/bin/bash", "-c"]
 
 RUN python -c "import pdal"
 
-ENTRYPOINT ["conda", "run", "-n", "ctview"]
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "ctview"]
