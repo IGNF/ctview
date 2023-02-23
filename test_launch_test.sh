@@ -1,6 +1,8 @@
 ## clean store
-rm -rf /var/data/store-lidarhd/developpement/ctview/tests_local_docker/
-rm -rf /var/data/store-lidarhd/developpement/ctview/tests_local/
+rm -rf /var/data/store-lidarhd/developpement/ctview/tests_local_docker/test0/
+rm -rf /var/data/store-lidarhd/developpement/ctview/tests_local_docker/test0b/
+rm -rf /var/data/store-lidarhd/developpement/ctview/tests_local/test0/
+rm -rf /var/data/store-lidarhd/developpement/ctview/tests_local/test0b/
 
 ## launch tests
 ./test_main_0.sh
