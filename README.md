@@ -3,15 +3,15 @@
 Ce projet permet de créer différentes vues opérateurs pour du contrôle de classification. 
 
 ## Vues
-- OCS Lidar, composée d'une OCS "brute" colorisée par classe combinée à un MNS
-- MNT ombragé colorisé avec nombre de cycles variable
-- image de densité colorisée
+- OCS Lidar, composée d'une OCS "brute" colorisée par classe fusionné avec un MNS à 50cm
+- MNT ombragé colorisé à 1m avec nombre de cycles variable
+- raster de densité colorisé fusionné avec un MNT à 5m
 
 
 # Informations
 
 CtView a été développé sous linux et n'a pas encore été testé sous windows. Les commandes proposées dans la suite correspondent à un terminal linux.
-CtView s'utilise en via un terminal et les commandent doivent être lancées à la racine (dans le dossier `ctView`).
+CtView s'utilise via un terminal et les commandes doivent être lancées à la racine (dans le dossier `ctView`).
 
 # Installation
 
@@ -25,7 +25,7 @@ ou
 
 <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>
 
-Installation de l'environnement conda : se placer dans le dossier `ctView` (attention pas `ctView/ctview`)
+Créer l'environnement conda : les commandes suivantes doivent être lancées depuis le dossier `ctView/` (attention pas `ctView/ctview`)
 ```
 conda env create -n ctview -f environnement.yml
 conda activate ctview
@@ -46,7 +46,7 @@ python -m ctview.main -i path/to/one_file.las -odir path/to/output_directory/
 python -m ctview.main -idir path/to/input_directory/ -odir path/to/output_directory/
 ```
 
-Ces commandes vont lancer la génération des vues détaillées ci-après. Si la commande est lancée sur un dossier, l'ensemble des vues seront générées pour le premier LAS, puis pour le suivant, etc.
+Ces commandes permettent de générer les vues détaillées ci-après. Si la commande est lancée sur un dossier, l'ensemble des vues seront générées pour le premier LAS, puis pour le suivant, etc.
 
 Pour voir tous les paramètres modifiables :
 
@@ -54,9 +54,19 @@ Pour voir tous les paramètres modifiables :
 python -m ctview.main --help
 ```
 
+## Choix des colorisations
+
+Pour le MNT à 1m, il est possible de générer plusieurs colorisations et de choisir pour chacune le nombre de cycle de couleur à appliquer. Cela est permis par le paramètre -c, qui doit être suivi par les nombres de cycles souhaités séparés par un espace. Par exemple, pour générer 5 colorisations avec respectivement 2, 3, 5, 6 et 12 cycles, voici la commande :
+
+```
+python -m ctview.main -i path/to/one_file.las -odir path/to/output_directory/ -c 2 3 5 6 12
+```
+
+Par défaut, il n'y a qu'une seule colorisation avec un seul cycle.
+
 # Génération des vues
 
-Le plus chronophage est la génération de MNT/MNS.
+Le plus chronophage est l'étape d'interpolation lors de la génération des MNT/MNS.
 
 ## Carte de densité
 
@@ -71,14 +81,6 @@ Step 3 : Fusion du MNT et de la carte de densité -> `DENS_FINAL`
 Step 1 : MNT ombragé de résolution 1m -> `DTM_1M_shade`
 
 Step 2 : Colorisation -> `DTM_1M_color`
-
-Pour la colorisation il est possible d'en générer plusieurs et de choisir pour chacune le nombre de cycle de couleur à appliquer. Par exemple pour avoir 2 colorisations avec respectivement 5 et 12 cycles :
-
-```
-python -m ctview.main -i path/to/one_file.las -odir path/to/output_directory/ -c 5 12
-```
-
-Par défaut, il n'y a qu'une seule colorisation avec un seul cycle.
 
 ## Carte de classe colorisée
 
@@ -95,6 +97,13 @@ Step 3 : Fusion du MNT et de la carte de classe -> `CC_5_fusion`
 ./ci/test.sh
 ```
 
+# Tests fonctionnels
+
+```
+./test_launch_test.sh
+```
+
 ## TODO
+- cas LAS/LAZ sans points sol ni virtuel
 - prise en compte du voisinage
 - COG
