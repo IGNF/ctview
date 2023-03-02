@@ -10,7 +10,7 @@ filename = "jones"
 # Test files
 DATA_DIR = os.path.join("data","las")
 FILE_MUTLI_1_TO_5 = "multiclass_1to5.las"
-FILE_MUTLI_65_TO_66 = "multiclass_65to66.las"
+FILE_MUTLI_65_TO_66 = "test_data_multiclass_65to66.las"
 
 # Expected : ([minx,maxx],[miny,maxy])
 BoundsExpected_FILE_MUTLI_65_TO_66 = ([940967,940973,],[6538270,6538298])

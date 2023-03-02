@@ -28,13 +28,15 @@ FOLDER_DENS_VALUE = dico_folder["folder_density_value"]
 FOLDER_DENS_COLOR = dico_folder["folder_density_color"]
 FOLDER_DENS_FINAL = dico_folder["folder_density_final"]
 _radius = dico_param["radius_PC_dens"]
+CLASSIF_GROUND = 2
 
 # FONCTION
 
 
 def generate_raster_of_density(
     input_las: str,
-    output_dir: str
+    output_dir: str,
+    bounds: str=None
 ):
     """
     Build a raster of density colored.
@@ -61,26 +63,30 @@ def generate_raster_of_density(
     
     # Raster of density : count points in resolution*resolution m² (Default=25 m²)
     log.info(f"Raster count points at resolution {size} meter(s)")
-    method_writer_gdal(input_las=input_las, output_file=raster_name_count)
+    success = method_writer_gdal(input_las=input_las, output_file=raster_name_count, bounds=bounds)
 
-    # Overwrite and change unity of count from "per 25 m²" to "per m²"
-    change_unit(
-        input_raster=raster_name_count,
-        output_raster=raster_name_dens,
-        res=resolution
+    if success :
+        # Overwrite and change unity of count from "per 25 m²" to "per m²"
+        change_unit(
+            input_raster=raster_name_count,
+            output_raster=raster_name_dens,
+            res=resolution
+            )
+
+        # Color density
+        raster_name_dens_color = os.path.join(output_dir, FOLDER_DENS_COLOR,f"{os.path.splitext(input_filename)[0]}_DENS_COLOR{extension}")
+
+        log.info("Colorisation...")
+        utils_gdal.color_raster_with_LUT(
+            input_raster = raster_name_dens,
+            output_raster = raster_name_dens_color,
+            LUT = os.path.join("LUT","LUT_DENSITY.txt")
         )
 
-    # Color density
-    raster_name_dens_color = os.path.join(output_dir, FOLDER_DENS_COLOR,f"{os.path.splitext(input_filename)[0]}_DENS_COLOR{extension}")
+        return raster_name_dens_color, success
 
-    log.info("Colorisation...")
-    utils_gdal.color_raster_with_LUT(
-        input_raster = raster_name_dens,
-        output_raster = raster_name_dens_color,
-        LUT = os.path.join("LUT","LUT_DENSITY.txt")
-    )
-
-    return raster_name_dens_color
+    else :
+        return "_", success
 
 
 def method_writer_gdal(
@@ -89,35 +95,50 @@ def method_writer_gdal(
     bounds: str = None,
     radius=_radius
 ):
-    if bounds is None :
-        pipeline = (
-            pdal.Reader.las(filename=input_las)
-            | pdal.Filter.range(
-                            limits="Classification[2:2]"
-                            )
-            | pdal.Writer.gdal(
-                            filename = output_file, 
-                            resolution = resolution,
-                            radius = radius,
-                            output_type = "count"
-                            )
-        )
+    log.debug('method_writer_gdal')
+    log.debug(f"raster name output count points : {output_file}")
+    log.debug(f'bounds is : {bounds}')
+    log.debug(f"resolution utilisée : {resolution}")
+    log.debug(f"radius :{radius}")
+
+    # Check if the las file contains ground points (redmine 2068)
+    pts_to_check = utils_pdal.read_las_file(input_las=input_las)
+    pts_ground = numpy.where(pts_to_check["Classification"] == CLASSIF_GROUND, 1, 0)
+    nb_pts_ground = numpy.count_nonzero(pts_ground == 1)
+
+    is_count_ok = True
+
+    if nb_pts_ground > 0 :
+
+        pipeline = pdal.Filter.range(
+                                limits="Classification[2:2]"
+                                ).pipeline(pts_to_check)
+        
+
+        if bounds is None :
+            pipeline |= pdal.Writer.gdal(
+                                filename = output_file, 
+                                resolution = resolution,
+                                radius = radius,
+                                output_type = "count"
+                                )
+        else :
+            log.info(f"Bounds forced (remove 1 pixel at resolution density) :{bounds}")
+            pipeline |= pdal.Writer.gdal(
+                                filename = output_file, 
+                                resolution = resolution,
+                                radius = radius,
+                                output_type = "count",
+                                bounds = str(bounds),
+                                )
+
+        pipeline.execute()
+
+        return is_count_ok
+
     else :
-        log.info(f"Bounds forced (remove 1 pixel at resolution density) :{bounds}")
-        pipeline = (
-            pdal.Reader.las(filename=input_las)
-            | pdal.Filter.range(
-                            limits="Classification[2:2]"
-                            )
-            | pdal.Writer.gdal(
-                            filename = output_file, 
-                            resolution = resolution,
-                            radius = radius,
-                            output_type = "count",
-                            bounds = str(bounds),
-                            )
-        )
-    pipeline.execute()
+        is_count_ok = False
+        return is_count_ok
 
 
 def change_unit(input_raster: str, output_raster: str, res: int):
