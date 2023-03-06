@@ -459,8 +459,10 @@ def create_map_one_las(
 
     # Get directory
     input_dir = os.path.dirname(input_las)
-    # Get filename without extension
+    # Get filename with extension
     input_las_name = os.path.basename(input_las)
+    # Get filename without extension
+    input_las_name_without_ext = os.path.splitext(input_las_name)[0]
 
     # Fichier de sortie DXM brut
     out_dtm_raster = f"{output_dir}{input_las_name}_{DXM}.tif"
@@ -613,8 +615,10 @@ def create_map_one_las_DTM(
 
         # Get directory
     input_dir = os.path.dirname(input_las)
-    # Get filename without extension
+    # Get filename with extension
     input_las_name = os.path.basename(input_las)
+    # Get filename without extension
+    input_las_name_without_ext = os.path.splitext(input_las_name)[0]
 
     # Paramètres
     size = dico_param[f"resolution_{type_raster}"]  # meter = resolution from raster
@@ -648,7 +652,7 @@ def create_map_one_las_DTM(
     log.info("Filtering ground and virtual points...")
     # Filtre les points sol de classif 2 et 66
 
-    FileToInterpolate = os.path.join(output_dir, dico_folder["folder_LAS_ground_virtual"], f"{input_las_name}_ground.las")
+    FileToInterpolate = os.path.join(output_dir, dico_folder["folder_LAS_ground_virtual"], f"{input_las_name_without_ext}_ground.las")
 
     filter_las_classes(input_file=os.path.join(input_dir,input_las_name),
                        output_file=FileToInterpolate)
@@ -765,8 +769,10 @@ def create_map_one_las_DSM(
 
     # Get directory
     input_dir = os.path.dirname(input_las)
-    # Get filename without extension
+    # Get filename with extension
     input_las_name = os.path.basename(input_las)
+    # Get filename without extension
+    input_las_name_without_ext = os.path.splitext(input_las_name)[0]
 
     # Paramètres
     size = dico_param[f"resolution_{type_raster}"]  # meter = resolution from raster
@@ -886,8 +892,10 @@ def create_map_one_las_DTM_dens(
 
     # Get directory
     input_dir = os.path.dirname(input_las)
-    # Get filename without extension
+    # Get filename with extension
     input_las_name = os.path.basename(input_las)
+    # Get filename without extension
+    input_las_name_without_ext = os.path.splitext(input_las_name)[0]
 
     # Paramètres
     size = dico_param[f"resolution_{type_raster}"]  # meter = resolution from raster
@@ -922,7 +930,7 @@ def create_map_one_las_DTM_dens(
     log.info("Filtering ground and virtual points...")
     # Filtre les points sol de classif 2 et 66
 
-    FileToInterpolate = os.path.join(output_dir, dico_folder["folder_LAS_ground_virtual"], f"{input_las_name}_ground.las")
+    FileToInterpolate = os.path.join(output_dir, dico_folder["folder_LAS_ground_virtual"], f"{input_las_name_without_ext}_ground.las")
 
     filter_las_classes(input_file=os.path.join(input_dir,input_las_name),
                        output_file=FileToInterpolate)
