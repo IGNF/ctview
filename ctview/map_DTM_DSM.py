@@ -25,10 +25,52 @@ import laspy
 import math
 from tqdm import tqdm
 import logging as log
+from typing import List
 
 # PARAMETERS
 
 EPSG = dico_param["EPSG"]
+
+
+def filter_las_classes(input_file: str,
+                       output_file: str,
+                       spatial_ref: str="EPSG:2154",
+                       keep_classes: List=[2, 66]):
+    """ Reads the LAS file and filter only grounds from LIDAR.
+
+    Args:
+        fileInput (str) : Path to the input lidar file
+        spatial_ref (str) : spatial reference to use when reading the las file
+        output_file (str): Path to the output file
+        keep_classes (List): Classes to keep in the filter (ground + virtual points by default)
+    """
+    limits = ",".join(f"Classification[{c}:{c}]" for c in keep_classes)
+    information = {}
+    information = {
+    "pipeline": [
+            {
+                "type":"readers.las",
+                "filename": input_file,
+                "override_srs": spatial_ref,
+                "nosrs": True
+            },
+            {
+                "type":"filters.range",
+                "limits": limits
+            },
+            {
+                "type": "writers.las",
+                "a_srs": spatial_ref,
+                # "minor_version": 4,
+                # "dataformat_id": 6,
+                "filename": output_file
+            }
+        ]
+    }
+    ground = json.dumps(information, sort_keys=True, indent=4)
+    log.debug(ground)
+    pipeline = pdal.Pipeline(ground)
+    pipeline.execute()
 
 
 def filter_las_ground_virtual(input_dir: str, filename: str):
@@ -73,10 +115,10 @@ def write_las(input_points, filename: str, output_dir: str, name: str):
 
     os.makedirs(output_dir, exist_ok=True)  # create directory LAS/ if not exists
 
-    log.debug("output_dir : " + output_dir)
+    log.debug(f"output_dir : {output_dir}")
     FileOutput = os.path.join(output_dir, f"{file_root}_{name}.las")
 
-    log.debug("filename : " + FileOutput)
+    log.debug(f"filename : {FileOutput}")
     pipeline = pdal.Writer.las(filename=FileOutput, a_srs=f"EPSG:{EPSG}").pipeline(
         input_points
     )
@@ -107,9 +149,16 @@ def las_prepare_1_file(input_file: str, size: float):
     # Reads the LAS file and outputs the ground points as a numpy array.
     in_file = laspy.read(input_file)
     header = in_file.header
+    log.debug(f'\nheader\n{header}')
+    log.debug(f'\nextents = [[header.min[0], header.max[0]], [header.min[1], header.max[1]]]\nextents = {[[header.min[0], header.max[0]], [header.min[1], header.max[1]]]}')
+    log.debug(f'\nin_file.x, in_file.y, in_file.z\n{in_file.x}\n{in_file.y}\n{in_file.z}')
+
     in_np = np.vstack(
         (in_file.x, in_file.y, in_file.z)
     ).transpose()
+    log.debug(f'\nin_np : {in_np}')
+    # import sys
+    # sys.exit(1)
     extents = [[header.min[0], header.max[0]], [header.min[1], header.max[1]]]
     res = [
         math.ceil((extents[0][1] - extents[0][0]) / size),
@@ -120,6 +169,57 @@ def las_prepare_1_file(input_file: str, size: float):
         np.mean(extents[1]) - (size / 2) * res[1],
     ]
     return in_np, res, origin
+
+
+def run_interpolate(pts, res, origin, size, method):
+    """Run interpolation
+    Args:
+        pts : ground points clouds (for each point, just x-y-z coordinates)
+        res(list): resolution in coordinates (1 000 km -> raster carré de 1 000km de côté)
+        origin(list): coordinate location of the relative origin (bottom left)
+        size (int): raster cell size (1m x 1m OU 5m x 5m)
+        method (str) : interpolation method
+    Output:
+        ras: output raster (/!\ can be full of no-data value)
+    """
+    ras, success = interpolation(pts, res, origin, size, method)
+    log.debug(f'\nsuccess :{success}')
+
+    if not success:
+        log.debug(f"type ras without {type(ras)}")
+        ras = dico_param["no_data_value"] * np.ones([res[1], res[0]])
+        log.debug(f"type ras with {type(ras)}")
+
+        if res[1]==0 and res[0]==0 :
+            log.warning("Array is empty ! Your origin las file is probably empty !")
+        else :
+            log.debug(f"resolution{res,res[1],res[0]}")
+            log.debug(f"ras[0][0] apres ajout no data : {ras[0][0]}")
+    return ras
+
+
+def interpolation(pts, res, origin, size, method):
+    """Run interpolation
+    Args:
+        pts : ground points clouds (for each point, just x-y-z coordinates)
+        res(list): resolution in coordinates (1 000 km -> raster carré de 1 000km de côté)
+        origin(list): coordinate location of the relative origin (bottom left)
+        size (int): raster cell size (1m x 1m OU 5m x 5m)
+        method (str) : interpolation method
+    Output:
+        ras: output raster (/!\ can be None)
+        can_interpolate (bool): false if there were no points to interpolate
+    """
+
+    can_interpolate = pts.size > 0
+
+    if can_interpolate:
+        ras = execute_startin(pts, res, origin, size, method)
+
+    else:
+        ras = None
+        
+    return ras, can_interpolate
 
 
 def execute_startin(pts, res, origin, size, method):
@@ -169,7 +269,7 @@ def execute_startin(pts, res, origin, size, method):
                 x, y
             )  # check is the point [x, y] located inside  the convex hull of the DT
             if ch == False:
-                ras[yi, xi] = -9999  # no-data value
+                ras[yi, xi] = dico_param["no_data_value"]  # no-data value
             else:
                 tri = tin.locate(
                     x, y
@@ -178,7 +278,7 @@ def execute_startin(pts, res, origin, size, method):
                 if (tri.shape != ()) and (0 not in tri):
                     ras[yi, xi] = interpolant(x, y)
                 else:
-                    ras[yi, xi] = -9999  # no-data value
+                    ras[yi, xi] = dico_param["no_data_value"]  # no-data value
             xi += 1
 
         yi += 1
@@ -401,11 +501,11 @@ def create_map_one_las(
     log.info(f"Re-sampling : resolution {size} meter...")
     # Extraction coord points cloud
     log.debug(f"input : {FileToInterpolate}")
-    extents_calc, res_calc, origin_calc = las_prepare_1_file(
+    pts_calc, res_calc, origin_calc = las_prepare_1_file(
         input_file=FileToInterpolate, size=size
     )
 
-    log.debug(f"Extents {extents_calc}")
+    log.debug(f"Points cloud {pts_calc}")
     log.debug(f"Resolution in coordinates : {res_calc}")
     log.debug(f"Loc of the relative origin : {origin_calc}")
 
@@ -413,8 +513,8 @@ def create_map_one_las(
     # Interpolation using Laplace or tin linear method
     resolution = res_calc  # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
     origine = origin_calc
-    ras = execute_startin(
-        pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD
+    ras = run_interpolate(
+        pts=pts_calc, res=resolution, origin=origine, size=size, method=interpMETHOD
     )
     log.info("End interpolation.")
 
@@ -540,41 +640,39 @@ def create_map_one_las_DTM(
     # log.info(f"System of projection : {ProjSystem}")
     # log.info(f"Altimetric system : {AltiSystem}")
 
-    log.info("Filtering ground and virtual points...")
-    # Filtre les points sol de classif 2 et 66
-    ground_pts = filter_las_ground_virtual(input_dir=input_dir, filename=input_las_name)
-
-    log.info("Build las filtered...")
-    # LAS points sol non interpolés
-    FileLasGround = write_las(
-        input_points=ground_pts,
-        filename=input_las_name,
-        output_dir=os.path.join(output_dir, dico_folder["folder_LAS_ground_virtual"]),
-        name="ground",
+    ## Get resolution and origin from initial las file
+    _, res_initial, origin_initial = las_prepare_1_file(
+        input_file=os.path.join(input_dir,input_las_name), size=size
     )
 
-    FileToInterpolate = FileLasGround
+    log.info("Filtering ground and virtual points...")
+    # Filtre les points sol de classif 2 et 66
 
+    FileToInterpolate = os.path.join(output_dir, dico_folder["folder_LAS_ground_virtual"], f"{input_las_name}_ground.las")
+
+    filter_las_classes(input_file=os.path.join(input_dir,input_las_name),
+                       output_file=FileToInterpolate)
 
     log.info(f"Interpolation method : {interpMETHOD}")
 
     log.info(f"Re-sampling : resolution {size} meter...")
     # Extraction coord points cloud
     log.debug(f"input : {FileToInterpolate}")
-    extents_calc, res_calc, origin_calc = las_prepare_1_file(
+    pts_calc, _, _ = las_prepare_1_file(
         input_file=FileToInterpolate, size=size
     )
 
-    log.debug(f"Extents {extents_calc}")
-    log.debug(f"Resolution in coordinates : {res_calc}")
-    log.debug(f"Loc of the relative origin : {origin_calc}")
+    log.info(f"Points cloud {pts_calc}")
+    log.info(f"Resolution in coordinates : {res_initial}")
+    log.info(f"Loc of the relative origin : {origin_initial}")
+    log.info(f'size :{size}')
 
     log.info("Begin Interpolation...")
     # Interpolation using Laplace or tin linear method
-    resolution = res_calc  # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
-    origine = origin_calc
-    ras = execute_startin(
-        pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD
+    resolution = res_initial  # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
+    origine = origin_initial
+    ras = run_interpolate(
+        pts=pts_calc, res=resolution, origin=origine, size=size, method=interpMETHOD
     )
     log.info("End interpolation.")
 
@@ -702,11 +800,11 @@ def create_map_one_las_DSM(
     log.info(f"Re-sampling : resolution {size} meter...")
     # Extraction coord points cloud
     log.debug(f"input : {FileToInterpolate}")
-    extents_calc, res_calc, origin_calc = las_prepare_1_file(
+    pts_calc, res_calc, origin_calc = las_prepare_1_file(
         input_file=FileToInterpolate, size=size
     )
 
-    log.debug(f"Extents {extents_calc}")
+    log.debug(f"Points cloud {pts_calc}")
     log.debug(f"Resolution in coordinates : {res_calc}")
     log.debug(f"Loc of the relative origin : {origin_calc}")
 
@@ -714,8 +812,8 @@ def create_map_one_las_DSM(
     # Interpolation using Laplace or tin linear method
     resolution = res_calc  # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
     origine = origin_calc
-    ras = execute_startin(
-        pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD
+    ras = run_interpolate(
+        pts=pts_calc, res=resolution, origin=origine, size=size, method=interpMETHOD
     )
     log.info("End interpolation.")
 
@@ -816,40 +914,39 @@ def create_map_one_las_DTM_dens(
     # log.info(f"System of projection : {ProjSystem}")
     # log.info(f"Altimetric system : {AltiSystem}")
 
-    log.info("Filtering ground and virtual points...")
-    # Filtre les points sol de classif 2 et 66
-    ground_pts = filter_las_ground_virtual(input_dir=input_dir, filename=input_las_name)
-
-    log.info("Build las filtered...")
-    # LAS points sol non interpolés
-    FileLasGround = write_las(
-        input_points=ground_pts,
-        filename=input_las_name,
-        output_dir=os.path.join(output_dir, dico_folder["folder_LAS_ground_virtual"]),
-        name="ground",
+    ## Get resolution and origin from initial las file
+    _, res_initial, origin_initial = las_prepare_1_file(
+        input_file=os.path.join(input_dir,input_las_name), size=size
     )
 
-    FileToInterpolate = FileLasGround
+    log.info("Filtering ground and virtual points...")
+    # Filtre les points sol de classif 2 et 66
+
+    FileToInterpolate = os.path.join(output_dir, dico_folder["folder_LAS_ground_virtual"], f"{input_las_name}_ground.las")
+
+    filter_las_classes(input_file=os.path.join(input_dir,input_las_name),
+                       output_file=FileToInterpolate)
 
     log.info(f"Interpolation method : {interpMETHOD}")
 
     log.info(f"Re-sampling : resolution {size} meter...")
     # Extraction coord points cloud
     log.debug(f"input : {FileToInterpolate}")
-    extents_calc, res_calc, origin_calc = las_prepare_1_file(
+    pts_calc, _, _ = las_prepare_1_file(
         input_file=FileToInterpolate, size=size
     )
 
-    log.debug(f"Extents {extents_calc}")
-    log.debug(f"Resolution in coordinates : {res_calc}")
-    log.debug(f"Loc of the relative origin : {origin_calc}")
+    log.info(f"Points cloud {pts_calc}")
+    log.info(f"Resolution in coordinates : {res_initial}")
+    log.info(f"Loc of the relative origin : {origin_initial}")
+    log.info(f'size :{size}')
 
     log.info("Begin Interpolation...")
     # Interpolation using Laplace or tin linear method
-    resolution = res_calc  # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
-    origine = origin_calc
-    ras = execute_startin(
-        pts=extents_calc, res=resolution, origin=origine, size=size, method=interpMETHOD
+    resolution = res_initial  # résolution en coordonnées (correspond à la taille de la grille de coordonnées pour avoir la résolution indiquée dans le paramètre "size")
+    origine = origin_initial
+    ras = run_interpolate(
+        pts=pts_calc, res=resolution, origin=origine, size=size, method=interpMETHOD
     )
     log.info("End interpolation.")
 

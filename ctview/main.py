@@ -126,18 +126,23 @@ def main():
             type_raster="DTM_dens"
         )
         ## Step 2 : raster of density
-        raster_dens = map_density.generate_raster_of_density(
+        raster_dens, success = map_density.generate_raster_of_density(
             input_las=las_input_file,
             output_dir=out_dir
         )
         ## Step 3 : multiply density and DTM layers
-        map_density.multiply_DTM_density(
-            input_DTM=raster_DTM_dens, 
-            input_dens_raster=raster_dens, 
-            filename=filename,
-            output_dir=out_dir,
-            bounds=bounds_las
-        )
+        if success :
+
+            map_density.multiply_DTM_density(
+                input_DTM=raster_DTM_dens, 
+                input_dens_raster=raster_dens, 
+                filename=filename,
+                output_dir=out_dir,
+                bounds=bounds_las
+            )
+        else :
+            log.warning(f"La dalle {filename} ne contient pas de points sol. Carte de densité non générée.")
+
         ## DTM hillshade color
         ## Step 1/1 :
         map_DTM_DSM.create_map_one_las_DTM(
