@@ -416,15 +416,14 @@ def name_folder_DSM():
     """Assign folder name from dictionnary"""
     folder_DXM_brut = dico_folder["folder_DSM_brut"]
     folder_DXM_shade = dico_folder["folder_DSM_shade"]
-    return folder_DXM_brut,folder_DXM_shade
+    return folder_DXM_brut, folder_DXM_shade
 
 
 def name_folder_DTM():
     """Assign folder name from dictionnary"""
     folder_DXM_brut = dico_folder["folder_DTM_brut"]
     folder_DXM_shade = dico_folder["folder_DTM_shade"]
-    folder_DXM_color = dico_folder["folder_DTM_color"]
-    return folder_DXM_brut, folder_DXM_shade, folder_DXM_color
+    return folder_DXM_brut, folder_DXM_shade
 
 
 def create_map_one_las(
@@ -626,7 +625,7 @@ def create_map_one_las_DTM(
 
     DXM = type_raster
     if type_raster == "DTM":
-        folder_DXM_brut, folder_DXM_shade, folder_DXM_color = name_folder_DTM()
+        folder_DXM_brut, folder_DXM_shade = name_folder_DTM()
         log.info(f"\n{type_raster} (brut, shade, color) at resolution {size} meter(s) : {input_las_name}\n")
     else :
         raise ValueError("Function create_map_one_las Parameter type_raster. Must be \"DTM\", \"DSM\" or \"DTM_dens\"")
@@ -740,6 +739,8 @@ def create_map_one_las_DTM(
     for cycle in list_c:
 
         log.info(f"{cpt}/{len(list_c)}...")
+
+        folder_DXM_color = dico_folder[f"folder_DTM_color{cycle}"]
 
         color_DTM_with_cycles(
             las_input_file=input_las_name,

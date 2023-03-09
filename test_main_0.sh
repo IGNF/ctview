@@ -1,1 +1,1 @@
-python -m ctview.main -idir /var/data/store-lidarhd/developpement/ctview/las/data0/ -odir /var/data/store-lidarhd/developpement/ctview/tests_local/test0
+python -m ctview.main -idir /var/data/store-lidarhd/developpement/ctview/las/data0/ -odir /var/data/store-lidarhd/developpement/ctview/tests_local/test0 -ofdens DENS_FINAL -ofcc CC_5_fusion_FINAL -ofcolor DTM_1M_color_FINAL -c 1 2 4
