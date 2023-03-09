@@ -11,7 +11,7 @@ import time
 # Internal function
 import ctview.map_DTM_DSM as map_DTM_DSM
 from ctview.parameter import dico_param
-from ctview.utils_folder import create_folder, dico_folder
+from ctview.utils_folder import create_folder, dico_folder, add_folder_list_cycles, delete_empty_folder
 import ctview.map_density as map_density
 import ctview.map_class as map_class
 
@@ -34,6 +34,9 @@ def parse_args():
         default=dico_param["cycles_color_DTM"],
         help="Allow to choose the number of coloration cycles for each colorisation. Exemple : -c 1 4 5 (3 colorisation with repectively 1 cycle, 4 cycles and 5 cycles)."
     )
+    parser.add_argument("-ofdens", "--output_folder_density", default=dico_folder["folder_density_final"], help="Output folder map density final.")
+    parser.add_argument("-ofcc", "--output_folder_class_color", default=dico_folder["folder_CC_fusion"], help="Output folder map class color with DSM.")
+    parser.add_argument("-ofcolor", "--output_folder_DTM_color", default=dico_folder["folder_DTM_color"], help="Output folder DTM color.")
 
     return parser.parse_args()
 
@@ -86,6 +89,12 @@ def main():
     out_dir = args.output_dir
     interp_Method = args.interp_method
     list_cycles = args.cycles_DTM_colored
+    # Change destination final folders
+    dico_folder["folder_density_final"] = args.output_folder_density
+    dico_folder["folder_CC_fusion"] = args.output_folder_class_color
+    dico_folder["folder_DTM_color"] = args.output_folder_DTM_color
+    # Add folders for all colorisations in dictionnary
+    add_folder_list_cycles(List=list_cycles, folder_base=dico_folder["folder_DTM_color"], key_base="folder_DTM_color")
 
     # Verify args are ok
     # input
@@ -174,6 +183,8 @@ def main():
             bounds=bounds_las
         )
 
+        # Delete folder
+        delete_empty_folder(dir=out_dir)
 
 if __name__ == "__main__":
 

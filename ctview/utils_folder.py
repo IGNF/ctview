@@ -34,3 +34,26 @@ def create_folder(dest_dir: str):
     for folder in dico_folder:
         folder_path = os.path.join(dest_dir, dico_folder[folder])
         os.makedirs(folder_path, exist_ok=True) # create folder if not exist
+
+def add_folder_list_cycles(List: list, folder_base: str, key_base: str):
+    """
+    Add number of folder that correspond to the number of colorisations with the number of cycles.
+    Args :
+        List: list of number of cycles per colorisation
+        folder: basename of the folders
+    """
+    for c in List:
+        key = f"{key_base}{c}"
+        value = f"{folder_base}{c}c"
+        dico_folder[key] = value
+
+def delete_empty_folder(dir: str):
+    """
+    Delete empty folder of dir
+    Args :
+        dir : directory to be clean
+    """
+    list_folder = os.listdir(dir)
+    for f in list_folder :
+        if len(os.listdir(os.path.join(dir,f))) == 0:
+            os.rmdir(os.path.join(dir,f))
