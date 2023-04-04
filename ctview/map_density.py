@@ -26,7 +26,6 @@ resolution = dico_param["resolution_DTM_dens"]
 extension = dico_param["raster_extension"]
 FOLDER_DENS_VALUE = dico_folder["folder_density_value"]
 FOLDER_DENS_COLOR = dico_folder["folder_density_color"]
-FOLDER_DENS_FINAL = dico_folder["folder_density_final"]
 _radius = dico_param["radius_PC_dens"]
 CLASSIF_GROUND = 2
 
@@ -176,7 +175,7 @@ def multiply_DTM_density(input_DTM: str, input_dens_raster: str, filename: str, 
 
     log.info("Multiplication with DTM")
     # Output file
-    out_raster = os.path.join(output_dir, FOLDER_DENS_FINAL, f"{os.path.splitext(filename)[0]}_DENS{extension}")
+    out_raster = os.path.join(output_dir, dico_folder["folder_density_final"], f"{os.path.splitext(filename)[0]}_DENS{extension}")
     # Mutiply 
     gdal_calc.Calc(
         A=input_DTM_crop,
