@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # PARAMETERS
-VERSION=`cat VERSION.md`
+VERSION=`cd .. && python -m ctview._version`
 # paths
 INPUT=/var/data/store-lidarhd/developpement/ctview/las/data1
 OUTPUT=/var/data/store-lidarhd/developpement/ctview/2_tests_local_docker/test1
