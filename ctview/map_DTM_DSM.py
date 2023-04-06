@@ -927,7 +927,7 @@ def create_map_one_las_DTM_dens(
     _, res_initial, origin_initial = las_prepare_1_file(
         input_file=os.path.join(input_dir,input_las_name), size=size
     )
-
+    
     log.info("Filtering ground and virtual points...")
     # Filtre les points sol de classif 2 et 66
 
