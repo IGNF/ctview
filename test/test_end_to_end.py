@@ -69,7 +69,7 @@ def assert_output_folders_contains_expected_number_of_file(output: str, nb_raste
         assert len(os.listdir(path)) == nb_raster_expected
     else :
         assert not os.path.exists(path)
-    for folder in [ FOLDER_2, FOLDER_31, FOLDER_32, FOLDER_34]:
+    for folder in [FOLDER_2, FOLDER_31, FOLDER_32, FOLDER_34]:
       path = os.path.join(output, folder)
       assert len(os.listdir(path)) == nb_raster_expected
 
