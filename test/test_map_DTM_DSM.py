@@ -34,7 +34,7 @@ RASTER_DTM_BRUT = "test_data_0000_0000_LA93_IGN69_ground_DTM_1M_Laplace.tif"
 # PATH TO FOLDER TEST
 TEST_DIR = os.path.join("data","labo")
 
-def setUpModule(): # run before the first test
+def setup_module(module): # run before the first test
     try : # Clean folder test if exists
         shutil.rmtree(TEST_DIR)
     except (FileNotFoundError):
@@ -43,7 +43,7 @@ def setUpModule(): # run before the first test
     os.makedirs(TEST_DIR)
 
 
-def tearDownModule(): # run after the last test
+def teardown_module(module): # run after the last test
     try : # Clean folder test if exists
         shutil.rmtree(TEST_DIR)
     except (FileNotFoundError):
