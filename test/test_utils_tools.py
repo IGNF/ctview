@@ -17,7 +17,7 @@ new_maxX_expected = 25
 new_maxY_expected = 55
 
 
-def setUpModule():  # run before the first test
+def setup_module(module):  # run before the first test
     try:  # Clean folder test if exists
         shutil.rmtree(TEST_DIR)
     except (FileNotFoundError):
@@ -26,7 +26,7 @@ def setUpModule():  # run before the first test
     os.makedirs(TEST_DIR)
 
 
-def tearDownModule():  # run after the last test
+def teardown_module(module):  # run after the last test
     try:  # Clean folder test if exists
         shutil.rmtree(TEST_DIR)
     except (FileNotFoundError):
