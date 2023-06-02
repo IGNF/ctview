@@ -15,9 +15,10 @@ dependencies:
   - pytest-cov==3.0.*
   - tqdm
   - black # reformat file
+  # mnx config #
+  - hydra-core==1.2.*
+  - hydra-colorlog==1.2.*
 
   - pip:
-    - ign-gpao-project-builder
-    - ign-gpao-client
-    - ign-lidarutils
-    - startinpy
+    - --extra-index-url=https://nexus.ign.fr/repository/pypi-lidarhd-hosted/simple
+    - -r requirements.txt
