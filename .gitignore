@@ -1,0 +1,8 @@
+/LAS/
+/test_LAS/
+/test_raster/
+__pycache__
+.pytest_cache
+/test_script/
+var/
+data/raster/

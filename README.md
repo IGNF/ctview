@@ -1,8 +1,109 @@
 # CtView
 
-Ce projet a pour but de créer différentes vues opérateurs pour différents contrôles de classification. 
+Ce projet permet de créer différentes vues opérateurs pour du contrôle de classification. 
 
-## Vues demandées 
-- OCS Lidar, composée d'une OCS "brute" combinée à une image d'intensité et un MNS
-- Vectorisation des zones de changements de classes
-- Matrice de confusion
+## Vues
+- OCS Lidar, composée d'une OCS "brute" colorisée par classe fusionné avec un MNS à 50cm
+- MNT ombragé colorisé à 1m avec nombre de cycles variable
+- raster de densité colorisé fusionné avec un MNT à 5m
+
+
+# Informations
+
+CtView a été développé sous linux et n'a pas encore été testé sous windows. Les commandes proposées dans la suite correspondent à un terminal linux.
+CtView s'utilise via un terminal et les commandes doivent être lancées à la racine (dans le dossier `ctView`).
+
+# Installation
+
+Installer conda
+
+```
+install conda
+```
+
+ou
+
+<https://conda.io/projects/conda/en/latest/user-guide/install/index.html>
+
+Créer l'environnement conda : les commandes suivantes doivent être lancées depuis le dossier `ctView/` (attention pas `ctView/ctview`)
+```
+conda env create -n ctview -f environnement.yml
+conda activate ctview
+```
+# Utilisation
+
+CtView peut se lancer sur un seul fichier LAS/LAZ ou sur un dossier contenant plusieurs fichiers LAS/LAZ.
+
+## Sur un seul fichier
+
+```
+python -m ctview.main -i path/to/one_file.las -odir path/to/output_directory/
+```
+
+## Sur un dossier
+
+```
+python -m ctview.main -idir path/to/input_directory/ -odir path/to/output_directory/
+```
+
+Ces commandes permettent de générer les vues détaillées ci-après. Si la commande est lancée sur un dossier, l'ensemble des vues seront générées pour le premier LAS, puis pour le suivant, etc.
+
+Pour voir tous les paramètres modifiables :
+
+```
+python -m ctview.main --help
+```
+
+## Choix des colorisations
+
+Pour le MNT à 1m, il est possible de générer plusieurs colorisations et de choisir pour chacune le nombre de cycle de couleur à appliquer. Cela est permis par le paramètre -c, qui doit être suivi par les nombres de cycles souhaités séparés par un espace. Par exemple, pour générer 5 colorisations avec respectivement 2, 3, 5, 6 et 12 cycles, voici la commande :
+
+```
+python -m ctview.main -i path/to/one_file.las -odir path/to/output_directory/ -c 2 3 5 6 12
+```
+
+Par défaut, il n'y a qu'une seule colorisation avec un seul cycle.
+
+# Génération des vues
+
+Le plus chronophage est l'étape d'interpolation lors de la génération des MNT/MNS.
+
+## Carte de densité
+
+Step 1 : MNT ombragé de résolution 5m -> `DTM_DENS_5M_shade`
+
+Step 2 : Carte de densité colorisée de résolution 5m -> `DENS_COL`
+
+Step 3 : Fusion du MNT et de la carte de densité -> `DENS_FINAL`
+
+## MNT ombragé colorisé
+
+Step 1 : MNT ombragé de résolution 1m -> `DTM_1M_shade`
+
+Step 2 : Colorisation -> `DTM_1M_color`
+
+## Carte de classe colorisée
+
+Step 1 : MNS ombragé -> `DSM_50CM_shade`
+
+Step 2 : Carte de classe colorisée -> `CC_4_fgcolor`
+
+Step 3 : Fusion du MNT et de la carte de classe -> `CC_5_fusion`
+
+
+# Tests unitaires
+
+```
+./ci/test.sh
+```
+
+# Tests fonctionnels
+
+```
+./test_launch_test.sh
+```
+
+## TODO
+- cas LAS/LAZ sans points sol ni virtuel
+- prise en compte du voisinage
+- COG

@@ -1,0 +1,765 @@
+1		Non classes	0
+*	Zero length line	1	255,255,255	1
+
+2		Sol	0
+*	Zero length line	2	255,128,0	1
+
+3		Vegetation basse	0
+*	Zero length line	2	0,255,0	1
+
+4		Vegetation intermediaire	0
+*	Zero length line	2	0,255,0	1
+
+5		Vegetation haute	0
+*	Zero length line	2	0,255,0	1
+
+6		Batiment	0
+*	Zero length line	6	255,0,0	1
+
+7		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+8		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+9		Eau	0
+*	Zero length line	1	0,225,225	1
+
+10		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+11		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+12		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+13		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+14		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+15		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+16		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+17		Pont	0
+*	Zero length line	1	255,255,0	1
+
+18		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+19		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+20		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+21		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+22		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+23		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+24		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+25		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+26		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+27		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+28		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+29		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+30		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+31		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+32		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+33		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+34		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+35		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+36		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+37		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+38		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+39		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+40		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+41		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+42		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+43		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+44		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+45		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+46		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+47		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+48		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+49		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+50		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+51		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+52		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+53		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+54		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+55		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+56		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+57		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+58		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+59		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+60		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+61		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+62		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+63		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+64		Sursol perenne	0
+*	Zero length line	254	128,0,64	1
+
+65		Artefact	0
+*	Zero length line	65	64,0,128	1
+
+66		Point virtuel	0
+*	Zero length line	66	255,0,255	1
+
+67		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+68		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+69		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+70		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+71		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+72		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+73		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+74		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+75		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+76		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+77		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+78		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+79		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+80		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+81		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+82		Reserve	0
+*	Zero length line	1	255,255,255	1
+
+83		Libre	0
+*	Zero length line	1	255,255,255	1
+
+84		Libre	0
+*	Zero length line	1	255,255,255	1
+
+85		Libre	0
+*	Zero length line	1	255,255,255	1
+
+86		Libre	0
+*	Zero length line	1	255,255,255	1
+
+87		Libre	0
+*	Zero length line	1	255,255,255	1
+
+88		Libre	0
+*	Zero length line	1	255,255,255	1
+
+89		Libre	0
+*	Zero length line	1	255,255,255	1
+
+90		Libre	0
+*	Zero length line	1	255,255,255	1
+
+91		Libre	0
+*	Zero length line	1	255,255,255	1
+
+92		Libre	0
+*	Zero length line	1	255,255,255	1
+
+93		Libre	0
+*	Zero length line	1	255,255,255	1
+
+94		Libre	0
+*	Zero length line	1	255,255,255	1
+
+95		Libre	0
+*	Zero length line	1	255,255,255	1
+
+96		Libre	0
+*	Zero length line	1	255,255,255	1
+
+97		Libre	0
+*	Zero length line	1	255,255,255	1
+
+98		Libre	0
+*	Zero length line	1	255,255,255	1
+
+99		Libre	0
+*	Zero length line	1	255,255,255	1
+
+100		Temp_Elodie	0
+*	Zero length line	100	128,0,160	0
+
+101		Temp1_Elodie	0
+*	Zero length line	101	0,0,165	0
+
+102		Temp2_Elodie	0
+*	Zero length line	102	128,128,192	0
+
+103		Temp3_Elodie	0
+*	Zero length line	103	255,255,0	0
+
+104		Temp4_Elodie	0
+*	Zero length line	104	255,0,255	0
+
+105		Temp5_Elodie	0
+*	Zero length line	105	192,192,192	0
+
+106		Temp6_Elodie	0
+*	Zero length line	106	165,165,0	0
+
+107		Temp7_Elodie	0
+*	Zero length line	107	165,0,0	0
+
+108		Temp8_Elodie	0
+*	Zero length line	108	0,165,0	0
+
+109		Temp9_Elodie	0
+*	Zero length line	109	255,192,255	0
+
+110		Analyse_refuteIA	0
+*	Zero length line	110	0,128,128	0
+
+111		Analyse_IncertainRefuteIAValide	0
+*	Zero length line	111	192,158,254	0
+
+112		Analyse_IncertainIATopo	0
+*	Zero length line	112	160,66,255	0
+
+113		Analyse_ValideIA	0
+*	Zero length line	113	244,115,100	0
+
+114		Analyse_ValideTopo	0
+*	Zero length line	114	245,146,112	0
+
+115		Analyse_ValideIATopo	0
+*	Zero length line	115	226,37,16	0
+
+116		Temp6_Floryne	0
+*	Zero length line	116	165,165,0	0
+
+117		Temp7_Floryne	0
+*	Zero length line	117	165,0,0	0
+
+118		Temp8_Floryne	0
+*	Zero length line	118	0,165,0	0
+
+119		Temp9_Floryne	0
+*	Zero length line	119	255,192,255	0
+
+120		Temp_Guillaume	0
+*	Zero length line	120	128,0,160	0
+
+121		Temp1_Guillaume	0
+*	Zero length line	121	0,0,165	0
+
+122		Temp2_Guillaume	0
+*	Zero length line	122	128,128,192	0
+
+123		Temp3_Guillaume	0
+*	Zero length line	123	255,255,0	0
+
+124		Temp4_Guillaume	0
+*	Zero length line	124	255,0,255	0
+
+125		Temp5_Guillaume	0
+*	Zero length line	125	192,192,192	0
+
+126		Temp6_Guillaume	0
+*	Zero length line	126	165,165,0	0
+
+127		Temp7_Guillaume	0
+*	Zero length line	127	165,0,0	0
+
+128		Temp8_Guillaume	0
+*	Zero length line	128	0,165,0	0
+
+129		Temp9_Guillaume	0
+*	Zero length line	129	255,192,255	0
+
+130		Temp_Hugo	0
+*	Zero length line	130	128,0,160	0
+
+131		Temp1_Hugo	0
+*	Zero length line	131	0,0,165	0
+
+132		Temp2_Hugo	0
+*	Zero length line	132	128,128,192	0
+
+133		Temp3_Hugo	0
+*	Zero length line	133	255,255,0	0
+
+134		Temp4_Hugo	0
+*	Zero length line	134	255,0,255	0
+
+135		Temp5_Hugo	0
+*	Zero length line	135	192,192,192	0
+
+136		Temp6_Hugo	0
+*	Zero length line	136	165,165,0	0
+
+137		Temp7_Hugo	0
+*	Zero length line	137	165,0,0	0
+
+138		Temp8_Hugo	0
+*	Zero length line	138	0,165,0	0
+
+139		Temp9_Hugo	0
+*	Zero length line	139	255,192,255	0
+
+140		Temp_Thomas	0
+*	Zero length line	140	128,0,160	0
+
+141		Temp1_Thomas	0
+*	Zero length line	141	0,0,165	0
+
+142		Temp2_Thomas	0
+*	Zero length line	142	128,128,192	0
+
+143		Temp3_Thomas	0
+*	Zero length line	143	255,255,0	0
+
+144		Temp4_Thomas	0
+*	Zero length line	144	255,0,255	0
+
+145		Temp5_Thomas	0
+*	Zero length line	145	192,192,192	0
+
+146		Temp6_Thomas	0
+*	Zero length line	146	165,165,0	0
+
+147		Temp7_Thomas	0
+*	Zero length line	147	165,0,0	0
+
+148		Temp8_Thomas	0
+*	Zero length line	148	0,165,0	0
+
+149		Temp9_Thomas	0
+*	Zero length line	149	255,192,255	0
+
+150		Temp_Tristan	0
+*	Zero length line	150	128,0,160	0
+
+151		Temp1_Tristan	0
+*	Zero length line	151	0,0,165	0
+
+152		Temp2_Tristan	0
+*	Zero length line	152	128,128,192	0
+
+153		Temp3_Tristan	0
+*	Zero length line	153	255,255,0	0
+
+154		Temp4_Tristan	0
+*	Zero length line	154	255,0,255	0
+
+155		Temp5_Tristan	0
+*	Zero length line	155	192,192,192	0
+
+156		Temp6_Tristan	0
+*	Zero length line	156	165,165,0	0
+
+157		Temp7_Tristan	0
+*	Zero length line	157	165,0,0	0
+
+158		Temp8_Tristan	0
+*	Zero length line	158	0,165,0	0
+
+159		Temp9_Tristan	0
+*	Zero length line	159	255,192,255	0
+
+160		Libre	0
+*	Zero length line	1	255,255,255	1
+
+161		Libre	0
+*	Zero length line	1	255,255,255	1
+
+162		Libre	0
+*	Zero length line	1	255,255,255	1
+
+163		Libre	0
+*	Zero length line	1	255,255,255	1
+
+164		Libre	0
+*	Zero length line	1	255,255,255	1
+
+165		Libre	0
+*	Zero length line	1	255,255,255	1
+
+166		Libre	0
+*	Zero length line	1	255,255,255	1
+
+167		Libre	0
+*	Zero length line	1	255,255,255	1
+
+168		Libre	0
+*	Zero length line	1	255,255,255	1
+
+169		Libre	0
+*	Zero length line	1	255,255,255	1
+
+170		Libre	0
+*	Zero length line	1	255,255,255	1
+
+171		Libre	0
+*	Zero length line	1	255,255,255	1
+
+172		Libre	0
+*	Zero length line	1	255,255,255	1
+
+173		Libre	0
+*	Zero length line	1	255,255,255	1
+
+174		Libre	0
+*	Zero length line	1	255,255,255	1
+
+175		Libre	0
+*	Zero length line	1	255,255,255	1
+
+176		Libre	0
+*	Zero length line	1	255,255,255	1
+
+177		Libre	0
+*	Zero length line	1	255,255,255	1
+
+178		Libre	0
+*	Zero length line	1	255,255,255	1
+
+179		Libre	0
+*	Zero length line	1	255,255,255	1
+
+180		Libre	0
+*	Zero length line	1	255,255,255	1
+
+181		Libre	0
+*	Zero length line	1	255,255,255	1
+
+182		Libre	0
+*	Zero length line	1	255,255,255	1
+
+183		Libre	0
+*	Zero length line	1	255,255,255	1
+
+184		Libre	0
+*	Zero length line	1	255,255,255	1
+
+185		Libre	0
+*	Zero length line	1	255,255,255	1
+
+186		Libre	0
+*	Zero length line	1	255,255,255	1
+
+187		Libre	0
+*	Zero length line	1	255,255,255	1
+
+188		Libre	0
+*	Zero length line	1	255,255,255	1
+
+189		Libre	0
+*	Zero length line	1	255,255,255	1
+
+190		Libre	0
+*	Zero length line	1	255,255,255	1
+
+191		Libre	0
+*	Zero length line	1	255,255,255	1
+
+192		Libre	0
+*	Zero length line	1	255,255,255	1
+
+193		Libre	0
+*	Zero length line	1	255,255,255	1
+
+194		Libre	0
+*	Zero length line	1	255,255,255	1
+
+195		Libre	0
+*	Zero length line	1	255,255,255	1
+
+196		Libre	0
+*	Zero length line	1	255,255,255	1
+
+197		Libre	0
+*	Zero length line	1	255,255,255	1
+
+198		Libre	0
+*	Zero length line	1	255,255,255	1
+
+199		Libre	0
+*	Zero length line	1	255,255,255	1
+
+200		Libre	0
+*	Zero length line	1	255,255,255	1
+
+201		Candidats Sol	0
+*	Zero length line	2	255,192,0	1
+
+202		Candidats Batiment	0
+*	Zero length line	6	255,128,128	1
+
+203		Candidats Vegetation	0
+*	Zero length line	6	192,255,192	1
+
+204		Candidats Pont	0
+*	Zero length line	6	255,255,192	1
+
+205		Candidats Sursol perenne	0
+*	Zero length line	254	128,128,192	1
+
+206		Candidats Eau	0
+*	Zero length line	6	224,255,255	1
+
+207		Refutes Sol	0
+*	Zero length line	2	255,192,0	1
+
+208		Refutes Batiment	0
+*	Zero length line	6	0,128,128	1
+
+209		Refutes Vegetation	0
+*	Zero length line	6	192,255,192	1
+
+210		Refutes Pont	0
+*	Zero length line	6	255,255,192	1
+
+211		Refutes Sursol perenne	0
+*	Zero length line	254	128,128,192	1
+
+212		Refutes Eau	0
+*	Zero length line	6	224,255,255	1
+
+213		Incertains Sol	0
+*	Zero length line	2	255,192,0	1
+
+214		Incertains Batiment	0
+*	Zero length line	6	160,66,255	1
+
+215		Incertains Vegetation	0
+*	Zero length line	6	192,255,192	1
+
+216		Incertains Pont	0
+*	Zero length line	6	255,255,192	1
+
+217		Incertains Sursol perenne	0
+*	Zero length line	254	128,128,192	1
+
+218		Incertains Eau	0
+*	Zero length line	6	224,255,255	1
+
+219		Libre	0
+*	Zero length line	1	255,255,255	1
+
+220		Libre	0
+*	Zero length line	1	255,255,255	1
+
+221		Libre	0
+*	Zero length line	1	255,255,255	1
+
+222		Libre	0
+*	Zero length line	1	255,255,255	1
+
+223		Libre	0
+*	Zero length line	1	255,255,255	1
+
+224		Libre	0
+*	Zero length line	1	255,255,255	1
+
+225		Libre	0
+*	Zero length line	1	255,255,255	1
+
+226		Libre	0
+*	Zero length line	1	255,255,255	1
+
+227		Libre	0
+*	Zero length line	1	255,255,255	1
+
+228		Libre	0
+*	Zero length line	1	255,255,255	1
+
+229		Libre	0
+*	Zero length line	1	255,255,255	1
+
+230		Libre	0
+*	Zero length line	1	255,255,255	1
+
+231		Libre	0
+*	Zero length line	1	255,255,255	1
+
+232		Libre	0
+*	Zero length line	1	255,255,255	1
+
+233		Libre	0
+*	Zero length line	1	255,255,255	1
+
+234		Libre	0
+*	Zero length line	1	255,255,255	1
+
+235		Libre	0
+*	Zero length line	1	255,255,255	1
+
+236		Libre	0
+*	Zero length line	1	255,255,255	1
+
+237		Libre	0
+*	Zero length line	1	255,255,255	1
+
+238		Libre	0
+*	Zero length line	1	255,255,255	1
+
+239		Libre	0
+*	Zero length line	1	255,255,255	1
+
+240		Libre	0
+*	Zero length line	1	255,255,255	1
+
+241		Libre	0
+*	Zero length line	1	255,255,255	1
+
+242		Libre	0
+*	Zero length line	1	255,255,255	1
+
+243		Libre	0
+*	Zero length line	1	255,255,255	1
+
+244		Libre	0
+*	Zero length line	1	255,255,255	1
+
+245		Libre	0
+*	Zero length line	1	255,255,255	1
+
+246		Libre	0
+*	Zero length line	1	255,255,255	1
+
+247		Libre	0
+*	Zero length line	1	255,255,255	1
+
+248		Libre	0
+*	Zero length line	1	255,255,255	1
+
+249		Libre	0
+*	Zero length line	1	255,255,255	1
+
+250		Libre	0
+*	Zero length line	1	255,255,255	1
+
+251		Libre	0
+*	Zero length line	1	255,255,255	1
+
+252		Libre	0
+*	Zero length line	1	255,255,255	1
+
+253		Libre	0
+*	Zero length line	1	255,255,255	1
+
+254		Libre	0
+*	Zero length line	1	255,255,255	1
+
+255		Libre	0
+*	Zero length line	1	255,255,255	1
+

@@ -1,0 +1,23 @@
+name: ctview
+channels:
+  - conda-forge
+  - anaconda
+dependencies:
+  - python=3.9.*
+  - pip
+  - conda-forge:pdal==2.5.*
+  - conda-forge:python-pdal==3.2.*
+  - gdal
+  - laspy
+  - numpy
+  - rasterio
+  - pytest==6.2.*  # tests
+  - pytest-cov==3.0.*
+  - tqdm
+  - black # reformat file
+
+  - pip:
+    - ign-gpao-project-builder
+    - ign-gpao-client
+    - ign-lidarutils
+    - startinpy
