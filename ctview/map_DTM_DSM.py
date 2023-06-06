@@ -26,6 +26,61 @@ import math
 from tqdm import tqdm
 import logging as log
 from typing import List
+    # mnx
+import produit_derive_lidar as mnx
+    # config hydra
+from hydra import initialize, compose
+import hydra
+
+
+def run_mnx_filter_one_tile(
+                        output_dir: str,
+                        io_yaml_file: str='default',
+                        tile_geometry_yaml_file: str='default',
+                        filter_yaml_file: str='default_test',
+                        forced_intermediate_ext: str='null',
+                        spatial_reference: str='EPSG:2154'):
+    """Run filter of library produit_derive_lidar for one tile.
+    Param :
+        output_dir : output directory
+        io_yaml_file : config file gather paths and spatial reference
+        tile_geometry_yaml_file : config file describing intern geometry of the tile
+        filter_yaml_file : config file with class to keep
+        forced_intermediate_ext : param to force extention of output file
+        spatial_reference : spatial reference
+    """
+    # set config
+    with initialize(version_base="1.2", config_path="../configs"):
+        # config is relative to a module
+        cfg = compose(config_name="config",
+                      overrides=[f"io={io_yaml_file}",
+                                 f"io.output_dir={output_dir}",
+                                 f"io.forced_intermediate_ext={forced_intermediate_ext}",
+                                 f"+tile_geometry={tile_geometry_yaml_file}",
+                                 f"filter={filter_yaml_file}"])
+    # run filter
+    mnx.filter_one_tile.run_filter_on_tile(cfg)
+
+def run_mnx_filter_las_classes(
+                        input_file: str,
+                        output_file: str,
+                        spatial_reference: str='EPSG:2154',
+                        keep_classes: List=[2, 66]):
+    """ Reads the LAS file and filter only grounds from LIDAR.
+
+    Args:
+        fileInput (str) : Path to the input lidar file
+        spatial_ref (str) : spatial reference to use when reading the las file
+        output_file (str): Path to the output file
+        keep_classes (List): Classes to keep in the filter (ground + virtual points by default)
+    """
+    # run filter
+    mnx.tasks.las_filter.filter_las_classes(
+                        input_file=input_file,
+                        out_file=output_file,
+                        spatial_ref=spatial_reference,
+                        keep_classes=keep_classes)
+
 
 # PARAMETERS
 

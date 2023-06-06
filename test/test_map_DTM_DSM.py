@@ -12,8 +12,7 @@ from ctview.map_DTM_DSM import (
     get_origin,
     hillshade_from_raster,
     interpolation,
-    run_interpolate,
-    filter_las_classes
+    run_interpolate
 )
 
 from ctview.utils_pdal import get_class_min_max_from_las, get_info_from_las, read_las_file

@@ -1,0 +1,8 @@
+input_dir: ./data/laz/
+input_filename: test_data_77055_627760_LA93_IGN69.laz
+
+forced_intermediate_ext: null
+
+spatial_reference: EPSG:2154
+
+output_dir: ./data/labo/ground
