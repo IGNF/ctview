@@ -15,6 +15,9 @@ dependencies:
   - pytest-cov==3.0.*
   - tqdm
   - black # reformat file
+  - hydra-core==1.2.* # mnx config
+  - hydra-colorlog==1.2.* # mnx config
+  - fiona # mnx
 
   - pip:
     - --extra-index-url=https://nexus.ign.fr/repository/pypi-lidarhd-hosted/simple

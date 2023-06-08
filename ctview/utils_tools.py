@@ -3,6 +3,7 @@
 # IMPORT
 import os
 import numpy as np
+import json
 
 
 # FONCTION
@@ -87,3 +88,13 @@ def remove_1_pixel(bounds: tuple, resolution: int):
     bounds[0][1] -= resolution # remove 1 pixel in x
     bounds[1][1] -= resolution # remove 1 pixel in y
     return bounds
+
+
+def convert_json_into_dico(config_file: str):
+    """
+    Translate json into dictionnary 
+    """
+    with open(config_file, "r") as file_handler:
+        dico_config = json.load(file_handler)
+
+    return dico_config

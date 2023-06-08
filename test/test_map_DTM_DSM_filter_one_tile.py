@@ -1,7 +1,6 @@
 import os
 import shutil
 from ctview.map_DTM_DSM import run_mnx_filter_las_classes
-from produit_derive_lidar import filter_one_tile
 import test.utils.point_cloud_utils as pcu
 
 
@@ -22,10 +21,11 @@ output_las_file = os.path.join(output_dir,f"test_data_{coordX}_{coordY}_LA93_IGN
 
 def setup_module():
     try:
-        shutil.rmtree(output_dir)
+        shutil.rmtree(tmp_path)
 
     except (FileNotFoundError):
         pass
+    os.mkdir(tmp_path)
     os.mkdir(output_dir)
 
 
@@ -62,6 +62,7 @@ def test_run_mnx_filter_las_classes_false_spatial_reference():
     '''
     Test call to filter_las_classes from library produit_derive_lidar,
     with modification of spatial reference.
+    This must raise a RuntimeError
     '''
     setup_module()
     try : 

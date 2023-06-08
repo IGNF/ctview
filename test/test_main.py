@@ -7,7 +7,7 @@ IN_LAS = os.path.join(DIR_LAS,"numero1.las")
 ALL_LAS = ["numero2.las","numero1.las"]
 DIR_LAS2 = "/var/data/store-lidarhd/developpement/ctview/las/data0b"
 IN_LAS2 = os.path.join(DIR_LAS2, "Semis_2021_0785_6378_LA93_IGN69_light.laz")
-DIR_LAS3 = "/home/ELucon/Bureau/lidarExpress/data/one_micro_laz"
+DIR_LAS3 = "./data/laz/one_micro_laz"
 IN_LAS3 = os.path.join(DIR_LAS3,"Semis_2021_0785_6378_LA93_IGN69_light.laz")
 
 def test_get_las_liste_LAS():

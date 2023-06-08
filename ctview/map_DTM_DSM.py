@@ -28,6 +28,39 @@ import logging as log
 from typing import List
     # mnx
 import produit_derive_lidar as mnx
+import pdaltools.las_add_buffer
+import produit_derive_lidar.filter_one_tile
+import produit_derive_lidar.ip_one_tile
+
+# OUTPUT TREE
+
+def create_output_tree(output_dir: str):
+    """Create tree for output. 
+    """
+    output_tree = {
+                "DTM":
+                    {"output": os.path.join(output_dir, "DTM"),
+                    "filter": os.path.join(output_dir, "tmp_dtm", "filter"),
+                    "buffer": os.path.join(output_dir, "tmp_dtm", "buffer"),
+                    },
+                "DSM":
+                    {"output": os.path.join(output_dir, "DSM"),
+                    "filter": os.path.join(output_dir, "tmp_dsm", "filter"),
+                    "buffer": os.path.join(output_dir, "tmp_dsm", "buffer"),
+                    },
+                "DTM_DENS":
+                    {"output": os.path.join(output_dir, "DTM_DENS"),
+                    "filter": os.path.join(output_dir, "tmp_dtm_dens", "filter"),
+                    "buffer": os.path.join(output_dir, "tmp_dtm_dens", "buffer"),
+                    }
+            }
+
+    for n in output_tree :
+        os.makedirs(output_tree[n]["output"])
+        os.makedirs(output_tree[n]["filter"])
+        os.makedirs(output_tree[n]["buffer"])
+
+    return output_tree
 
 
 def run_mnx_filter_las_classes(
@@ -49,6 +82,106 @@ def run_mnx_filter_las_classes(
                         output_file=output_file,
                         spatial_ref=spatial_reference,
                         keep_classes=keep_classes)
+
+
+def run_pdaltools_buffer(input_dir: str, tile_filename: str,
+                           output_filename: str,
+                           buffer_width: int=100,
+                           tile_width: int=1000,
+                           tile_coord_scale: int=1000):
+    """Merge lidar tiles around the queried tile and crop them in order to add a buffer
+    to the tile (usually 100m).
+    Args:
+        input_dir (str): directory of pointclouds (where you look for neigbors)
+        tile_filename (str): full path to the queried LIDAR tile
+        output_filename (str) : full path to the saved cropped tile
+        buffer_width (int): width of the border to add to the tile (in pixels)
+        spatial_ref (str): Spatial reference to use to override the one from input las.
+        tile width (int): width of tiles in meters (usually 1000m)
+        tile_coord_scale (int) : scale used in the filename to describe coordinates in meters
+                (usually 1000m)
+    """
+    # param
+    spatial_ref_num = dico_param["EPSG"]
+    # run buffer
+    pdaltools.las_add_buffer.create_las_with_buffer(
+                            input_dir, tile_filename, output_filename,
+                            buffer_width=buffer_width,
+                            spatial_ref=f"EPSG:{spatial_ref_num}",
+                            tile_width=tile_width,
+                            tile_coord_scale=tile_coord_scale)  
+
+
+def run_mnx_interpolation(input_file: str, output_raster: str, config: dict):
+    """Run interpolation
+    Args:
+        input_file(str): File on which to run the interpolation
+        output_raster(str): output file for raster image (with buffer)
+        config(dict): dictionary that must contain
+                { "tile_geometry": { "tile_coord_scale": #int, "tile_width": #int, "pixel_size": #float, "no_data_value": #int },
+                  "io": { "spatial_reference": #str},
+                  "interpolation": { "algo_name": #str }
+                }
+            with
+                tile_coord_scale value(int): coords in tile names are in km
+                tile_width value(int): tile width in meters
+                pixel_size value(float): pixel size for raster generation
+                spatial_ref value(str): spatial reference to use when reading las file
+                interpolation_method value(str): interpolation method for raster generation
+    """
+    mnx.ip_one_tile.interpolate(input_file=input_file,
+                output_raster=output_raster,
+                config=config)
+
+
+def create_mnx_one_las(input_file: str,
+            output_dir: str,
+            config_file=os.path.join("ctview","config.json"),
+            type_raster="dtm"):
+    """
+    Create a DTM or a DSM from a las tile.
+    Args :
+        input_las : full path of las
+        inter_method : interpolation method, can be cgal-nn / pdal-idw / padl-tin / startin-laplace / startin-tinlinear
+        type_raster : can be dtm / dsm / dtm_dens 
+    """
+    # get config
+    config_dict = utils_tools.convert_json_into_dico(config_file)
+
+    # manage paths
+    input_dir, input_basename = os.path.split(input_file)
+    tilename, _ = os.path.splitext(input_basename)
+    
+    # prepare output
+    output_tree = create_output_tree(output_dir=output_dir)
+
+    basename_buffered = f"{tilename}_buffer.las"
+    basename_filtered = f"{tilename}_filter.las"
+    basename_interpolated = f"{tilename}_interp.tif"
+
+    file_buffered = os.path.join(output_tree[type_raster.upper()]["buffer"], basename_buffered)
+    file_filtered = os.path.join(output_tree[type_raster.upper()]["filter"], basename_filtered)
+    raster_after_interpolated = os.path.join(output_tree[type_raster.upper()]["output"], basename_interpolated)
+    
+    # add buffer
+    run_pdaltools_buffer(input_dir=input_dir, 
+                        tile_filename=input_file,
+                        output_filename=file_buffered,
+                        buffer_width=config_dict["buffer"]["size"],
+                        tile_width=config_dict["tile_geometry"]["tile_width"],
+                        tile_coord_scale=config_dict["tile_geometry"]["tile_coord_scale"])
+    # filter
+    run_mnx_filter_las_classes(
+                        input_file=file_buffered,
+                        output_file=file_filtered,
+                        spatial_reference=config_dict["io"]["spatial_reference"],
+                        keep_classes=config_dict["filter"]["keep_classes"][type_raster])
+
+    # interpolate
+    run_mnx_interpolation(
+                        input_file=file_filtered, 
+                        output_raster=raster_after_interpolated, 
+                        config=config_dict)
 
 
 # PARAMETERS
