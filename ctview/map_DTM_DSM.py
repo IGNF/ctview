@@ -42,23 +42,27 @@ def create_output_tree(output_dir: str):
                     {"output": os.path.join(output_dir, "DTM"),
                     "filter": os.path.join(output_dir, "tmp_dtm", "filter"),
                     "buffer": os.path.join(output_dir, "tmp_dtm", "buffer"),
+                    "hillshade": os.path.join(output_dir, "tmp_dtm", "hillshade"),
                     },
                 "DSM":
                     {"output": os.path.join(output_dir, "DSM"),
                     "filter": os.path.join(output_dir, "tmp_dsm", "filter"),
                     "buffer": os.path.join(output_dir, "tmp_dsm", "buffer"),
+                    "hillshade": os.path.join(output_dir, "tmp_dsm", "hillshade"),
                     },
                 "DTM_DENS":
                     {"output": os.path.join(output_dir, "DTM_DENS"),
                     "filter": os.path.join(output_dir, "tmp_dtm_dens", "filter"),
                     "buffer": os.path.join(output_dir, "tmp_dtm_dens", "buffer"),
+                    "hillshade": os.path.join(output_dir, "tmp_dtm_dens", "hillshade"),
                     }
             }
 
     for n in output_tree :
-        os.makedirs(output_tree[n]["output"])
-        os.makedirs(output_tree[n]["filter"])
-        os.makedirs(output_tree[n]["buffer"])
+        os.makedirs(output_tree[n]["output"], exist_ok=True)
+        os.makedirs(output_tree[n]["filter"], exist_ok=True)
+        os.makedirs(output_tree[n]["buffer"], exist_ok=True)
+        os.makedirs(output_tree[n]["hillshade"], exist_ok=True)
 
     return output_tree
 
@@ -134,34 +138,51 @@ def run_mnx_interpolation(input_file: str, output_raster: str, config: dict):
                 config=config)
 
 
+def add_hillshade_one_raster(input_raster: str, output_raster: str):
+    """Add hillshade to raster
+    Arg :
+        input_raster : input file with complete path
+        output_raster : output file with complete path
+    """
+    gdal.DEMProcessing(
+        destName=output_raster,
+        srcDS=input_raster,
+        processing="hillshade",
+    )
+
+
 def create_mnx_one_las(input_file: str,
             output_dir: str,
-            config_file=os.path.join("ctview","config.json"),
+            config_dict: dict,
             type_raster="dtm"):
     """
     Create a DTM or a DSM from a las tile.
     Args :
-        input_las : full path of las
-        inter_method : interpolation method, can be cgal-nn / pdal-idw / padl-tin / startin-laplace / startin-tinlinear
+        input_file : full path of LAS/LAZ file
+        config_dict :  dictionary that must contain
+                { "tile_geometry": { "tile_coord_scale": #int, "tile_width": #int, "pixel_size": #float, "no_data_value": #int },
+                  "io": { "spatial_reference": #str},
+                  "interpolation": { "algo_name": #str }
+                }
         type_raster : can be dtm / dsm / dtm_dens 
     """
-    # get config
-    config_dict = utils_tools.convert_json_into_dico(config_file)
 
     # manage paths
     input_dir, input_basename = os.path.split(input_file)
     tilename, _ = os.path.splitext(input_basename)
     
-    # prepare output
+    # prepare outputs
     output_tree = create_output_tree(output_dir=output_dir)
 
     basename_buffered = f"{tilename}_buffer.las"
     basename_filtered = f"{tilename}_filter.las"
     basename_interpolated = f"{tilename}_interp.tif"
+    basename_hillshade = f"{tilename}_hillshade.tif"
 
     file_buffered = os.path.join(output_tree[type_raster.upper()]["buffer"], basename_buffered)
     file_filtered = os.path.join(output_tree[type_raster.upper()]["filter"], basename_filtered)
-    raster_after_interpolated = os.path.join(output_tree[type_raster.upper()]["output"], basename_interpolated)
+    raster_dxm_brut = os.path.join(output_tree[type_raster.upper()]["output"], basename_interpolated)
+    raster_dxm_hillshade =  os.path.join(output_tree[type_raster.upper()]["hillshade"], basename_hillshade)
     
     # add buffer
     run_pdaltools_buffer(input_dir=input_dir, 
@@ -180,8 +201,61 @@ def create_mnx_one_las(input_file: str,
     # interpolate
     run_mnx_interpolation(
                         input_file=file_filtered, 
-                        output_raster=raster_after_interpolated, 
+                        output_raster=raster_dxm_brut, 
                         config=config_dict)
+
+    # add hillshade
+    add_hillshade_one_raster(
+                        input_raster=raster_dxm_brut,
+                        output_raster=raster_dxm_hillshade
+    )
+
+    return raster_dxm_hillshade
+
+
+def create_dxm_with_hillshade_one_las_XM(input_file: str,
+                        output_dir: str,
+                        config_file=os.path.join("ctview","config.json"),
+                        type_raster: str="dtm",
+                        pixel_size: float=1.0):
+    # modif config
+    config_dict = utils_tools.convert_json_into_dico(config_file)
+    config_dict["tile_geometry"]["pixel_size"] = pixel_size
+
+    # create dtm with hillshade
+    raster_dtm_hillshade = create_mnx_one_las(input_file=input_file, output_dir=output_dir, config_dict=config_dict, type_raster=type_raster)
+
+    return raster_dtm_hillshade
+
+
+def create_dsm_with_hillshade_one_las_5M(input_file: str,
+                        output_dir: str):
+    """Create DSM with hillshade and fix precision (pixel size) at 5 meters
+    """
+    create_dxm_with_hillshade_XM_one_las(input_file=input_file,
+                        output_dir=output_dir,
+                        type_raster="dtm",
+                        pixel_size=0.5)
+
+
+def create_dtm_with_hillshade_one_las_1M(input_file: str,
+                        output_dir: str):
+    """Create DTM with hillshade and fix precision (pixel size) at 1 meter
+    """
+    create_dxm_with_hillshade_XM_one_las(input_file=input_file,
+                        output_dir=output_dir,
+                        type_raster="dtm",
+                        pixel_size=1.0)
+
+
+def create_dtm_with_hillshade_one_las_50CM(input_file: str,
+                        output_dir: str):
+    """Create DTM with hillshade and fix precision (pixel size) at 0.5 meter
+    """
+    create_dxm_with_hillshade_XM_one_las(input_file=input_file,
+                        output_dir=output_dir,
+                        type_raster="dtm",
+                        pixel_size=0.5)
 
 
 # PARAMETERS
