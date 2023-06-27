@@ -7,7 +7,7 @@ import ctview.utils_tools as utils_tools
 import ctview.utils_pdal as utils_pdal
 import ctview.utils_gdal as utils_gdal
 from ctview.parameter import dico_param
-from ctview.utils_folder import dico_folder
+from ctview.utils_folder import dico_folder_template
 import ctview.gen_LUT_X_cycle as gen_LUT_X_cycle
 
 # Library
@@ -32,6 +32,9 @@ import pdaltools.las_add_buffer
 import produit_derive_lidar.filter_one_tile
 import produit_derive_lidar.ip_one_tile
 
+# TEMPORARY
+# dico_folder_template = dico_folder_template.copy()
+
 # OUTPUT TREE
 
 def create_output_tree(output_dir: str):
@@ -43,12 +46,13 @@ def create_output_tree(output_dir: str):
                     "filter": os.path.join(output_dir, "tmp_dtm", "filter"),
                     "buffer": os.path.join(output_dir, "tmp_dtm", "buffer"),
                     "hillshade": os.path.join(output_dir, "tmp_dtm", "hillshade"),
+                    "color": os.path.join(output_dir, "DTM", "color")
                     },
                 "DSM":
                     {"output": os.path.join(output_dir, "DSM"),
                     "filter": os.path.join(output_dir, "tmp_dsm", "filter"),
                     "buffer": os.path.join(output_dir, "tmp_dsm", "buffer"),
-                    "hillshade": os.path.join(output_dir, "tmp_dsm", "hillshade"),
+                    "hillshade": os.path.join(output_dir, "tmp_dsm", "hillshade")
                     },
                 "DTM_DENS":
                     {"output": os.path.join(output_dir, "DTM_DENS"),
@@ -63,6 +67,7 @@ def create_output_tree(output_dir: str):
         os.makedirs(output_tree[n]["filter"], exist_ok=True)
         os.makedirs(output_tree[n]["buffer"], exist_ok=True)
         os.makedirs(output_tree[n]["hillshade"], exist_ok=True)
+    os.makedirs(output_tree["DTM"]["color"], exist_ok=True)
 
     return output_tree
 
@@ -218,6 +223,14 @@ def create_dxm_with_hillshade_one_las_XM(input_file: str,
                         config_file=os.path.join("ctview","config.json"),
                         type_raster: str="dtm",
                         pixel_size: float=1.0):
+    """Create DXM with hillshade according to a configuration.
+    Args :
+        input_file : LAS file oin input
+        output_dir : output directory
+        config_file : json of configuration
+        type_raster : can be dtm / dsm / dtm_dens
+        pixel_size : precision in meter
+    """
     # modif config
     config_dict = utils_tools.convert_json_into_dico(config_file)
     config_dict["tile_geometry"]["pixel_size"] = pixel_size
@@ -228,34 +241,79 @@ def create_dxm_with_hillshade_one_las_XM(input_file: str,
     return raster_dtm_hillshade
 
 
-def create_dsm_with_hillshade_one_las_5M(input_file: str,
+def create_dtm_with_hillshade_one_las_5M(input_file: str,
                         output_dir: str):
     """Create DSM with hillshade and fix precision (pixel size) at 5 meters
     """
-    create_dxm_with_hillshade_XM_one_las(input_file=input_file,
+    output_raster = create_dxm_with_hillshade_one_las_XM(input_file=input_file,
                         output_dir=output_dir,
-                        type_raster="dtm",
-                        pixel_size=0.5)
+                        type_raster="dtm_dens",
+                        pixel_size=5)
+    return output_raster
 
 
 def create_dtm_with_hillshade_one_las_1M(input_file: str,
                         output_dir: str):
     """Create DTM with hillshade and fix precision (pixel size) at 1 meter
     """
-    create_dxm_with_hillshade_XM_one_las(input_file=input_file,
+    output_raster = create_dxm_with_hillshade_one_las_XM(input_file=input_file,
                         output_dir=output_dir,
                         type_raster="dtm",
                         pixel_size=1.0)
+    return output_raster
 
 
-def create_dtm_with_hillshade_one_las_50CM(input_file: str,
+def create_dsm_with_hillshade_one_las_50CM(input_file: str,
                         output_dir: str):
     """Create DTM with hillshade and fix precision (pixel size) at 0.5 meter
     """
-    create_dxm_with_hillshade_XM_one_las(input_file=input_file,
+    output_raster = create_dxm_with_hillshade_one_las_XM(input_file=input_file,
                         output_dir=output_dir,
-                        type_raster="dtm",
+                        type_raster="dsm",
                         pixel_size=0.5)
+    return output_raster
+
+
+def color_raster_dtm_hillshade_with_LUT(input_initial_basename: str,
+                        input_raster: str,
+                        output_dir: str,
+                        list_c: list,
+                        dico_fld: dict):
+    """Color a raster according color palette define in a LUT file.
+    Args :
+        input_initial_file : full path of initial LAS file (use for named the output raster)
+        input_raster : input raster to color
+        output_dir : output directory
+        list_c : the number of cycle that determine how th use the LUT 
+    """
+    try :
+        output_dir_color = output_tree["DTM"]["color"]
+    except NameError: # in case tree was not created -> raise "NameError: name 'output_tree' is not defined"
+        output_tree = create_output_tree(output_dir=output_dir)
+        output_dir_color = output_tree["DTM"]["color"]
+
+    log.info("Build DTM hillshade color")
+
+    cpt = 1
+
+    for cycle in list_c:
+
+        log.info(f"{cpt}/{len(list_c)}...")
+        folder_DXM_color = dico_fld[f"folder_DTM_color{cycle}"]
+        output_dir_raster = os.path.join(output_dir_color,folder_DXM_color)
+        os.makedirs(output_dir_raster, exist_ok=False)
+
+        color_DTM_with_cycles(
+            las_input_file=input_initial_basename,
+            output_dir_raster=output_dir_raster,
+            output_dir_LUT=os.path.join(output_dir, dico_fld["folder_LUT"]),
+            raster_DTM_file=input_raster,
+            nb_cycle=cycle,
+        )
+
+        cpt += 1
+
+    log.info(f"End DTM.\n")
 
 
 # PARAMETERS
@@ -638,22 +696,22 @@ def cluster(input_points: str):
 
 def name_folder_DTM_dens():
     """Assign folder name from dictionnary"""
-    folder_DXM_brut = dico_folder["folder_DTM_DENS_brut"]
-    folder_DXM_shade = dico_folder["folder_DTM_DENS_shade"]
+    folder_DXM_brut = dico_folder_template["folder_DTM_DENS_brut"]
+    folder_DXM_shade = dico_folder_template["folder_DTM_DENS_shade"]
     return folder_DXM_brut, folder_DXM_shade
 
 
 def name_folder_DSM():
     """Assign folder name from dictionnary"""
-    folder_DXM_brut = dico_folder["folder_DSM_brut"]
-    folder_DXM_shade = dico_folder["folder_DSM_shade"]
+    folder_DXM_brut = dico_folder_template["folder_DSM_brut"]
+    folder_DXM_shade = dico_folder_template["folder_DSM_shade"]
     return folder_DXM_brut, folder_DXM_shade
 
 
 def name_folder_DTM():
     """Assign folder name from dictionnary"""
-    folder_DXM_brut = dico_folder["folder_DTM_brut"]
-    folder_DXM_shade = dico_folder["folder_DTM_shade"]
+    folder_DXM_brut = dico_folder_template["folder_DTM_brut"]
+    folder_DXM_shade = dico_folder_template["folder_DTM_shade"]
     return folder_DXM_brut, folder_DXM_shade
 
 
@@ -718,7 +776,7 @@ def create_map_one_las(
         FileLasGround = write_las(
             input_points=ground_pts,
             filename=input_las_name,
-            output_dir=os.path.join(output_dir, dico_folder["folder_LAS_ground_virtual"]),
+            output_dir=os.path.join(output_dir, dico_folder_template["folder_LAS_ground_virtual"]),
             name="ground",
         )
 
@@ -757,7 +815,7 @@ def create_map_one_las(
     # Write interpolation table in a text file
     fileRas = os.path.join(
         output_dir,
-        dico_folder["folder_interp_table"],
+        dico_folder_template["folder_interp_table"],
         f"ras_{os.path.splitext(input_las_name)[0]}.txt"
         )  
     
@@ -819,7 +877,7 @@ def create_map_one_las(
             color_DTM_with_cycles(
                 las_input_file=input_las_name,
                 output_dir_raster=os.path.join(output_dir,folder_DXM_color),
-                output_dir_LUT=os.path.join(output_dir,dico_folder["folder_LUT"]),
+                output_dir_LUT=os.path.join(output_dir,dico_folder_template["folder_LUT"]),
                 raster_DTM_file=raster_dtm_hs,
                 nb_cycle=cycle,
             )
@@ -882,7 +940,7 @@ def create_map_one_las_DTM(
     log.info("Filtering ground and virtual points...")
     # Filtre les points sol de classif 2 et 66
 
-    FileToInterpolate = os.path.join(output_dir, dico_folder["folder_LAS_ground_virtual"], f"{input_las_name_without_ext}_ground.las")
+    FileToInterpolate = os.path.join(output_dir, dico_folder_template["folder_LAS_ground_virtual"], f"{input_las_name_without_ext}_ground.las")
 
     filter_las_classes(input_file=os.path.join(input_dir,input_las_name),
                        output_file=FileToInterpolate)
@@ -917,7 +975,7 @@ def create_map_one_las_DTM(
     # Write interpolation table in a text file
     fileRas = os.path.join(
         output_dir,
-        dico_folder["folder_interp_table"],
+        dico_folder_template["folder_interp_table"],
         f"ras_{os.path.splitext(input_las_name)[0]}.txt"
         )  
     
@@ -971,12 +1029,12 @@ def create_map_one_las_DTM(
 
         log.info(f"{cpt}/{len(list_c)}...")
 
-        folder_DXM_color = dico_folder[f"folder_DTM_color{cycle}"]
+        folder_DXM_color = dico_folder_template[f"folder_DTM_color{cycle}"]
 
         color_DTM_with_cycles(
             las_input_file=input_las_name,
             output_dir_raster=os.path.join(output_dir,folder_DXM_color),
-            output_dir_LUT=os.path.join(output_dir,dico_folder["folder_LUT"]),
+            output_dir_LUT=os.path.join(output_dir,dico_folder_template["folder_LUT"]),
             raster_DTM_file=raster_dtm_hs,
             nb_cycle=cycle,
         )
@@ -1062,7 +1120,7 @@ def create_map_one_las_DSM(
     # Write interpolation table in a text file
     fileRas = os.path.join(
         output_dir,
-        dico_folder["folder_interp_table"],
+        dico_folder_template["folder_interp_table"],
         f"ras_{os.path.splitext(input_las_name)[0]}.txt"
         )  
     
@@ -1162,7 +1220,7 @@ def create_map_one_las_DTM_dens(
     log.info("Filtering ground and virtual points...")
     # Filtre les points sol de classif 2 et 66
 
-    FileToInterpolate = os.path.join(output_dir, dico_folder["folder_LAS_ground_virtual"], f"{input_las_name_without_ext}_ground.las")
+    FileToInterpolate = os.path.join(output_dir, dico_folder_template["folder_LAS_ground_virtual"], f"{input_las_name_without_ext}_ground.las")
 
     filter_las_classes(input_file=os.path.join(input_dir,input_las_name),
                        output_file=FileToInterpolate)
@@ -1197,7 +1255,7 @@ def create_map_one_las_DTM_dens(
     # Write interpolation table in a text file
     fileRas = os.path.join(
         output_dir,
-        dico_folder["folder_interp_table"],
+        dico_folder_template["folder_interp_table"],
         f"ras_{os.path.splitext(input_las_name)[0]}.txt"
         )  
     

@@ -2,6 +2,7 @@
 
 # IMPORT
 import os
+import logging as log
 import numpy as np
 import json
 
@@ -34,7 +35,7 @@ def repare_files(las_liste: str, input_dir):
         f.seek(6)
         f.write(bytes([17, 0, 0, 0]))
         f.close()
-        print(f"fichier {filename} repare")
+        log.info(f"fichier {filename} repare")
 
 
 def sample(input_points):

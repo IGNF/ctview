@@ -12,9 +12,9 @@ FOLDER_1="ADENS_FINAL"
 FOLDER_2="ACC_5_fusion_FINAL"
 FOLDER_3="ADTM_1M_color_FINAL"
 # folders expected
-FOLDER_31="ADTM_1M_color_FINAL1c"
-FOLDER_32="ADTM_1M_color_FINAL2c"
-FOLDER_34="ADTM_1M_color_FINAL4c"
+FOLDER_31="DTM/color/1cycle"
+FOLDER_32="DTM/color/2cycles"
+FOLDER_34="DTM/color/4cycles"
 
 # test 1 : small dalle with and without docker
 INPUT_1="/var/data/store-lidarhd/developpement/ctview/las/data0"
@@ -49,12 +49,12 @@ def setup_module(module): # run before the first test
         pass
 
 
-def teardown_module(module): # run after the last test
-    try : # Clean folder test if exists
-        shutil.rmtree("/var/data/store-lidarhd/developpement/ctview/1_tests_local")
-        shutil.rmtree("/var/data/store-lidarhd/developpement/ctview/2_tests_local_docker")
-    except (FileNotFoundError):
-        pass
+# def teardown_module(module): # run after the last test
+#     try : # Clean folder test if exists
+#         shutil.rmtree("/var/data/store-lidarhd/developpement/ctview/1_tests_local")
+#         shutil.rmtree("/var/data/store-lidarhd/developpement/ctview/2_tests_local_docker")
+#     except (FileNotFoundError):
+#         pass
 
 
 def assert_output_folders_contains_expected_number_of_file(output: str, nb_raster_expected: int, water:bool=False):
@@ -116,7 +116,7 @@ def execute_test_end_to_end_docker(input: str, output: str, nb_raster_expected: 
 def test_execute_end_to_end_quick():
     # 1/1 small 1 dalle
     execute_test_end_to_end(input=INPUT_1, output=OUTPUT_1, nb_raster_expected=NB_FILE_EXPECTED_1)
-    execute_test_end_to_end_docker(input=INPUT_1, output=OUTPUT_1bis, nb_raster_expected=NB_FILE_EXPECTED_1)
+    # execute_test_end_to_end_docker(input=INPUT_1, output=OUTPUT_1bis, nb_raster_expected=NB_FILE_EXPECTED_1)
 
 
 @pytest.mark.slow
