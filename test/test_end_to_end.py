@@ -116,7 +116,7 @@ def execute_test_end_to_end_docker(input: str, output: str, nb_raster_expected: 
 def test_execute_end_to_end_quick():
     # 1/1 small 1 dalle
     execute_test_end_to_end(input=INPUT_1, output=OUTPUT_1, nb_raster_expected=NB_FILE_EXPECTED_1)
-    # execute_test_end_to_end_docker(input=INPUT_1, output=OUTPUT_1bis, nb_raster_expected=NB_FILE_EXPECTED_1)
+    execute_test_end_to_end_docker(input=INPUT_1, output=OUTPUT_1bis, nb_raster_expected=NB_FILE_EXPECTED_1)
 
 
 @pytest.mark.slow
