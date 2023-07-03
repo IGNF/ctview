@@ -301,7 +301,7 @@ def color_raster_dtm_hillshade_with_LUT(input_initial_basename: str,
         log.info(f"{cpt}/{len(list_c)}...")
         folder_DXM_color = dico_fld[f"folder_DTM_color{cycle}"]
         output_dir_raster = os.path.join(output_dir_color,folder_DXM_color)
-        os.makedirs(output_dir_raster, exist_ok=False)
+        os.makedirs(output_dir_raster, exist_ok=True)
 
         color_DTM_with_cycles(
             las_input_file=input_initial_basename,
