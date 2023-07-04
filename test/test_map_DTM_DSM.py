@@ -1,9 +1,7 @@
 import os
 import shutil
 
-from ctview.map_DTM_DSM import (
-    hillshade_from_raster
-)
+from ctview.map_DTM_DSM import hillshade_from_raster
 
 # TEST FILE
 DATA_DIR_RASTER = os.path.join("data","raster")
