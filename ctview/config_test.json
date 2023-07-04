@@ -1,6 +1,6 @@
 {
     "interpolation":{
-        "algo_name":"startin-laplace"
+        "algo_name":"pdal-tin"
     },
     "io":{
         "spatial_reference":"EPSG:2154",
