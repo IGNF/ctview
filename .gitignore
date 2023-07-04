@@ -5,5 +5,4 @@ __pycache__
 .pytest_cache
 /test_script/
 var/
-data/raster/
 data/labo
