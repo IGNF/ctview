@@ -16,16 +16,14 @@ tmp_path = os.path.join("data", "labo")
 tmp_path_LUT = os.path.join(tmp_path, "LUT")
 
 # expected
-expected_output_default_file_1c = os.path.join(tmp_path, "DTM", "color", "1cycle", "test_data_77055_627760_LA93_IGN69_DTM_hillshade_color1c.tif")
-expected_output_default_file_5c = os.path.join(tmp_path, "DTM", "color", "5cycles", "test_data_77055_627760_LA93_IGN69_DTM_hillshade_color5c.tif")
+expected_dtm_color_1cycle_file = os.path.join(tmp_path, "DTM", "color", "1cycle", "test_data_77055_627760_LA93_IGN69_DTM_hillshade_color1c.tif")
+expected_dtm_color_5cycles_file = os.path.join(tmp_path, "DTM", "color", "5cycles", "test_data_77055_627760_LA93_IGN69_DTM_hillshade_color5c.tif")
 
 # preparation
 list_cycles = [1,5]
 dico_folder = dico_folder_template.copy()
 
 new_dico = add_folder_list_cycles(List=list_cycles, folder_base=dico_folder["folder_DTM_color"], key_base="folder_DTM_color", dico_fld=dico_folder_template)
-# log.debug("\n\nSETUP AFTER ADD dico_folder_template in test_map_color\n\n", dico_folder_template)
-# log.debug("\n\nSETUP AFTER ADD new_dico in test_map_color\n\n", new_dico)
 
 def setup_module(module):
     try:
@@ -47,5 +45,5 @@ def test_color_raster_dtm_hillshade_with_LUT():
                         output_dir=tmp_path,
                         list_c=list_cycles,
                         dico_fld=new_dico)
-    assert os.path.exists(expected_output_default_file_1c)
-    assert os.path.exists(expected_output_default_file_5c)
+    assert os.path.exists(expected_dtm_color_1cycle_file)
+    assert os.path.exists(expected_dtm_color_5cycles_file)
