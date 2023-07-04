@@ -6,3 +6,4 @@ __pycache__
 /test_script/
 var/
 data/labo
+data/raster/test_data_77055_627760_LA93_IGN69_interp.tif.aux.xml
