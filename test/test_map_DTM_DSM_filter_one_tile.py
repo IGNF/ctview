@@ -2,6 +2,7 @@ import os
 import shutil
 from ctview.map_DTM_DSM import run_mnx_filter_las_classes
 import test.utils.point_cloud_utils as pcu
+import pytest
 
 
 coordX = 77055
@@ -65,12 +66,9 @@ def test_run_mnx_filter_las_classes_false_spatial_reference():
     This must raise a RuntimeError
     '''
     setup_module()
-    try : 
+    with pytest.raises(RuntimeError) as e:
         run_mnx_filter_las_classes(
                         input_file="./data/laz/test_data_77055_627760_LA93_IGN69.laz",
                         output_file=output_default_file,
                         spatial_reference='EPSG:9999',
                         keep_classes=[2, 66])
-        assert 0
-    except RuntimeError:
-        assert 1
