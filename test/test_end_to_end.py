@@ -49,12 +49,12 @@ def setup_module(module): # run before the first test
         pass
 
 
-# def teardown_module(module): # run after the last test
-#     try : # Clean folder test if exists
-#         shutil.rmtree("/var/data/store-lidarhd/developpement/ctview/1_tests_local")
-#         shutil.rmtree("/var/data/store-lidarhd/developpement/ctview/2_tests_local_docker")
-#     except (FileNotFoundError):
-#         pass
+def teardown_module(module): # run after the last test
+    try : # Clean folder test if exists
+        shutil.rmtree("/var/data/store-lidarhd/developpement/ctview/1_tests_local")
+        shutil.rmtree("/var/data/store-lidarhd/developpement/ctview/2_tests_local_docker")
+    except (FileNotFoundError):
+        pass
 
 
 def assert_output_folders_contains_expected_number_of_file(output: str, nb_raster_expected: int, water:bool=False):
