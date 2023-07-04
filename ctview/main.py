@@ -91,16 +91,16 @@ def main():
     interp_Method = args.interp_method
     list_cycles = args.cycles_DTM_colored
     # Change destination final folders
-    log.debug(f"\n\nBEFORE CHOICE USER change name folders in dico_folder_modif on MAIN\n\n{dico_folder_modif}")
+    log.debug(f"\n\ndico_folder BEFORE the user changes folder names on MAIN\n\n{dico_folder_modif}")
     dico_folder_modif["folder_density_final"] = args.output_folder_density
     dico_folder_modif["folder_CC_fusion"] = args.output_folder_class_color
     dico_folder_modif["folder_DTM_color"] = args.output_folder_DTM_color
-    log.debug(f"\n\AFTER CHOICE USER change name folders in dico_folder_modif on MAIN\n\n{dico_folder_modif}")
+    log.debug(f"\n\dico_folder AFTER the user changes folder names on MAIN\n\n{dico_folder_modif}")
 
     # Add folders for all colorisations in dictionnary
-    log.debug(f"\n\nBEFORE ADD in dico_folder_modif on MAIN\n\n{dico_folder_modif}")
+    log.debug(f"\n\nBEFORE ADD folders in dico_folder_modif on MAIN\n\n{dico_folder_modif}")
     dico_folder_modif = add_folder_list_cycles(List=list_cycles, folder_base=dico_folder_modif["folder_DTM_color"], key_base="folder_DTM_color", dico_fld=dico_folder_modif)
-    log.debug(f"\n\AFTER ADD in dico_folder_modif on MAIN\n\n{dico_folder_modif}")
+    log.debug(f"\n\AFTER ADD folders in dico_folder_modif on MAIN\n\n{dico_folder_modif}")
 
 
     # Verify args are ok
