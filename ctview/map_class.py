@@ -164,7 +164,7 @@ def step3_color_raster(in_raster, output_dir, filename, verbose, i):
     return raster_colored
 
 
-def create_map_class(input_las: str(), output_dir: str(), dico_fld: dict):
+def create_map_class(input_las: str, output_dir: str, dico_fld: dict):
     """
     Create a raster of class with the fill aps method of gdal and a colorisation.
     Args :
