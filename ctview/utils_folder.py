@@ -1,4 +1,5 @@
 import os
+import logging as log
 import ctview.utils_tools as utils_tools
 from ctview.parameter import dico_param
 
@@ -6,7 +7,7 @@ RES_DTM = utils_tools.give_name_resolution_raster(dico_param["resolution_DTM"])
 RES_DTM_DENS = utils_tools.give_name_resolution_raster(dico_param["resolution_DTM_dens"])
 RES_DSM = utils_tools.give_name_resolution_raster(dico_param["resolution_DSM"])
 
-dico_folder = {
+dico_folder_template = {
     "folder_LAS_ground_virtual": "LAS_filterGrdVirt",
     "folder_DTM_brut": f"DTM{RES_DTM}_brut",
     "folder_DTM_shade": f"DTM{RES_DTM}_shade",
@@ -28,24 +29,34 @@ dico_folder = {
     "folder_CC_fusion" : "CC_5_fusion",
 }
 
+# dico_folder = dico_folder_template.copy()
 
-def create_folder(dest_dir: str):
+def create_folder(dest_dir: str, dico_fld:dict):
     """Create folders from dictionnary dico_folder if not exist"""
-    for folder in dico_folder:
-        folder_path = os.path.join(dest_dir, dico_folder[folder])
+    for folder in dico_fld:
+        folder_path = os.path.join(dest_dir, dico_fld[folder])
         os.makedirs(folder_path, exist_ok=True) # create folder if not exist
 
-def add_folder_list_cycles(List: list, folder_base: str, key_base: str):
+def add_folder_list_cycles(List: list, folder_base: str, key_base: str, dico_fld: str):
     """
     Add number of folder that correspond to the number of colorisations with the number of cycles.
     Args :
         List: list of number of cycles per colorisation
         folder: basename of the folders
     """
+    dico_modif = dico_fld.copy()
+    log.debug(f"\n\nDICO BEFORE ADD in add_folder_list_cycles\n\n{dico_modif}")
     for c in List:
+        plural = ""
+        if c>1:
+            plural = "s"
         key = f"{key_base}{c}"
-        value = f"{folder_base}{c}c"
-        dico_folder[key] = value
+        value = f"{c}cycle{plural}"
+        dico_modif[key] = value
+    log.debug(f"\n\nDICO AFTER ADD in add_folder_list_cycles\n\n{dico_modif}")
+
+    return dico_modif
+
 
 def delete_empty_folder(dir: str):
     """

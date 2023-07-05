@@ -12,9 +12,9 @@ FOLDER_1="ADENS_FINAL"
 FOLDER_2="ACC_5_fusion_FINAL"
 FOLDER_3="ADTM_1M_color_FINAL"
 # folders expected
-FOLDER_31="ADTM_1M_color_FINAL1c"
-FOLDER_32="ADTM_1M_color_FINAL2c"
-FOLDER_34="ADTM_1M_color_FINAL4c"
+FOLDER_31="DTM/color/1cycle"
+FOLDER_32="DTM/color/2cycles"
+FOLDER_34="DTM/color/4cycles"
 
 # test 1 : small dalle with and without docker
 INPUT_1="/var/data/store-lidarhd/developpement/ctview/las/data0"

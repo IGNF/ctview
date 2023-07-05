@@ -11,7 +11,7 @@ import time
 # Internal function
 import ctview.map_DTM_DSM as map_DTM_DSM
 from ctview.parameter import dico_param
-from ctview.utils_folder import create_folder, dico_folder, add_folder_list_cycles, delete_empty_folder
+from ctview.utils_folder import create_folder, dico_folder_template, add_folder_list_cycles, delete_empty_folder
 import ctview.map_density as map_density
 import ctview.map_class as map_class
 
@@ -34,9 +34,9 @@ def parse_args():
         default=dico_param["cycles_color_DTM"],
         help="Allow to choose the number of coloration cycles for each colorisation. Exemple : -c 1 4 5 (3 colorisation with repectively 1 cycle, 4 cycles and 5 cycles)."
     )
-    parser.add_argument("-ofdens", "--output_folder_density", default=dico_folder["folder_density_final"], help="Output folder map density final.")
-    parser.add_argument("-ofcc", "--output_folder_class_color", default=dico_folder["folder_CC_fusion"], help="Output folder map class color with DSM.")
-    parser.add_argument("-ofcolor", "--output_folder_DTM_color", default=dico_folder["folder_DTM_color"], help="Output folder DTM color.")
+    parser.add_argument("-ofdens", "--output_folder_density", default=dico_folder_template["folder_density_final"], help="Output folder map density final.")
+    parser.add_argument("-ofcc", "--output_folder_class_color", default=dico_folder_template["folder_CC_fusion"], help="Output folder map class color with DSM.")
+    parser.add_argument("-ofcolor", "--output_folder_DTM_color", default=dico_folder_template["folder_DTM_color"], help="Output folder DTM color.")
 
     return parser.parse_args()
 
@@ -81,6 +81,7 @@ def get_las_liste(input_las, input_dir):
 def main():
 
     log.basicConfig(level=log.INFO, format='%(message)s')
+    dico_folder_modif = dico_folder_template.copy()
 
     # Get las file, output directory and interpolation method
     args = parse_args()
@@ -90,11 +91,17 @@ def main():
     interp_Method = args.interp_method
     list_cycles = args.cycles_DTM_colored
     # Change destination final folders
-    dico_folder["folder_density_final"] = args.output_folder_density
-    dico_folder["folder_CC_fusion"] = args.output_folder_class_color
-    dico_folder["folder_DTM_color"] = args.output_folder_DTM_color
+    log.debug(f"\n\ndico_folder BEFORE the user changes folder names on MAIN\n\n{dico_folder_modif}")
+    dico_folder_modif["folder_density_final"] = args.output_folder_density
+    dico_folder_modif["folder_CC_fusion"] = args.output_folder_class_color
+    dico_folder_modif["folder_DTM_color"] = args.output_folder_DTM_color
+    log.debug(f"\n\dico_folder AFTER the user changes folder names on MAIN\n\n{dico_folder_modif}")
+
     # Add folders for all colorisations in dictionnary
-    add_folder_list_cycles(List=list_cycles, folder_base=dico_folder["folder_DTM_color"], key_base="folder_DTM_color")
+    log.debug(f"\n\nBEFORE ADD folders in dico_folder_modif on MAIN\n\n{dico_folder_modif}")
+    dico_folder_modif = add_folder_list_cycles(List=list_cycles, folder_base=dico_folder_modif["folder_DTM_color"], key_base="folder_DTM_color", dico_fld=dico_folder_modif)
+    log.debug(f"\n\AFTER ADD folders in dico_folder_modif on MAIN\n\n{dico_folder_modif}")
+
 
     # Verify args are ok
     # input
@@ -109,8 +116,8 @@ def main():
     # Create folder test if not exists
     os.makedirs(out_dir, exist_ok=True)
 
-    # Create folders of dico_folder in out_dir
-    create_folder(out_dir)
+    # Create folders of dico_folder_modif in out_dir
+    create_folder(out_dir, dico_fld=dico_folder_modif)
 
         # List las/laz
     las_liste, in_dir = get_las_liste(in_las, in_dir)
@@ -128,18 +135,18 @@ def main():
         
         ## DENSITY (DTM brut + density)
         ## Step 1/3 : DTM brut
-        raster_DTM_dens = map_DTM_DSM.create_map_one_las_DTM_dens(
-            input_las=las_input_file,
-            output_dir=out_dir,
-            interpMETHOD=interp_Method,
-            type_raster="DTM_dens"
+        raster_DTM_dens = map_DTM_DSM.create_dtm_with_hillshade_one_las_5M(
+            input_file=las_input_file,
+            output_dir=out_dir
         )
         ## Step 2 : raster of density
+        log.info("\nStep 2/3 : raster of density\n")
         raster_dens, success = map_density.generate_raster_of_density(
             input_las=las_input_file,
             output_dir=out_dir
         )
         ## Step 3 : multiply density and DTM layers
+        log.info("\nStep 3/3 : raster of density\n")
         if success :
 
             map_density.multiply_DTM_density(
@@ -147,32 +154,38 @@ def main():
                 input_dens_raster=raster_dens, 
                 filename=filename,
                 output_dir=out_dir,
-                bounds=bounds_las
+                bounds=bounds_las,
+                dico_fld=dico_folder_modif
             )
         else :
             log.warning(f"La dalle {filename} ne contient pas de points sol. Carte de densité non générée.")
 
         ## DTM hillshade color
-        ## Step 1/1 :
-        map_DTM_DSM.create_map_one_las_DTM(
-            input_las=las_input_file,
-            output_dir=out_dir,
-            interpMETHOD=interp_Method,
-            list_c=list_cycles,
-            type_raster="DTM"
+        ## Step 1/2 : DTM hillshade
+        raster_DTM_hs_1M = map_DTM_DSM.create_dtm_with_hillshade_one_las_1M(
+            input_file=las_input_file,
+            output_dir=out_dir
         )
+
+        ## Step 2/2 : color
+        map_DTM_DSM.color_raster_dtm_hillshade_with_LUT(input_initial_basename=filename,
+                        input_raster=raster_DTM_hs_1M,
+                        output_dir=out_dir,
+                        list_c=list_cycles,
+                        dico_fld=dico_folder_modif
+        )
+                        
         ## Map class color
         ## Step 1/3 : DSM hillshade
-        raster_DSM_hs = map_DTM_DSM.create_map_one_las_DSM(
-            input_las=las_input_file,
-            output_dir=out_dir,
-            interpMETHOD=interp_Method,
-            type_raster="DSM"
+        raster_DSM_hs = map_DTM_DSM.create_dsm_with_hillshade_one_las_50CM(
+            input_file=las_input_file,
+            output_dir=out_dir
         )
         ## Step 2/3 : create map fill gaps color
         raster_class_fgc = map_class.create_map_class(
             input_las=las_input_file, 
-            output_dir=out_dir
+            output_dir=out_dir,
+            dico_fld=dico_folder_modif
         )
         ## Step 3/3 : fusion with MNS
         map_class.multiply_DSM_class(
@@ -180,7 +193,8 @@ def main():
             input_raster_class=raster_class_fgc,
             filename=filename,
             output_dir=out_dir,
-            bounds=bounds_las
+            bounds=bounds_las,
+            dico_fld=dico_folder_modif
         )
 
         # Delete folder

@@ -1,0 +1,25 @@
+{
+    "interpolation":{
+        "algo_name":"pdal-tin"
+    },
+    "io":{
+        "spatial_reference":"EPSG:2154",
+        "extension":"tif"
+    },
+    "tile_geometry":{
+        "tile_coord_scale": 1000,
+        "tile_width": 1000,
+        "pixel_size": 1,
+        "no_data_value": -9999
+    },
+    "filter":{
+        "keep_classes":{
+            "dtm": [2, 66],
+            "dtm_dens": [2, 66],
+            "dsm": [1, 2, 3, 4, 5, 6, 9, 17, 64, 65, 66, 67, 202]
+        }
+    },
+    "buffer":{
+        "size":100
+    }
+}
