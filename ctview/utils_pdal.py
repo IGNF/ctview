@@ -1,6 +1,7 @@
 import pdal
 import tempfile
 from pathlib import Path
+import logging as log
 
 # from ctclass import utils_geometry, utils_gdal
 
@@ -139,7 +140,7 @@ def get_class_min_max_from_las(points):
             indice = i
             break
     if indice == -1:
-        print("AlgoError : classification dictionnary not found")
+        log.info("AlgoError : classification dictionnary not found")
     # Classification dictionnary is list_statistic[indice]
     minClass = list_statistic[indice]["minimum"]
     maxClass = list_statistic[indice]["maximum"]

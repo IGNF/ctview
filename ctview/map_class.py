@@ -23,7 +23,7 @@ from osgeo_utils import gdal_fillnodata
 import lidarutils.gdal_calc as gdal_calc
 
 # Dictionnary
-from ctview.utils_folder import dico_folder
+from ctview.utils_folder import dico_folder_template
 from ctview.parameter import dico_param
 
 # Parameters
@@ -164,7 +164,7 @@ def step3_color_raster(in_raster, output_dir, filename, verbose, i):
     return raster_colored
 
 
-def create_map_class(input_las: str(), output_dir: str()):
+def create_map_class(input_las: str, output_dir: str, dico_fld: dict):
     """
     Create a raster of class with the fill aps method of gdal and a colorisation.
     Args :
@@ -183,10 +183,10 @@ def create_map_class(input_las: str(), output_dir: str()):
     log.info(f"\nMAP OF CLASS : file : {input_las_name}")
 
     # Output_folder_names
-    output_folder_1 = os.path.join(output_dir,dico_folder["folder_CC_brut"])
-    output_folder_2 = os.path.join(output_dir,dico_folder["folder_CC_brut_color"])
-    output_folder_3 = os.path.join(output_dir,dico_folder["folder_CC_fillgap"])
-    output_folder_4 = os.path.join(output_dir,dico_folder["folder_CC_fillgap_color"])
+    output_folder_1 = os.path.join(output_dir,dico_fld["folder_CC_brut"])
+    output_folder_2 = os.path.join(output_dir,dico_fld["folder_CC_brut_color"])
+    output_folder_3 = os.path.join(output_dir,dico_fld["folder_CC_fillgap"])
+    output_folder_4 = os.path.join(output_dir,dico_fld["folder_CC_fillgap_color"])
 
     # Step 1 : Write raster brut
     raster_brut = step1_create_raster_brut(in_points, output_folder_1, input_las_name_without_extension, resolution_class, i=1)
@@ -203,7 +203,7 @@ def create_map_class(input_las: str(), output_dir: str()):
     return color_fillgap_raster
 
 
-def multiply_DSM_class(input_DSM: str, input_raster_class: str, filename: str, output_dir: str, bounds: tuple):
+def multiply_DSM_class(input_DSM: str, input_raster_class: str, filename: str, output_dir: str, bounds: tuple, dico_fld: dict):
     """
     Fusion of 2 rasters (DSM and raster of class filled and colored) with a given formula.
     Args :
@@ -212,6 +212,7 @@ def multiply_DSM_class(input_DSM: str, input_raster_class: str, filename: str, o
         filename : name of las file whithout path
         output_dir : output directory
         bounds : bounds of las file ([minx,maxx],[miny, maxy])
+        dico_fld : dictionnary of subfolders
     """
     # Crop rasters
     log.info("Crop rasters")
@@ -223,7 +224,7 @@ def multiply_DSM_class(input_DSM: str, input_raster_class: str, filename: str, o
 
     log.info("Multiplication with DSM")
     # Output file
-    output_folder_5 = os.path.join(output_dir,dico_folder["folder_CC_fusion"])
+    output_folder_5 = os.path.join(output_dir,dico_fld["folder_CC_fusion"])
     out_raster = os.path.join(output_folder_5, f"{os.path.splitext(filename)[0]}_fusion_DSM_class{extension}")
     # Mutiply 
     gdal_calc.Calc(
@@ -243,10 +244,11 @@ if __name__ == "__main__":
     out_dir = args.output_dir
 
     # Create folders
-    os.makedirs(os.path.join(out_dir,dico_folder["folder_CC_brut"]), exist_ok=True)
-    os.makedirs(os.path.join(out_dir,dico_folder["folder_CC_fillgap"]), exist_ok=True)
-    os.makedirs(os.path.join(out_dir,dico_folder["folder_CC_brut_color"]), exist_ok=True)
-    os.makedirs(os.path.join(out_dir,dico_folder["folder_CC_fillgap_color"]), exist_ok=True)
-    os.makedirs(os.path.join(out_dir,dico_folder["folder_CC_fusion"]), exist_ok=True)
+    dico_test = dico_folder_template
+    os.makedirs(os.path.join(out_dir,dico_test["folder_CC_brut"]), exist_ok=True)
+    os.makedirs(os.path.join(out_dir,dico_test["folder_CC_fillgap"]), exist_ok=True)
+    os.makedirs(os.path.join(out_dir,dico_test["folder_CC_brut_color"]), exist_ok=True)
+    os.makedirs(os.path.join(out_dir,dico_test["folder_CC_fillgap_color"]), exist_ok=True)
+    os.makedirs(os.path.join(out_dir,dico_test["folder_CC_fusion"]), exist_ok=True)
 
-    create_map_class(in_las, out_dir)
+    create_map_class(in_las, out_dir, dico_fld=dico_test)

@@ -2,7 +2,9 @@
 
 # IMPORT
 import os
+import logging as log
 import numpy as np
+import json
 
 
 # FONCTION
@@ -33,7 +35,7 @@ def repare_files(las_liste: str, input_dir):
         f.seek(6)
         f.write(bytes([17, 0, 0, 0]))
         f.close()
-        print(f"fichier {filename} repare")
+        log.info(f"fichier {filename} repare")
 
 
 def sample(input_points):
@@ -87,3 +89,13 @@ def remove_1_pixel(bounds: tuple, resolution: int):
     bounds[0][1] -= resolution # remove 1 pixel in x
     bounds[1][1] -= resolution # remove 1 pixel in y
     return bounds
+
+
+def convert_json_into_dico(config_file: str):
+    """
+    Translate json into dictionnary 
+    """
+    with open(config_file, "r") as file_handler:
+        dico_config = json.load(file_handler)
+
+    return dico_config

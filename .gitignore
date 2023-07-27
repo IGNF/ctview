@@ -3,6 +3,7 @@
 /test_raster/
 __pycache__
 .pytest_cache
-/test_script/
+/test_script/bug
 var/
-data/raster/
+data/labo
+*.aux.xml

@@ -6,7 +6,6 @@ import subprocess
 import numpy
 import logging as log
 import os
-from ctview.utils_folder import dico_folder
 
 # FONCTION
 
