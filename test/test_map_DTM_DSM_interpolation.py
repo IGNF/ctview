@@ -1,9 +1,9 @@
 import os
 import shutil
-from ctview.map_DTM_DSM import run_mnx_interpolation
 import test.utils.raster_utils as ru
-import ctview.utils_tools as utools
 
+import ctview.utils_tools as utools
+from ctview.map_DTM_DSM import run_mnx_interpolation
 
 coordX = 77055
 coordY = 627760
@@ -27,8 +27,8 @@ config_dict["tile_geometry"]["tile_coord_scale"] = tile_coord_scale
 config_dict["tile_geometry"]["tile_width"] = tile_width
 config_dict["tile_geometry"]["pixel_size"] = pixel_size
 
-expected_xmin = coordX * tile_coord_scale - pixel_size/2
-expected_ymax = coordY * tile_coord_scale  + pixel_size/2
+expected_xmin = coordX * tile_coord_scale - pixel_size / 2
+expected_ymax = coordY * tile_coord_scale + pixel_size / 2
 expected_raster_bounds = (expected_xmin, expected_ymax - tile_width), (expected_xmin + tile_width, expected_ymax)
 
 expected_output_default_file = os.path.join(output_dir, "test_data_77055_627760_LA93_IGN69_50CM_Laplace.tif")
@@ -38,15 +38,14 @@ def setup_module(module):
     try:
         shutil.rmtree(tmp_path)
 
-    except (FileNotFoundError):
+    except FileNotFoundError:
         pass
     os.mkdir(tmp_path)
     os.mkdir(output_dir)
 
 
 def test_run_mnx_interpolation():
-    """Verif interpolation create a file with suffix size (50CM) and interpolation method (Laplace)
-    """
+    """Verif interpolation create a file with suffix size (50CM) and interpolation method (Laplace)"""
     if os.path.isfile(expected_output_default_file):
         os.remove(expected_output_default_file)
 
@@ -56,4 +55,3 @@ def test_run_mnx_interpolation():
 
     raster_bounds = ru.get_tif_extent(expected_output_default_file)
     assert ru.allclose_mm(raster_bounds, expected_raster_bounds)
-

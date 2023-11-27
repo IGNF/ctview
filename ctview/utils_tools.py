@@ -1,12 +1,10 @@
 # Autor : ELucon
 
-# IMPORT
-import os
-import logging as log
 import json
+import logging as log
+import os
 
 
-# FONCTION
 def give_name_resolution_raster(size):
     """
     Give a resolution from raster
@@ -30,7 +28,7 @@ def give_name_resolution_raster(size):
 
 def repare_files(las_liste: str, input_dir):
     for filename in las_liste:
-        f = open(os.path.join(input_dir,filename), "rb+")
+        f = open(os.path.join(input_dir, filename), "rb+")
         f.seek(6)
         f.write(bytes([17, 0, 0, 0]))
         f.close()
@@ -39,7 +37,7 @@ def repare_files(las_liste: str, input_dir):
 
 def convert_json_into_dico(config_file: str):
     """
-    Translate json into dictionnary 
+    Translate json into dictionnary
     """
     with open(config_file, "r") as file_handler:
         dico_config = json.load(file_handler)

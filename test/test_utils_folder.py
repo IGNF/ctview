@@ -1,7 +1,12 @@
 import os
 import shutil
-import ctview
-from ctview.utils_folder import create_folder, dico_folder_template, add_folder_list_cycles, delete_empty_folder
+
+from ctview.utils_folder import (
+    add_folder_list_cycles,
+    create_folder,
+    delete_empty_folder,
+    dico_folder_template,
+)
 
 # PATH TO FOLDER "TEST"
 tmp_path = os.path.join("data", "labo")
@@ -17,7 +22,7 @@ def setup_module():
     try:
         shutil.rmtree(tmp_path)
 
-    except (FileNotFoundError):
+    except FileNotFoundError:
         pass
     os.mkdir(tmp_path)
 
@@ -33,11 +38,12 @@ def test_create_folder(dest_dir=tmp_path):
     for dir_expected in list_dir_expected:
         assert os.path.exists(dir_expected)
 
+
 def test_add_folder_list_cycles():
     """Verify :
     - keys and values are added to dictionnary
     """
-    liste = [1,2,3]
+    liste = [1, 2, 3]
     f = "FOLDER"
     k = "KEY"
 
@@ -45,13 +51,14 @@ def test_add_folder_list_cycles():
 
     new_dico = add_folder_list_cycles(List=liste, folder_base=f, key_base=k, dico_fld=dico_folder_template)
 
-    assert len(dico_folder_template) == 19 # verif static dico has not changed
+    assert len(dico_folder_template) == 19  # verif static dico has not changed
 
     assert len(new_dico) == 22
 
+
 def test_delete_empty_folder():
     """Verify :
-    - delete empty folder  
+    - delete empty folder
     """
     setup_module()
     empty_folder = os.path.join(tmp_path, "empty_folder")
