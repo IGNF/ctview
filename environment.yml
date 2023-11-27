@@ -15,6 +15,9 @@ dependencies:
   - pytest-cov==3.0.*
   - tqdm
   - black # reformat file
+  - flake8
+  - isort
+  - pre-commit
 
   - pip:
     - --extra-index-url=https://nexus.ign.fr/repository/pypi-lidarhd-hosted/simple
