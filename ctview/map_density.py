@@ -11,6 +11,7 @@ import ctview.clip_raster as clip_raster
 import os
 import pdal
 import numpy
+import shutil
 import argparse
 import subprocess
 import logging as log
@@ -199,12 +200,12 @@ if __name__=="__main__":
     output_dir = args.output_dir
 
     # Create directory if not exists
-    if os.path.exists(out_dir):
+    if os.path.exists(output_dir):
         # Clean folder test if exists
-        shutil.rmtree(out_dir)
+        shutil.rmtree(output_dir)
     else:
         # Create folder test if not exists
-        os.makedirs(out_dir)
+        os.makedirs(output_dir)
     os.makedirs(os.path.join(output_dir,FOLDER_DENS_VALUE), exist_ok=True)
     os.makedirs(os.path.join(output_dir,FOLDER_DENS_COLOR), exist_ok=True)
 

@@ -316,15 +316,6 @@ def color_raster_dtm_hillshade_with_LUT(input_initial_basename: str,
     log.info(f"End DTM.\n")
 
 
-def hillshade_from_raster(input_raster: str, output_raster: str):
-    """Add hillshade to raster"""
-    gdal.DEMProcessing(
-        destName=output_raster,
-        srcDS=input_raster,
-        processing="hillshade",
-    )
-
-
 def color_DTM_with_cycles(
     las_input_file: str, output_dir_raster: str, output_dir_LUT: str, raster_DTM_file: str, nb_cycle: int
 ):

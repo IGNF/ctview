@@ -1,6 +1,5 @@
 from ctview.main import get_las_liste
 import os
-import pytest
 
 DIR_LAS = os.path.join("data","las","2_LAS")
 IN_LAS = os.path.join(DIR_LAS,"numero1.las")

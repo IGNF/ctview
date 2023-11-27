@@ -7,8 +7,7 @@ dico_param = {
     "interpolation_method": "Laplace",
     "cycles_color_DTM": [1],
     "radius_PC_dens" : 2.5,
-    "resolution_mapclass": 0.5,
-    "no_data_value" : -9999
+    "resolution_mapclass": 0.5
 }
 
 # EPSG : projection system

@@ -107,8 +107,12 @@ def generate_LUT_X_cycle(
 
 if __name__ == "__main__":
 
+    TMP = "./tmp/"
+    os.makedirs(TMP, exist_ok=True)
+
     generate_LUT_X_cycle(
         file_las="../LAS/C5_OK.las",
         file_DTM="../test_raster/DTM/C5_OK_DTM_hillshade.tif",
         nb_cycle=6,
+        output_dir_LUT=TMP
     )
