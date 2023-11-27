@@ -1,26 +1,20 @@
 # Autor : ELucon
 
-# IMPORT
 
-# File
-import ctview.utils_pdal as utils_pdal
-import ctview.utils_gdal as utils_gdal
-import ctview.utils_tools as utils_tools
-import ctview.clip_raster as clip_raster
-    # Library
-import os
-import pdal
-import numpy
-import shutil
 import argparse
-import subprocess
 import logging as log
-    # Dictionnary
+import os
+import shutil
+
+import lidarutils.gdal_calc as gdal_calc
+import numpy
+import pdal
+
+import ctview.clip_raster as clip_raster
+import ctview.utils_gdal as utils_gdal
+import ctview.utils_pdal as utils_pdal
 from ctview.parameter import dico_param
 from ctview.utils_folder import dico_folder_template
-import lidarutils.gdal_calc as gdal_calc
-
-# PARAMETERS
 
 EPSG = dico_param["EPSG"]
 resolution = dico_param["resolution_DTM_dens"]
@@ -30,14 +24,8 @@ FOLDER_DENS_COLOR = dico_folder_template["folder_density_color"]
 _radius = dico_param["radius_PC_dens"]
 CLASSIF_GROUND = 2
 
-# FONCTION
 
-
-def generate_raster_of_density(
-    input_las: str,
-    output_dir: str,
-    bounds: str=None
-):
+def generate_raster_of_density(input_las: str, output_dir: str, bounds: str = None):
     """
     Build a raster of density colored.
     Args :
@@ -46,58 +34,52 @@ def generate_raster_of_density(
     Return :
         path of the raster of density colored
     """
-    # Get directory
-    input_dir = os.path.dirname(input_las)
     # Get filename without extension
     input_filename = os.path.basename(input_las)
 
     # Build raster count point
-    raster_name_count = os.path.join(output_dir,FOLDER_DENS_VALUE,f"{os.path.splitext(input_filename)[0]}_COUNT{extension}")
-    raster_name_dens = os.path.join(output_dir, FOLDER_DENS_VALUE,f"{os.path.splitext(input_filename)[0]}_DENS{extension}")
+    raster_name_count = os.path.join(
+        output_dir, FOLDER_DENS_VALUE, f"{os.path.splitext(input_filename)[0]}_COUNT{extension}"
+    )
+    raster_name_dens = os.path.join(
+        output_dir, FOLDER_DENS_VALUE, f"{os.path.splitext(input_filename)[0]}_DENS{extension}"
+    )
 
     # Parameters
     size = resolution  # meter = resolution from raster
-    _size = utils_tools.give_name_resolution_raster(size)
 
     log.info(f"\nRaster of density at resolution {size} meter(s) : {input_filename}\n")
-    
+
     # Raster of density : count points in resolution*resolution m² (Default=25 m²)
     log.info(f"Raster count points at resolution {size} meter(s)")
     success = method_writer_gdal(input_las=input_las, output_file=raster_name_count, bounds=bounds)
 
-    if success :
+    if success:
         # Overwrite and change unity of count from "per 25 m²" to "per m²"
-        change_unit(
-            input_raster=raster_name_count,
-            output_raster=raster_name_dens,
-            res=resolution
-            )
+        change_unit(input_raster=raster_name_count, output_raster=raster_name_dens, res=resolution)
 
         # Color density
-        raster_name_dens_color = os.path.join(output_dir, FOLDER_DENS_COLOR,f"{os.path.splitext(input_filename)[0]}_DENS_COLOR{extension}")
+        raster_name_dens_color = os.path.join(
+            output_dir, FOLDER_DENS_COLOR, f"{os.path.splitext(input_filename)[0]}_DENS_COLOR{extension}"
+        )
 
         log.info("Colorisation...")
         utils_gdal.color_raster_with_LUT(
-            input_raster = raster_name_dens,
-            output_raster = raster_name_dens_color,
-            LUT = os.path.join("LUT","LUT_DENSITY.txt")
+            input_raster=raster_name_dens,
+            output_raster=raster_name_dens_color,
+            LUT=os.path.join("LUT", "LUT_DENSITY.txt"),
         )
 
         return raster_name_dens_color, success
 
-    else :
+    else:
         return "_", success
 
 
-def method_writer_gdal(
-    input_las: str,
-    output_file: str,
-    bounds: str = None,
-    radius=_radius
-):
-    log.debug('method_writer_gdal')
+def method_writer_gdal(input_las: str, output_file: str, bounds: str = None, radius=_radius):
+    log.debug("method_writer_gdal")
     log.debug(f"raster name output count points : {output_file}")
-    log.debug(f'bounds is : {bounds}')
+    log.debug(f"bounds is : {bounds}")
     log.debug(f"resolution utilisée : {resolution}")
     log.debug(f"radius :{radius}")
 
@@ -108,35 +90,28 @@ def method_writer_gdal(
 
     is_count_ok = True
 
-    if nb_pts_ground > 0 :
+    if nb_pts_ground > 0:
+        pipeline = pdal.Filter.range(limits="Classification[2:2]").pipeline(pts_to_check)
 
-        pipeline = pdal.Filter.range(
-                                limits="Classification[2:2]"
-                                ).pipeline(pts_to_check)
-        
-
-        if bounds is None :
+        if bounds is None:
             pipeline |= pdal.Writer.gdal(
-                                filename = output_file, 
-                                resolution = resolution,
-                                radius = radius,
-                                output_type = "count"
-                                )
-        else :
+                filename=output_file, resolution=resolution, radius=radius, output_type="count"
+            )
+        else:
             log.info(f"Bounds forced (remove 1 pixel at resolution density) :{bounds}")
             pipeline |= pdal.Writer.gdal(
-                                filename = output_file, 
-                                resolution = resolution,
-                                radius = radius,
-                                output_type = "count",
-                                bounds = str(bounds),
-                                )
+                filename=output_file,
+                resolution=resolution,
+                radius=radius,
+                output_type="count",
+                bounds=str(bounds),
+            )
 
         pipeline.execute()
 
         return is_count_ok
 
-    else :
+    else:
         is_count_ok = False
         return is_count_ok
 
@@ -156,7 +131,9 @@ def change_unit(input_raster: str, output_raster: str, res: int):
     )
 
 
-def multiply_DTM_density(input_DTM: str, input_dens_raster: str, filename: str, output_dir: str, bounds: tuple, dico_fld: dict):
+def multiply_DTM_density(
+    input_DTM: str, input_dens_raster: str, filename: str, output_dir: str, bounds: tuple, dico_fld: dict
+):
     """
     Fusion of 2 rasters (DTM and raster of density) with a given formula.
     Args :
@@ -176,25 +153,27 @@ def multiply_DTM_density(input_DTM: str, input_dens_raster: str, filename: str, 
 
     log.info("Multiplication with DTM")
     # Output file
-    out_raster = os.path.join(output_dir, dico_fld["folder_density_final"], f"{os.path.splitext(filename)[0]}_DENS{extension}")
-    # Mutiply 
+    out_raster = os.path.join(
+        output_dir, dico_fld["folder_density_final"], f"{os.path.splitext(filename)[0]}_DENS{extension}"
+    )
+    # Mutiply
     gdal_calc.Calc(
         A=input_DTM_crop,
         B=input_dens_raster_crop,
         calc="((A-1)<0)*B*(A/255)+((A-1)>=0)*B*((A-1)/255)",
-        outfile=out_raster
+        outfile=out_raster,
     )
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-idir", "--input_las")
-    parser.add_argument('-odir', '--output_dir')
+    parser.add_argument("-odir", "--output_dir")
 
     return parser.parse_args()
 
-if __name__=="__main__":
 
+if __name__ == "__main__":
     args = parse_args()
     input_las = args.input_las
     output_dir = args.output_dir
@@ -206,7 +185,7 @@ if __name__=="__main__":
     else:
         # Create folder test if not exists
         os.makedirs(output_dir)
-    os.makedirs(os.path.join(output_dir,FOLDER_DENS_VALUE), exist_ok=True)
-    os.makedirs(os.path.join(output_dir,FOLDER_DENS_COLOR), exist_ok=True)
+    os.makedirs(os.path.join(output_dir, FOLDER_DENS_VALUE), exist_ok=True)
+    os.makedirs(os.path.join(output_dir, FOLDER_DENS_COLOR), exist_ok=True)
 
-    generate_raster_of_density(input_las = input_las, output_dir=output_dir)
+    generate_raster_of_density(input_las=input_las, output_dir=output_dir)

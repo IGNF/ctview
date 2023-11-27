@@ -1,7 +1,7 @@
 import os
 import shutil
-from ctview.map_DTM_DSM import add_hillshade_one_raster
 
+from ctview.map_DTM_DSM import add_hillshade_one_raster
 
 input_dir = os.path.join("data", "raster")
 
@@ -19,7 +19,7 @@ def setup_module(module):
     try:
         shutil.rmtree(tmp_path)
 
-    except (FileNotFoundError):
+    except FileNotFoundError:
         pass
     os.mkdir(tmp_path)
 

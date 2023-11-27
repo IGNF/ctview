@@ -1,68 +1,47 @@
 # Autor : ELucon
 
-# IMPORT
 
-# File
-import ctview.utils_tools as utils_tools
-import ctview.utils_pdal as utils_pdal
-import ctview.utils_gdal as utils_gdal
-from ctview.parameter import dico_param
-from ctview.utils_folder import dico_folder_template
-import ctview.gen_LUT_X_cycle as gen_LUT_X_cycle
-
-# Library
-import sys
-import pdal
-from osgeo import gdal
-import numpy as np
-import subprocess
-import startinpy
-import os
-from sys import argv
-from multiprocessing import Pool, cpu_count
-import json
-import laspy
-import math
-from tqdm import tqdm
 import logging as log
+import os
 from typing import List
-    # mnx
-import produit_derive_lidar as mnx
+
 import pdaltools.las_add_buffer
+import produit_derive_lidar as mnx
 import produit_derive_lidar.filter_one_tile
 import produit_derive_lidar.ip_one_tile
+from osgeo import gdal
 
-# TEMPORARY
-# dico_folder_template = dico_folder_template.copy()
+import ctview.gen_LUT_X_cycle as gen_LUT_X_cycle
+import ctview.utils_gdal as utils_gdal
+import ctview.utils_tools as utils_tools
+from ctview.parameter import dico_param
 
-# OUTPUT TREE
 
 def create_output_tree(output_dir: str):
-    """Create tree for output. 
-    """
+    """Create tree for output."""
     output_tree = {
-                "DTM":
-                    {"output": os.path.join(output_dir, "DTM"),
-                    "filter": os.path.join(output_dir, "tmp_dtm", "filter"),
-                    "buffer": os.path.join(output_dir, "tmp_dtm", "buffer"),
-                    "hillshade": os.path.join(output_dir, "tmp_dtm", "hillshade"),
-                    "color": os.path.join(output_dir, "DTM", "color")
-                    },
-                "DSM":
-                    {"output": os.path.join(output_dir, "DSM"),
-                    "filter": os.path.join(output_dir, "tmp_dsm", "filter"),
-                    "buffer": os.path.join(output_dir, "tmp_dsm", "buffer"),
-                    "hillshade": os.path.join(output_dir, "tmp_dsm", "hillshade")
-                    },
-                "DTM_DENS":
-                    {"output": os.path.join(output_dir, "DTM_DENS"),
-                    "filter": os.path.join(output_dir, "tmp_dtm_dens", "filter"),
-                    "buffer": os.path.join(output_dir, "tmp_dtm_dens", "buffer"),
-                    "hillshade": os.path.join(output_dir, "tmp_dtm_dens", "hillshade"),
-                    }
-            }
+        "DTM": {
+            "output": os.path.join(output_dir, "DTM"),
+            "filter": os.path.join(output_dir, "tmp_dtm", "filter"),
+            "buffer": os.path.join(output_dir, "tmp_dtm", "buffer"),
+            "hillshade": os.path.join(output_dir, "tmp_dtm", "hillshade"),
+            "color": os.path.join(output_dir, "DTM", "color"),
+        },
+        "DSM": {
+            "output": os.path.join(output_dir, "DSM"),
+            "filter": os.path.join(output_dir, "tmp_dsm", "filter"),
+            "buffer": os.path.join(output_dir, "tmp_dsm", "buffer"),
+            "hillshade": os.path.join(output_dir, "tmp_dsm", "hillshade"),
+        },
+        "DTM_DENS": {
+            "output": os.path.join(output_dir, "DTM_DENS"),
+            "filter": os.path.join(output_dir, "tmp_dtm_dens", "filter"),
+            "buffer": os.path.join(output_dir, "tmp_dtm_dens", "buffer"),
+            "hillshade": os.path.join(output_dir, "tmp_dtm_dens", "hillshade"),
+        },
+    }
 
-    for n in output_tree :
+    for n in output_tree:
         os.makedirs(output_tree[n]["output"], exist_ok=True)
         os.makedirs(output_tree[n]["filter"], exist_ok=True)
         os.makedirs(output_tree[n]["buffer"], exist_ok=True)
@@ -73,11 +52,9 @@ def create_output_tree(output_dir: str):
 
 
 def run_mnx_filter_las_classes(
-                        input_file: str,
-                        output_file: str,
-                        spatial_reference: str='EPSG:2154',
-                        keep_classes: List=[2, 66]):
-    """ Reads the LAS file and filter only grounds from LIDAR.
+    input_file: str, output_file: str, spatial_reference: str = "EPSG:2154", keep_classes: List = [2, 66]
+):
+    """Reads the LAS file and filter only grounds from LIDAR.
 
     Args:
         input_file (str) : Path to the input lidar file
@@ -87,17 +64,18 @@ def run_mnx_filter_las_classes(
     """
     # run filter
     mnx.tasks.las_filter.filter_las_classes(
-                        input_file=input_file,
-                        output_file=output_file,
-                        spatial_ref=spatial_reference,
-                        keep_classes=keep_classes)
+        input_file=input_file, output_file=output_file, spatial_ref=spatial_reference, keep_classes=keep_classes
+    )
 
 
-def run_pdaltools_buffer(input_dir: str, tile_filename: str,
-                           output_filename: str,
-                           buffer_width: int=100,
-                           tile_width: int=1000,
-                           tile_coord_scale: int=1000):
+def run_pdaltools_buffer(
+    input_dir: str,
+    tile_filename: str,
+    output_filename: str,
+    buffer_width: int = 100,
+    tile_width: int = 1000,
+    tile_coord_scale: int = 1000,
+):
     """Merge lidar tiles around the queried tile and crop them in order to add a buffer
     to the tile (usually 100m).
     Args:
@@ -114,11 +92,14 @@ def run_pdaltools_buffer(input_dir: str, tile_filename: str,
     spatial_ref_num = dico_param["EPSG"]
     # run buffer
     pdaltools.las_add_buffer.create_las_with_buffer(
-                            input_dir, tile_filename, output_filename,
-                            buffer_width=buffer_width,
-                            spatial_ref=f"EPSG:{spatial_ref_num}",
-                            tile_width=tile_width,
-                            tile_coord_scale=tile_coord_scale)  
+        input_dir,
+        tile_filename,
+        output_filename,
+        buffer_width=buffer_width,
+        spatial_ref=f"EPSG:{spatial_ref_num}",
+        tile_width=tile_width,
+        tile_coord_scale=tile_coord_scale,
+    )
 
 
 def run_mnx_interpolation(input_file: str, output_raster: str, config: dict):
@@ -127,7 +108,10 @@ def run_mnx_interpolation(input_file: str, output_raster: str, config: dict):
         input_file(str): File on which to run the interpolation
         output_raster(str): output file for raster image (with buffer)
         config(dict): dictionary that must contain
-                { "tile_geometry": { "tile_coord_scale": #int, "tile_width": #int, "pixel_size": #float, "no_data_value": #int },
+                { "tile_geometry": { "tile_coord_scale": #int,
+                                    "tile_width": #int,
+                                    "pixel_size": #float,
+                                    "no_data_value": #int },
                   "io": { "spatial_reference": #str},
                   "interpolation": { "algo_name": #str }
                 }
@@ -138,9 +122,7 @@ def run_mnx_interpolation(input_file: str, output_raster: str, config: dict):
                 spatial_ref value(str): spatial reference to use when reading las file
                 interpolation_method value(str): interpolation method for raster generation
     """
-    mnx.ip_one_tile.interpolate(input_file=input_file,
-                output_raster=output_raster,
-                config=config)
+    mnx.ip_one_tile.interpolate(input_file=input_file, output_raster=output_raster, config=config)
 
 
 def add_hillshade_one_raster(input_raster: str, output_raster: str):
@@ -156,26 +138,26 @@ def add_hillshade_one_raster(input_raster: str, output_raster: str):
     )
 
 
-def create_mnx_one_las(input_file: str,
-            output_dir: str,
-            config_dict: dict,
-            type_raster="dtm"):
+def create_mnx_one_las(input_file: str, output_dir: str, config_dict: dict, type_raster="dtm"):
     """
     Create a DTM or a DSM from a las tile.
     Args :
         input_file : full path of LAS/LAZ file
         config_dict :  dictionary that must contain
-                { "tile_geometry": { "tile_coord_scale": #int, "tile_width": #int, "pixel_size": #float, "no_data_value": #int },
+                { "tile_geometry": { "tile_coord_scale": #int,
+                                    "tile_width": #int,
+                                    "pixel_size": #float,
+                                    "no_data_value": #int },
                   "io": { "spatial_reference": #str},
                   "interpolation": { "algo_name": #str }
                 }
-        type_raster : can be dtm / dsm / dtm_dens 
+        type_raster : can be dtm / dsm / dtm_dens
     """
 
     # manage paths
     input_dir, input_basename = os.path.split(input_file)
     tilename, _ = os.path.splitext(input_basename)
-    
+
     # prepare outputs
     output_tree = create_output_tree(output_dir=output_dir)
 
@@ -187,42 +169,41 @@ def create_mnx_one_las(input_file: str,
     file_buffered = os.path.join(output_tree[type_raster.upper()]["buffer"], basename_buffered)
     file_filtered = os.path.join(output_tree[type_raster.upper()]["filter"], basename_filtered)
     raster_dxm_brut = os.path.join(output_tree[type_raster.upper()]["output"], basename_interpolated)
-    raster_dxm_hillshade =  os.path.join(output_tree[type_raster.upper()]["hillshade"], basename_hillshade)
-    
+    raster_dxm_hillshade = os.path.join(output_tree[type_raster.upper()]["hillshade"], basename_hillshade)
+
     # add buffer
-    run_pdaltools_buffer(input_dir=input_dir, 
-                        tile_filename=input_file,
-                        output_filename=file_buffered,
-                        buffer_width=config_dict["buffer"]["size"],
-                        tile_width=config_dict["tile_geometry"]["tile_width"],
-                        tile_coord_scale=config_dict["tile_geometry"]["tile_coord_scale"])
+    run_pdaltools_buffer(
+        input_dir=input_dir,
+        tile_filename=input_file,
+        output_filename=file_buffered,
+        buffer_width=config_dict["buffer"]["size"],
+        tile_width=config_dict["tile_geometry"]["tile_width"],
+        tile_coord_scale=config_dict["tile_geometry"]["tile_coord_scale"],
+    )
     # filter
     run_mnx_filter_las_classes(
-                        input_file=file_buffered,
-                        output_file=file_filtered,
-                        spatial_reference=config_dict["io"]["spatial_reference"],
-                        keep_classes=config_dict["filter"]["keep_classes"][type_raster])
+        input_file=file_buffered,
+        output_file=file_filtered,
+        spatial_reference=config_dict["io"]["spatial_reference"],
+        keep_classes=config_dict["filter"]["keep_classes"][type_raster],
+    )
 
     # interpolate
-    run_mnx_interpolation(
-                        input_file=file_filtered, 
-                        output_raster=raster_dxm_brut, 
-                        config=config_dict)
+    run_mnx_interpolation(input_file=file_filtered, output_raster=raster_dxm_brut, config=config_dict)
 
     # add hillshade
-    add_hillshade_one_raster(
-                        input_raster=raster_dxm_brut,
-                        output_raster=raster_dxm_hillshade
-    )
+    add_hillshade_one_raster(input_raster=raster_dxm_brut, output_raster=raster_dxm_hillshade)
 
     return raster_dxm_hillshade
 
 
-def create_dxm_with_hillshade_one_las_XM(input_file: str,
-                        output_dir: str,
-                        config_file=os.path.join("ctview","config.json"),
-                        type_raster: str="dtm",
-                        pixel_size: float=1.0):
+def create_dxm_with_hillshade_one_las_XM(
+    input_file: str,
+    output_dir: str,
+    config_file=os.path.join("ctview", "config.json"),
+    type_raster: str = "dtm",
+    pixel_size: float = 1.0,
+):
     """Create DXM with hillshade according to a configuration.
     Args :
         input_file : LAS file oin input
@@ -236,59 +217,50 @@ def create_dxm_with_hillshade_one_las_XM(input_file: str,
     config_dict["tile_geometry"]["pixel_size"] = pixel_size
 
     # create dtm with hillshade
-    raster_dtm_hillshade = create_mnx_one_las(input_file=input_file, output_dir=output_dir, config_dict=config_dict, type_raster=type_raster)
+    raster_dtm_hillshade = create_mnx_one_las(
+        input_file=input_file, output_dir=output_dir, config_dict=config_dict, type_raster=type_raster
+    )
 
     return raster_dtm_hillshade
 
 
-def create_dtm_with_hillshade_one_las_5M(input_file: str,
-                        output_dir: str):
-    """Create DSM with hillshade and fix precision (pixel size) at 5 meters
-    """
-    output_raster = create_dxm_with_hillshade_one_las_XM(input_file=input_file,
-                        output_dir=output_dir,
-                        type_raster="dtm_dens",
-                        pixel_size=5)
+def create_dtm_with_hillshade_one_las_5M(input_file: str, output_dir: str):
+    """Create DSM with hillshade and fix precision (pixel size) at 5 meters"""
+    output_raster = create_dxm_with_hillshade_one_las_XM(
+        input_file=input_file, output_dir=output_dir, type_raster="dtm_dens", pixel_size=5
+    )
     return output_raster
 
 
-def create_dtm_with_hillshade_one_las_1M(input_file: str,
-                        output_dir: str):
-    """Create DTM with hillshade and fix precision (pixel size) at 1 meter
-    """
-    output_raster = create_dxm_with_hillshade_one_las_XM(input_file=input_file,
-                        output_dir=output_dir,
-                        type_raster="dtm",
-                        pixel_size=1.0)
+def create_dtm_with_hillshade_one_las_1M(input_file: str, output_dir: str):
+    """Create DTM with hillshade and fix precision (pixel size) at 1 meter"""
+    output_raster = create_dxm_with_hillshade_one_las_XM(
+        input_file=input_file, output_dir=output_dir, type_raster="dtm", pixel_size=1.0
+    )
     return output_raster
 
 
-def create_dsm_with_hillshade_one_las_50CM(input_file: str,
-                        output_dir: str):
-    """Create DTM with hillshade and fix precision (pixel size) at 0.5 meter
-    """
-    output_raster = create_dxm_with_hillshade_one_las_XM(input_file=input_file,
-                        output_dir=output_dir,
-                        type_raster="dsm",
-                        pixel_size=0.5)
+def create_dsm_with_hillshade_one_las_50CM(input_file: str, output_dir: str):
+    """Create DTM with hillshade and fix precision (pixel size) at 0.5 meter"""
+    output_raster = create_dxm_with_hillshade_one_las_XM(
+        input_file=input_file, output_dir=output_dir, type_raster="dsm", pixel_size=0.5
+    )
     return output_raster
 
 
-def color_raster_dtm_hillshade_with_LUT(input_initial_basename: str,
-                        input_raster: str,
-                        output_dir: str,
-                        list_c: list,
-                        dico_fld: dict):
+def color_raster_dtm_hillshade_with_LUT(
+    input_initial_basename: str, input_raster: str, output_dir: str, list_c: list, dico_fld: dict
+):
     """Color a raster according color palette define in a LUT file.
     Args :
         input_initial_file : full path of initial LAS file (use for named the output raster)
         input_raster : input raster to color
         output_dir : output directory
-        list_c : the number of cycle that determine how th use the LUT 
+        list_c : the number of cycle that determine how th use the LUT
     """
-    try :
+    try:
         output_dir_color = output_tree["DTM"]["color"]
-    except NameError: # in case tree was not created -> raise "NameError: name 'output_tree' is not defined"
+    except NameError:  # in case tree was not created -> raise "NameError: name 'output_tree' is not defined"
         output_tree = create_output_tree(output_dir=output_dir)
         output_dir_color = output_tree["DTM"]["color"]
 
@@ -297,10 +269,9 @@ def color_raster_dtm_hillshade_with_LUT(input_initial_basename: str,
     cpt = 1
 
     for cycle in list_c:
-
         log.info(f"{cpt}/{len(list_c)}...")
         folder_DXM_color = dico_fld[f"folder_DTM_color{cycle}"]
-        output_dir_raster = os.path.join(output_dir_color,folder_DXM_color)
+        output_dir_raster = os.path.join(output_dir_color, folder_DXM_color)
         os.makedirs(output_dir_raster, exist_ok=True)
 
         color_DTM_with_cycles(
@@ -313,7 +284,7 @@ def color_raster_dtm_hillshade_with_LUT(input_initial_basename: str,
 
         cpt += 1
 
-    log.info(f"End DTM.\n")
+    log.info("End DTM.\n")
 
 
 def color_DTM_with_cycles(
@@ -348,8 +319,3 @@ def color_DTM_with_cycles(
         output_raster=raster_DTM_color_file,
         LUT=LUT,
     )
-
-
-if __name__ == "__main__":
-
-    main()

@@ -1,7 +1,7 @@
 import os
 import shutil
-from ctview.map_DTM_DSM import create_output_tree
 
+from ctview.map_DTM_DSM import create_output_tree
 
 tmp_path = os.path.join("data", "labo", "tools")
 
@@ -21,18 +21,18 @@ expected_dtm_dens_filter_dir = os.path.join(output_dir, "tmp_dtm_dens", "filter"
 expected_dtm_dens_buffer_dir = os.path.join(output_dir, "tmp_dtm_dens", "buffer")
 expected_dtm_dens_hillshade_dir = os.path.join(output_dir, "tmp_dtm_dens", "hillshade")
 
+
 def setup_module(module):
     try:
         shutil.rmtree(tmp_path)
 
-    except (FileNotFoundError):
+    except FileNotFoundError:
         pass
     os.mkdir(tmp_path)
 
 
 def test_create_output_tree():
-    """Test if all folders are created
-    """
+    """Test if all folders are created"""
     create_output_tree(output_dir=output_dir)
 
     assert os.path.isdir(expected_dtm_dir)
