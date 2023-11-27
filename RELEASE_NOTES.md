@@ -1,12 +1,12 @@
 # dev
-- Fonction `gdal_calc` maintenant appelée depuis le package `osgeo_utils` au lieu de la librairie `lidarutils`.
-- refactor (lint all code)
-- refactor (clean useless code)
+- Function `gdal_calc` now called from package `osgeo_utils` instead of lib `lidarutils`.
+- Refactor (lint all code).
+- Refactor (clean useless code).
 
 # v0.2.0
-- change méthode d'interpolation (startin-laplace -> pdal-tin)
-- correction bug lié à makedirs + utilisation dictionnaire d'architecture de dossiers
-- utilisation de la lib ign-mnx pour la création des mnt et mns
+- Change of interpolation method (startin-laplace -> pdal-tin).
+- Correct bug linked to `makedirs`` + use of folder architecture dictionary.
+- Use of lib ign-mnx for dtm and dsm creation.
 
 # v0.1.4
-- version fonctionnelle
+- Fonctional version.
