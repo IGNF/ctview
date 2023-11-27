@@ -6,9 +6,8 @@ import os
 from numbers import Real
 from typing import Optional
 
-import lidarutils.gdal_calc as gdal_calc
 import numpy as np
-from osgeo_utils import gdal_fillnodata
+from osgeo_utils import gdal_calc, gdal_fillnodata
 
 import ctview.clip_raster as clip_raster
 import ctview.utils_gdal as utils_gdal

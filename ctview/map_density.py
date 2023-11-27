@@ -6,9 +6,9 @@ import logging as log
 import os
 import shutil
 
-import lidarutils.gdal_calc as gdal_calc
 import numpy
 import pdal
+from osgeo_utils import gdal_calc
 
 import ctview.clip_raster as clip_raster
 import ctview.utils_gdal as utils_gdal

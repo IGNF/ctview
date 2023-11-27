@@ -1,6 +1,5 @@
 ign-gpao-project-builder
 ign-gpao-client
-ign-lidarutils
 startinpy
 ign-mnx==0.3.0
 ign-pdal-tools
