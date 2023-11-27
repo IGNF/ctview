@@ -24,9 +24,6 @@ def parse_args():
     parser.add_argument("-idir", "--input_dir", default=None, help="Directory which contains las/laz files.")
     parser.add_argument("-odir", "--output_dir", default=None, help="Output directory.")
     parser.add_argument(
-        "-m", "--interp_method", default=dico_param["interpolation_method"], help="Optional. Laplace method by default."
-    )
-    parser.add_argument(
         "-c",
         "--cycles_DTM_colored",
         nargs="+",
@@ -88,7 +85,6 @@ def main():
     in_las = args.input_file
     in_dir = args.input_dir
     out_dir = args.output_dir
-    interp_Method = args.interp_method
     list_cycles = args.cycles_DTM_colored
     # Change destination final folders
     log.debug(f"\n\ndico_folder BEFORE the user changes folder names on MAIN\n\n{dico_folder_modif}")

@@ -33,25 +33,6 @@ extension = dico_param["raster_extension"]
 # FONCTION
 
 
-def fill_gaps(input_raster):
-    """
-    NO FONKTIONIERT
-    Fill selected raster regions by interpolation from the edges.
-    This algorithm will interpolate values for all designated nodata pixels.
-    The default mask band used is the one returned by GDALGetMaskBand(hTargetBand).
-    """
-    opened_raster = gdal.OpenEx(input_raster)
-    band_raster = gdal.Dataset.GetRasterBand(opened_raster, 1)
-    mask_band_raster = gdal.Band.GetMaskBand(band_raster)
-
-    gdal.FillNodata(
-        targetBand=band_raster,
-        maskBand=mask_band_raster,
-        maxSearchDist=2,
-        smoothingIterations=0,
-    )
-
-
 def fill_no_data(
     src_raster: Optional[str] = None,
     dst_raster: Optional[str] = None,
@@ -74,14 +55,6 @@ def fill_no_data(
         smoothing_iterations=0,
         options=None,
     )
-
-
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-las", "--input_las")
-    parser.add_argument("-o", "--output_dir")
-
-    return parser.parse_args()
 
 
 def step1_create_raster_brut(in_points: np.ndarray, output_dir: str, filename: str, res: int, i: int):
@@ -153,9 +126,10 @@ def step3_color_raster(in_raster, output_dir, filename, verbose, i):
     )
     log.info(f"Step {i}/4 : {verbose} : {raster_colored}")
 
-    utils_gdal.color_raster_by_class_2(
+    utils_gdal.color_raster_with_LUT(
         input_raster=in_raster,
         output_raster=raster_colored,
+        LUT=os.path.join("LUT","LUT_CLASS.txt")
     )
 
     if not os.path.exists(raster_colored): # if raster not create, next step with fail
@@ -235,6 +209,15 @@ def multiply_DSM_class(input_DSM: str, input_raster_class: str, filename: str, o
         allBands='A',
         overwrite=True
     )
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-las", "--input_las")
+    parser.add_argument("-o", "--output_dir")
+
+    return parser.parse_args()
+
 
 if __name__ == "__main__":
 

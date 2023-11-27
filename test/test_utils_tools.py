@@ -2,7 +2,7 @@ import numpy as np
 import os
 import shutil
 
-from ctview.utils_tools import write_interp_table, remove_1_pixel, convert_json_into_dico
+from ctview.utils_tools import convert_json_into_dico
 
 TEST_DIR = os.path.join("data", "labo")
 dir_filename = os.path.join(TEST_DIR, "table.txt")
@@ -33,19 +33,6 @@ def teardown_module(module):  # run after the last test
         shutil.rmtree(TEST_DIR)
     except (FileNotFoundError):
         pass
-
-
-def test_write_interp_table():
-    """Test is fuction write_interp_table create a text file"""
-    write_interp_table(output_filename=dir_filename, table_interp=table_interpolation)
-    assert os.path.exists(dir_filename)
-
-
-def test_remove_1_pixel():
-    """Test if boundaries change with a given resolution"""
-    bound = ([minX, maxX],[minY,maxY])
-    new_bounds = remove_1_pixel(bound,res)
-    assert new_bounds == ([minX,new_maxX_expected],[minY,new_maxY_expected])
 
 
 

@@ -1,9 +1,5 @@
-/LAS/
-/test_LAS/
-/test_raster/
 __pycache__
 .pytest_cache
-/test_script/bug
-var/
 data/labo
 *.aux.xml
+tmp/

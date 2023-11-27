@@ -1,4 +1,5 @@
 # dev
+- refactor (clean useless code)
 
 # v0.2.0
 - change méthode d'interpolation (startin-laplace -> pdal-tin)
