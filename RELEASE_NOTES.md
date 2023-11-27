@@ -1,4 +1,5 @@
 # dev
+- Fonction `gdal_calc` maintenant appelée depuis le package `osgeo_utils` au lieu de la librairie `lidarutils`.
 - refactor (lint all code)
 - refactor (clean useless code)
 
