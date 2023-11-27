@@ -1,4 +1,5 @@
 # dev
+- refactor (lint all code)
 - refactor (clean useless code)
 
 # v0.2.0
