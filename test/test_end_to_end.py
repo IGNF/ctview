@@ -82,7 +82,7 @@ def execute_test_end_to_end(input: str, output: str, nb_raster_expected: int, wa
     """
     os.system(
         f"""
-    python -m ctview.main \
+    python -m ctview.main_ctview \
     -idir {input}  \
     -odir {output} \
     -ofdens {FOLDER_1} \
@@ -108,7 +108,7 @@ def execute_test_end_to_end_docker(input: str, output: str, nb_raster_expected: 
     -v {input}:/input \
     -v {output}:/output \
     lidar_hd/ct_view:{VERSION} \
-    python -m ctview.main \
+    python -m ctview.main_ctview \
     -idir /input \
     -odir /output \
     -ofdens {FOLDER_1} \

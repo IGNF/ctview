@@ -5,9 +5,11 @@ import argparse
 import logging as log
 import os
 import shutil
+from typing import Tuple
 
-import numpy
+import numpy as np
 import pdal
+import rasterio
 from osgeo_utils import gdal_calc
 
 import ctview.clip_raster as clip_raster
@@ -23,6 +25,77 @@ FOLDER_DENS_VALUE = dico_folder_template["folder_density_value"]
 FOLDER_DENS_COLOR = dico_folder_template["folder_density_color"]
 _radius = dico_param["radius_PC_dens"]
 CLASSIF_GROUND = 2
+
+
+def generate_raster_of_density_2(
+    input_points: np.array,
+    input_classifs: np.array,
+    output_tif: str,
+    epsg: int,
+    classes_by_layer: list = [[]],
+    tile_size: int = 1000,
+    pixel_size: float = 1,
+    buffer_size: float = 0,
+    no_data_value: int = -9999,
+):
+    pcd_origin_x, pcd_origin_y = get_pointcloud_origin(input_points, tile_size, buffer_size)
+
+    raster_origin = (pcd_origin_x - pixel_size / 2, pcd_origin_y + pixel_size / 2)
+
+    rasters = []
+    for classes in classes_by_layer:
+        if classes:
+            filtered_points = input_points[np.isin(input_classifs, classes), :]
+        else:
+            filtered_points = input_points
+
+        rasters.append(compute_density(filtered_points, raster_origin, tile_size, pixel_size))
+
+    rasters = np.array(rasters)
+    with rasterio.Env():
+        with rasterio.open(
+            output_tif,
+            "w",
+            driver="GTiff",
+            height=rasters.shape[1],
+            width=rasters.shape[2],
+            count=rasters.shape[0],
+            dtype=rasterio.float32,
+            crs=f"EPSG:{epsg}",
+            transform=rasterio.transform.from_origin(raster_origin[0], raster_origin[1], pixel_size, pixel_size),
+            nodata=no_data_value,
+        ) as out_file:
+            out_file.write(rasters.astype(rasterio.float32))
+
+    log.debug(f"Saved to {output_tif}")
+
+
+def get_pointcloud_origin(points: np.array, tile_size: int = 1000, buffer_size: float = 0):
+    # Extract coordinates xmin, xmax, ymin and ymax of the original tile without buffer
+    x_min, y_min = np.min(points[:, :2], axis=0) + buffer_size
+    x_max, y_max = np.max(points[:, :2], axis=0) - buffer_size
+
+    # Calculate the difference Xmin and Xmax, then Ymin and Ymax
+    diff_x = x_min - x_max
+    diff_y = y_min - y_max
+    # Check [x_min - x_max] == amplitude and [y_min - y_max] == amplitude
+    if abs(diff_x) <= tile_size and abs(diff_y) <= tile_size:
+        origin_x = np.floor(x_min / tile_size) * tile_size  # round low
+        origin_y = np.ceil(y_max / tile_size) * tile_size  # round top
+        return origin_x, origin_y
+    else:
+        raise ValueError(f"Extents (diff_x={diff_x} and diff_y={diff_y}) is bigger than tile_size ({tile_size}).")
+
+
+def compute_density(points: np.array, origin: Tuple[int, int], tile_size: int, pixel_size: float):
+    # Compute number of points per bin
+    bins_x = np.arange(origin[0], origin[0] + tile_size + pixel_size, pixel_size)
+    bins_y = np.arange(origin[1] - tile_size, origin[1] + pixel_size, pixel_size)
+    bins, _, _ = np.histogram2d(points[:, 1], points[:, 0], bins=[bins_y, bins_x])
+    density = bins / (pixel_size**2)
+    density = np.flipud(density)
+
+    return density
 
 
 def generate_raster_of_density(input_las: str, output_dir: str, bounds: str = None):
@@ -85,8 +158,8 @@ def method_writer_gdal(input_las: str, output_file: str, bounds: str = None, rad
 
     # Check if the las file contains ground points (redmine 2068)
     pts_to_check = utils_pdal.read_las_file(input_las=input_las)
-    pts_ground = numpy.where(pts_to_check["Classification"] == CLASSIF_GROUND, 1, 0)
-    nb_pts_ground = numpy.count_nonzero(pts_ground == 1)
+    pts_ground = np.where(pts_to_check["Classification"] == CLASSIF_GROUND, 1, 0)
+    nb_pts_ground = np.count_nonzero(pts_ground == 1)
 
     is_count_ok = True
 
