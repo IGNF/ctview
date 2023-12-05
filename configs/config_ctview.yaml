@@ -1,0 +1,34 @@
+# @package _global_
+
+# path to original working directory
+# hydra hijacks working directory by changing it to the current log directory,
+# so it's useful to have this path as a special variable
+# learn more here: https://hydra.cc/docs/next/tutorials/basic/running_your_app/working_directory
+work_dir: ${hydra:runtime.cwd}
+
+io:
+  spatial_reference: EPSG:2154
+  extension: .tif
+
+tile_geometry:
+  tile_coord_scale: 1000
+  tile_width: 1000
+  pixel_size: 1
+  no_data_value: -9999
+
+buffer:
+  size: 100
+
+interpolation: 
+  algo_name: pdal-tin
+
+defaults:
+  - _self_
+
+  - filter: dtm.yaml
+
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .

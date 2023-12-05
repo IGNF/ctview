@@ -1,5 +1,2 @@
-ign-gpao-project-builder
-ign-gpao-client
-startinpy
-ign-mnx==0.3.0
+ign-mnx==1.0.0
 ign-pdal-tools

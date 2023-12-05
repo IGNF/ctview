@@ -3,17 +3,14 @@
 
 import logging as log
 import os
-from typing import List
 
 import pdaltools.las_add_buffer
-import produit_derive_lidar as mnx
-import produit_derive_lidar.filter_one_tile
-import produit_derive_lidar.ip_one_tile
+import produits_derives_lidar.ip_one_tile
+from omegaconf import DictConfig
 from osgeo import gdal
 
 import ctview.gen_LUT_X_cycle as gen_LUT_X_cycle
 import ctview.utils_gdal as utils_gdal
-import ctview.utils_tools as utils_tools
 from ctview.parameter import dico_param
 
 
@@ -49,23 +46,6 @@ def create_output_tree(output_dir: str):
     os.makedirs(output_tree["DTM"]["color"], exist_ok=True)
 
     return output_tree
-
-
-def run_mnx_filter_las_classes(
-    input_file: str, output_file: str, spatial_reference: str = "EPSG:2154", keep_classes: List = [2, 66]
-):
-    """Reads the LAS file and filter only grounds from LIDAR.
-
-    Args:
-        input_file (str) : Path to the input lidar file
-        output_file (str): Path to the output file
-        spatial_ref (str) : spatial reference to use when reading the las file
-        keep_classes (List): Classes to keep in the filter (ground + virtual points by default)
-    """
-    # run filter
-    mnx.tasks.las_filter.filter_las_classes(
-        input_file=input_file, output_file=output_file, spatial_ref=spatial_reference, keep_classes=keep_classes
-    )
 
 
 def run_pdaltools_buffer(
@@ -122,7 +102,7 @@ def run_mnx_interpolation(input_file: str, output_raster: str, config: dict):
                 spatial_ref value(str): spatial reference to use when reading las file
                 interpolation_method value(str): interpolation method for raster generation
     """
-    mnx.ip_one_tile.interpolate(input_file=input_file, output_raster=output_raster, config=config)
+    produits_derives_lidar.ip_one_tile.interpolate(input_file=input_file, output_raster=output_raster, config=config)
 
 
 def add_hillshade_one_raster(input_raster: str, output_raster: str):
@@ -138,12 +118,12 @@ def add_hillshade_one_raster(input_raster: str, output_raster: str):
     )
 
 
-def create_mnx_one_las(input_file: str, output_dir: str, config_dict: dict, type_raster="dtm"):
+def create_mnx_one_las(input_file: str, output_dir: str, config: DictConfig, type_raster="dtm"):
     """
     Create a DTM or a DSM from a las tile.
     Args :
         input_file : full path of LAS/LAZ file
-        config_dict :  dictionary that must contain
+        config :  dictionary that must contain
                 { "tile_geometry": { "tile_coord_scale": #int,
                                     "tile_width": #int,
                                     "pixel_size": #float,
@@ -162,12 +142,10 @@ def create_mnx_one_las(input_file: str, output_dir: str, config_dict: dict, type
     output_tree = create_output_tree(output_dir=output_dir)
 
     basename_buffered = f"{tilename}_buffer.las"
-    basename_filtered = f"{tilename}_filter.las"
     basename_interpolated = f"{tilename}_interp.tif"
     basename_hillshade = f"{tilename}_hillshade.tif"
 
     file_buffered = os.path.join(output_tree[type_raster.upper()]["buffer"], basename_buffered)
-    file_filtered = os.path.join(output_tree[type_raster.upper()]["filter"], basename_filtered)
     raster_dxm_brut = os.path.join(output_tree[type_raster.upper()]["output"], basename_interpolated)
     raster_dxm_hillshade = os.path.join(output_tree[type_raster.upper()]["hillshade"], basename_hillshade)
 
@@ -176,20 +154,13 @@ def create_mnx_one_las(input_file: str, output_dir: str, config_dict: dict, type
         input_dir=input_dir,
         tile_filename=input_file,
         output_filename=file_buffered,
-        buffer_width=config_dict["buffer"]["size"],
-        tile_width=config_dict["tile_geometry"]["tile_width"],
-        tile_coord_scale=config_dict["tile_geometry"]["tile_coord_scale"],
-    )
-    # filter
-    run_mnx_filter_las_classes(
-        input_file=file_buffered,
-        output_file=file_filtered,
-        spatial_reference=config_dict["io"]["spatial_reference"],
-        keep_classes=config_dict["filter"]["keep_classes"][type_raster],
+        buffer_width=config["buffer"]["size"],
+        tile_width=config["tile_geometry"]["tile_width"],
+        tile_coord_scale=config["tile_geometry"]["tile_coord_scale"],
     )
 
-    # interpolate
-    run_mnx_interpolation(input_file=file_filtered, output_raster=raster_dxm_brut, config=config_dict)
+    # filter & interpolate
+    run_mnx_interpolation(input_file=file_buffered, output_raster=raster_dxm_brut, config=config)
 
     # add hillshade
     add_hillshade_one_raster(input_raster=raster_dxm_brut, output_raster=raster_dxm_hillshade)
@@ -198,52 +169,46 @@ def create_mnx_one_las(input_file: str, output_dir: str, config_dict: dict, type
 
 
 def create_dxm_with_hillshade_one_las_XM(
-    input_file: str,
-    output_dir: str,
-    config_file=os.path.join("ctview", "config.json"),
-    type_raster: str = "dtm",
-    pixel_size: float = 1.0,
+    input_file: str, output_dir: str, config: DictConfig, type_raster: str = "dtm"
 ):
     """Create DXM with hillshade according to a configuration.
     Args :
         input_file : LAS file oin input
         output_dir : output directory
-        config_file : json of configuration
-        type_raster : can be dtm / dsm / dtm_dens
-        pixel_size : precision in meter
+        config : config hydra
     """
-    # modif config
-    config_dict = utils_tools.convert_json_into_dico(config_file)
-    config_dict["tile_geometry"]["pixel_size"] = pixel_size
 
     # create dtm with hillshade
     raster_dtm_hillshade = create_mnx_one_las(
-        input_file=input_file, output_dir=output_dir, config_dict=config_dict, type_raster=type_raster
+        input_file=input_file, output_dir=output_dir, config=config, type_raster=type_raster
     )
 
     return raster_dtm_hillshade
 
 
-def create_dtm_with_hillshade_one_las_5M(input_file: str, output_dir: str):
+def create_dtm_with_hillshade_one_las_5M(input_file: str, output_dir: str, config: DictConfig):
     """Create DSM with hillshade and fix precision (pixel size) at 5 meters"""
+    config["tile_geometry"]["pixel_size"] = 5  # force pixelsize #TODO change in order to be parametrable
     output_raster = create_dxm_with_hillshade_one_las_XM(
-        input_file=input_file, output_dir=output_dir, type_raster="dtm_dens", pixel_size=5
+        input_file=input_file, output_dir=output_dir, config=config, type_raster="dtm_dens"
     )
     return output_raster
 
 
-def create_dtm_with_hillshade_one_las_1M(input_file: str, output_dir: str):
+def create_dtm_with_hillshade_one_las_1M(input_file: str, output_dir: str, config: DictConfig):
     """Create DTM with hillshade and fix precision (pixel size) at 1 meter"""
+    config["tile_geometry"]["pixel_size"] = 1  # force pixelsize #TODO change in order to be parametrable
     output_raster = create_dxm_with_hillshade_one_las_XM(
-        input_file=input_file, output_dir=output_dir, type_raster="dtm", pixel_size=1.0
+        input_file=input_file, output_dir=output_dir, config=config, type_raster="dtm"
     )
     return output_raster
 
 
-def create_dsm_with_hillshade_one_las_50CM(input_file: str, output_dir: str):
+def create_dsm_with_hillshade_one_las_50CM(input_file: str, output_dir: str, config: DictConfig):
     """Create DTM with hillshade and fix precision (pixel size) at 0.5 meter"""
+    config["tile_geometry"]["pixel_size"] = 0.5  # force pixelsize #TODO change in order to be parametrable
     output_raster = create_dxm_with_hillshade_one_las_XM(
-        input_file=input_file, output_dir=output_dir, type_raster="dsm", pixel_size=0.5
+        input_file=input_file, output_dir=output_dir, config=config, type_raster="dsm"
     )
     return output_raster
 
