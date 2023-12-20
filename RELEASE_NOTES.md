@@ -1,4 +1,7 @@
 # dev
+
+# v0.2.0.dev
+- Metadata : map of density
 - Function `gdal_calc` now called from package `osgeo_utils` instead of lib `lidarutils`.
 - Refactor (lint all code).
 - Refactor (clean useless code).

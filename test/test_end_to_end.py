@@ -17,43 +17,39 @@ FOLDER_31 = "DTM/color/1cycle"
 FOLDER_32 = "DTM/color/2cycles"
 FOLDER_34 = "DTM/color/4cycles"
 
+INPUT = "/var/data/store-lidarhd/developpement/ctview/las"
+OUTPUT_LOCAL = "/var/data/store-lidarhd/developpement/ctview/1_tests_local"
+OUTPUT_DOCKER = "/var/data/store-lidarhd/developpement/ctview/2_tests_local_docker"
+
 # test 1 : small dalle with and without docker
-INPUT_1 = "/var/data/store-lidarhd/developpement/ctview/las/data0"
-OUTPUT_1 = "/var/data/store-lidarhd/developpement/ctview/1_tests_local/test0"
-OUTPUT_1bis = "/var/data/store-lidarhd/developpement/ctview/2_tests_local_docker/test0"
+INPUT_1 = f"{INPUT}/data0"
+OUTPUT_1 = f"{OUTPUT_LOCAL}/test0"
+OUTPUT_1bis = f"{OUTPUT_DOCKER}/test0"
 NB_FILE_EXPECTED_1 = 1
 
 # test 2 : dalle with water
-INPUT_2 = "/var/data/store-lidarhd/developpement/ctview/las/data0b"
-OUTPUT_2 = "/var/data/store-lidarhd/developpement/ctview/1_tests_local/test0b"
-OUTPUT_2bis = "/var/data/store-lidarhd/developpement/ctview/2_tests_local_docker/test0b"
+INPUT_2 = f"{INPUT}/data0b"
+OUTPUT_2 = f"{OUTPUT_LOCAL}/test0b"
+OUTPUT_2bis = f"{OUTPUT_DOCKER}/test0b"
 NB_FILE_EXPECTED_2 = 1
 
 # test 3 : big dalle docker
-INPUT_3 = "/var/data/store-lidarhd/developpement/ctview/las/data1"
-OUTPUT_3 = "/var/data/store-lidarhd/developpement/ctview/1_tests_local/test1"
-OUTPUT_3bis = "/var/data/store-lidarhd/developpement/ctview/2_tests_local_docker/test1"
+INPUT_3 = f"{INPUT}/data1"
+OUTPUT_3 = f"{OUTPUT_LOCAL}/test1"
+OUTPUT_3bis = f"{OUTPUT_DOCKER}/test1"
 NB_FILE_EXPECTED_3 = 1
 
 # test 4 : big 4 dalles docker
-INPUT_4 = "/var/data/store-lidarhd/developpement/ctview/las/data3"
-OUTPUT_4 = "/var/data/store-lidarhd/developpement/ctview/1_tests_local/test3"
-OUTPUT_4bis = "/var/data/store-lidarhd/developpement/ctview/2_tests_local_docker/test3"
+INPUT_4 = f"{INPUT}/data3"
+OUTPUT_4 = f"{OUTPUT_LOCAL}/test3"
+OUTPUT_4bis = f"{OUTPUT_DOCKER}/test3"
 NB_FILE_EXPECTED_4 = 4
 
 
 def setup_module(module):  # run before the first test
     try:  # Clean folder test if exists
-        shutil.rmtree("/var/data/store-lidarhd/developpement/ctview/1_tests_local")
-        shutil.rmtree("/var/data/store-lidarhd/developpement/ctview/2_tests_local_docker")
-    except FileNotFoundError:
-        pass
-
-
-def teardown_module(module):  # run after the last test
-    try:  # Clean folder test if exists
-        shutil.rmtree("/var/data/store-lidarhd/developpement/ctview/1_tests_local")
-        shutil.rmtree("/var/data/store-lidarhd/developpement/ctview/2_tests_local_docker")
+        shutil.rmtree(OUTPUT_LOCAL)
+        shutil.rmtree(OUTPUT_DOCKER)
     except FileNotFoundError:
         pass
 
@@ -82,7 +78,7 @@ def execute_test_end_to_end(input: str, output: str, nb_raster_expected: int, wa
     """
     os.system(
         f"""
-    python -m ctview.main \
+    python -m ctview.main_ctview \
     -idir {input}  \
     -odir {output} \
     -ofdens {FOLDER_1} \
@@ -108,7 +104,7 @@ def execute_test_end_to_end_docker(input: str, output: str, nb_raster_expected: 
     -v {input}:/input \
     -v {output}:/output \
     lidar_hd/ct_view:{VERSION} \
-    python -m ctview.main \
+    python -m ctview.main_ctview \
     -idir /input \
     -odir /output \
     -ofdens {FOLDER_1} \
