@@ -7,7 +7,7 @@ from hydra import compose, initialize
 
 from ctview.main_metadata import main
 
-OUTPUT_DIR = "./tmp/blipblop"
+OUTPUT_DIR = "./tmp/main_metadata"
 INPUT_DIR = "./data/las/ground"
 
 OUTFILE_BUFFER = Path(OUTPUT_DIR) / "tmp" / "buffer" / "test_data_77055_627755_LA93_IGN69_buffered.las"

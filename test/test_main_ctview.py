@@ -37,7 +37,5 @@ def test_get_las_liste_DIR():
 
 def test_get_las_liste_DIR2():
     las_liste, in_dir = get_las_liste(input_las=None, input_dir=DIR_LAS2)
-    print("las_liste", set(las_liste))
-    print(set("Semis_2021_0785_6378_LA93_IGN69_light.laz"))
     assert set(las_liste) == set(["Semis_2021_0785_6378_LA93_IGN69_light.laz"])
     assert in_dir == DIR_LAS2

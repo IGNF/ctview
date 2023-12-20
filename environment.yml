@@ -20,6 +20,7 @@ dependencies:
   - pre-commit
   - hydra-core==1.2.*
   - hydra-colorlog==1.2.*
+  - fiona
 
   - pip:
     - --extra-index-url=https://nexus.ign.fr/repository/pypi-lidarhd-hosted/simple
