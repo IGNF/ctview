@@ -4,7 +4,7 @@ import shutil
 import laspy
 import numpy as np
 
-from ctview.utils_tools import convert_json_into_dico, get_pointcloud_origin
+from ctview.utils_tools import get_pointcloud_origin
 
 TEST_DIR = os.path.join("data", "labo")
 dir_filename = os.path.join(TEST_DIR, "table.txt")
@@ -40,14 +40,6 @@ def teardown_module(module):  # run after the last test
         shutil.rmtree(TEST_DIR)
     except FileNotFoundError:
         pass
-
-
-def test_convert_json_into_dico():
-    """Test if type of return is a dictionnary"""
-    dico = convert_json_into_dico(config_file=path_json_config)
-    assert isinstance(dico, dict)  # assert type
-    assert dico["tile_geometry"]["no_data_value"] == -9999  # assert architecture
-    assert dico["io"]["spatial_reference"] == "EPSG:2154"  # assert architecture
 
 
 def test_get_pointcloud_origin():

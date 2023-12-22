@@ -146,20 +146,18 @@ def main():
     # utils_tools.repare_files(las_liste, in_dir)
     # time.sleep(2)
 
+    with initialize(version_base="1.2", config_path="../configs"):
+        # config is relative to a module
+        config = compose(config_name="config_ctview")
+
     for filename in las_liste:
         las_input_file = os.path.join(in_dir, filename)
         bounds_las = utils_pdal.get_bounds_from_las(las_input_file)  # get boundaries
 
         # DENSITY (DTM brut + density)
         # Step 1/3 : DTM brut
-        with initialize(version_base="1.2", config_path="../configs"):
-            # config is relative to a module
-            cfg = compose(
-                config_name="config_test",
-                overrides=["filter=dtm_dens.yaml"],
-            )
         raster_DTM_dens = map_DTM_DSM.create_dtm_with_hillshade_one_las_5M(
-            input_file=las_input_file, output_dir=out_dir, config=cfg
+            input_file=las_input_file, output_dir=out_dir, config=config.mnx_dtm_dens
         )
         # Step 2 : raster of density
         log.info("\nStep 2/3 : raster of density\n")
@@ -180,14 +178,8 @@ def main():
 
         # DTM hillshade color
         # Step 1/2 : DTM hillshade
-        with initialize(version_base="1.2", config_path="../configs"):
-            # config is relative to a module
-            cfg = compose(
-                config_name="config_test",
-                overrides=["filter=dtm.yaml"],
-            )
         raster_DTM_hs_1M = map_DTM_DSM.create_dtm_with_hillshade_one_las_1M(
-            input_file=las_input_file, output_dir=out_dir, config=cfg
+            input_file=las_input_file, output_dir=out_dir, config=config.mnx_dtm
         )
 
         # Step 2/2 : color
@@ -201,14 +193,8 @@ def main():
 
         # Map class color
         # Step 1/3 : DSM hillshade
-        with initialize(version_base="1.2", config_path="../configs"):
-            # config is relative to a module
-            cfg = compose(
-                config_name="config_test",
-                overrides=["filter=dsm.yaml"],
-            )
         raster_DSM_hs = map_DTM_DSM.create_dsm_with_hillshade_one_las_50CM(
-            input_file=las_input_file, output_dir=out_dir, config=cfg
+            input_file=las_input_file, output_dir=out_dir, config=config.mnx_dsm
         )
         # Step 2/3 : create map fill gaps color
         raster_class_fgc = map_class.create_map_class(

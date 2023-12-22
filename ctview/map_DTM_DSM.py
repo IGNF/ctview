@@ -188,7 +188,6 @@ def create_dxm_with_hillshade_one_las_XM(
 
 def create_dtm_with_hillshade_one_las_5M(input_file: str, output_dir: str, config: DictConfig):
     """Create DSM with hillshade and fix precision (pixel size) at 5 meters"""
-    config["tile_geometry"]["pixel_size"] = 5  # force pixelsize #TODO change in order to be parametrable
     output_raster = create_dxm_with_hillshade_one_las_XM(
         input_file=input_file, output_dir=output_dir, config=config, type_raster="dtm_dens"
     )
@@ -197,7 +196,6 @@ def create_dtm_with_hillshade_one_las_5M(input_file: str, output_dir: str, confi
 
 def create_dtm_with_hillshade_one_las_1M(input_file: str, output_dir: str, config: DictConfig):
     """Create DTM with hillshade and fix precision (pixel size) at 1 meter"""
-    config["tile_geometry"]["pixel_size"] = 1  # force pixelsize #TODO change in order to be parametrable
     output_raster = create_dxm_with_hillshade_one_las_XM(
         input_file=input_file, output_dir=output_dir, config=config, type_raster="dtm"
     )
@@ -206,7 +204,6 @@ def create_dtm_with_hillshade_one_las_1M(input_file: str, output_dir: str, confi
 
 def create_dsm_with_hillshade_one_las_50CM(input_file: str, output_dir: str, config: DictConfig):
     """Create DTM with hillshade and fix precision (pixel size) at 0.5 meter"""
-    config["tile_geometry"]["pixel_size"] = 0.5  # force pixelsize #TODO change in order to be parametrable
     output_raster = create_dxm_with_hillshade_one_las_XM(
         input_file=input_file, output_dir=output_dir, config=config, type_raster="dsm"
     )

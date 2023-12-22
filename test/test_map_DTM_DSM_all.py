@@ -32,7 +32,7 @@ output_dir_3 = os.path.join(tmp_path, "mnt_mns_mntdens_hs")
 with initialize(version_base="1.2", config_path="../configs"):
     # config is relative to a module
     cfg = compose(
-        config_name="config_test",
+        config_name="config_ctview",
     )
 
 # expected
@@ -66,7 +66,9 @@ def test_create_mnx_one_las():
         - every 4 tifs are created
         - output is the raster hillshaded
     """
-    output_raster = create_mnx_one_las(input_file=input_filename, output_dir=output_dir, config=cfg, type_raster="dtm")
+    output_raster = create_mnx_one_las(
+        input_file=input_filename, output_dir=output_dir, config=cfg.mnx_dtm, type_raster="dtm"
+    )
 
     assert os.path.isfile(os.path.join(output_dir, expected_dtm_buffer_file))
     assert os.path.isfile(os.path.join(output_dir, expected_dtm_interpolation_file))
@@ -83,7 +85,7 @@ def test_create_DTM_with_hillshade_one_las_default_pixelsize():
     output_raster = create_dxm_with_hillshade_one_las_XM(
         input_file=input_filename,
         output_dir=output_dir_2,
-        config=cfg,
+        config=cfg.mnx_dtm,
     )
 
     assert os.path.isfile(os.path.join(output_dir_2, expected_dtm_buffer_file))
@@ -98,16 +100,10 @@ def test_create_DSM_with_hillshade_one_las_default_pixelsize():
         - .tif are created
         - output is the raster hillshaded
     """
-    with initialize(version_base="1.2", config_path="../configs"):
-        # config is relative to a module
-        cfg = compose(
-            config_name="config_test",
-            overrides=["filter=dsm.yaml"],
-        )
     output_raster = create_dxm_with_hillshade_one_las_XM(
         input_file=input_filename,
         output_dir=output_dir_2,
-        config=cfg,
+        config=cfg.mnx_dsm,
         type_raster="dsm",
     )
 
@@ -122,15 +118,10 @@ def test_create_dtm_with_hillshade_one_las_5M_pixelsize():
     Verify :
         - .tif are created
         - output is the raster hillshaded
+        - pixel size = 5 meters
     """
-    with initialize(version_base="1.2", config_path="../configs"):
-        # config is relative to a module
-        cfg = compose(
-            config_name="config_test",
-            overrides=["filter=dtm_dens.yaml"],
-        )
     output_raster = create_dtm_with_hillshade_one_las_5M(
-        input_file=input_filename, output_dir=output_dir_3, config=cfg
+        input_file=input_filename, output_dir=output_dir_3, config=cfg.mnx_dtm_dens
     )
 
     assert os.path.isfile(os.path.join(output_dir_3, expected_dtm_dens_buffer_file))
@@ -145,15 +136,10 @@ def test_create_dtm_with_hillshade_one_las_1M_pixelsize():
     Verify :
         - .tif are created
         - output is the raster hillshaded
+        - pixel size = 1 meters
     """
-    with initialize(version_base="1.2", config_path="../configs"):
-        # config is relative to a module
-        cfg = compose(
-            config_name="config_test",
-            overrides=["filter=dtm_dens.yaml"],
-        )
     output_raster = create_dtm_with_hillshade_one_las_1M(
-        input_file=input_filename, output_dir=output_dir_3, config=cfg
+        input_file=input_filename, output_dir=output_dir_3, config=cfg.mnx_dtm
     )
 
     assert os.path.isfile(os.path.join(output_dir_3, expected_dtm_buffer_file))
@@ -168,15 +154,10 @@ def test_create_dsm_with_hillshade_one_las_50CM_pixelsize():
     Verify :
         - .tif are created
         - output is the raster hillshaded
+        - pixel size = 0.5 meters
     """
-    with initialize(version_base="1.2", config_path="../configs"):
-        # config is relative to a module
-        cfg = compose(
-            config_name="config_test",
-            overrides=["filter=dsm.yaml"],
-        )
     output_raster = create_dsm_with_hillshade_one_las_50CM(
-        input_file=input_filename, output_dir=output_dir_3, config=cfg
+        input_file=input_filename, output_dir=output_dir_3, config=cfg.mnx_dsm
     )
 
     assert os.path.isfile(os.path.join(output_dir_3, expected_dsm_buffer_file))

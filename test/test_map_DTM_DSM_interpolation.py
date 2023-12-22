@@ -37,20 +37,20 @@ def setup_module(module):
 
 
 def test_run_mnx_interpolation():
-    """Verif interpolation create a file with suffix size (50CM) and interpolation method (Laplace)"""
+    """Verif interpolation create a file with suffix size (50CM)"""
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
             config_name="config_ctview",
             overrides=[
-                f"tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
-                f"tile_geometry.tile_width={TILE_WIDTH}",
-                f"buffer.size={BUFFER_SIZE}",
-                f"tile_geometry.pixel_size={PIXEL_SIZE}",
+                f"mnx_dtm.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
+                f"mnx_dtm.tile_geometry.tile_width={TILE_WIDTH}",
+                f"mnx_dtm.buffer.size={BUFFER_SIZE}",
+                f"mnx_dtm.tile_geometry.pixel_size={PIXEL_SIZE}",
             ],
         )
 
-    run_mnx_interpolation(input_file=INPUT_FILENAME, output_raster=EXPECTED_OUTPUT_DEFAULT_FILE, config=cfg)
+    run_mnx_interpolation(input_file=INPUT_FILENAME, output_raster=EXPECTED_OUTPUT_DEFAULT_FILE, config=cfg.mnx_dtm)
 
     assert os.path.isfile(EXPECTED_OUTPUT_DEFAULT_FILE)
 
