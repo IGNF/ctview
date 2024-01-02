@@ -1,5 +1,6 @@
 import os
 import shutil
+import test.utils.point_cloud_utils as pcu
 
 import pytest
 
@@ -71,6 +72,12 @@ def assert_output_folders_contains_expected_number_of_file(output: str, nb_raste
         assert len(os.listdir(path)) == nb_raster_expected
 
 
+def assert_las_buffer_is_not_empty(output: str):
+    las_dir = os.path.join(output, "tmp_dtm_dens", "buffer")
+    for las in os.listdir(las_dir):
+        assert pcu.get_nb_points(os.path.join(las_dir, las)) > 0
+
+
 def execute_test_end_to_end(input: str, output: str, nb_raster_expected: int, water: bool = False):
     """
     Verify :
@@ -91,6 +98,7 @@ def execute_test_end_to_end(input: str, output: str, nb_raster_expected: int, wa
     assert_output_folders_contains_expected_number_of_file(
         output=output, nb_raster_expected=nb_raster_expected, water=water
     )
+    assert_las_buffer_is_not_empty(output)
 
 
 def execute_test_end_to_end_docker(input: str, output: str, nb_raster_expected: int, water: bool = False):
@@ -117,6 +125,7 @@ def execute_test_end_to_end_docker(input: str, output: str, nb_raster_expected: 
     assert_output_folders_contains_expected_number_of_file(
         output=output, nb_raster_expected=nb_raster_expected, water=water
     )
+    assert_las_buffer_is_not_empty(output)
 
 
 def test_execute_end_to_end_quick():
