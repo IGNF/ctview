@@ -1,5 +1,6 @@
 import os
 import shutil
+import test.utils.point_cloud_utils as pcu
 
 import rasterio
 from hydra import compose, initialize
@@ -29,10 +30,24 @@ output_dir_3 = os.path.join(tmp_path, "mnt_mns_mntdens_hs")
 
 
 # config
+TILE_COORD_SCALE = 10
+TILE_WIDTH = 50
+BUFFER_SIZE = 10
 with initialize(version_base="1.2", config_path="../configs"):
     # config is relative to a module
     cfg = compose(
         config_name="config_ctview",
+        overrides=[
+            f"mnx_dtm.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
+            f"mnx_dtm.tile_geometry.tile_width={TILE_WIDTH}",
+            f"mnx_dtm.buffer.size={BUFFER_SIZE}",
+            f"mnx_dtm_dens.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
+            f"mnx_dtm_dens.tile_geometry.tile_width={TILE_WIDTH}",
+            f"mnx_dtm_dens.buffer.size={BUFFER_SIZE}",
+            f"mnx_dsm.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
+            f"mnx_dsm.tile_geometry.tile_width={TILE_WIDTH}",
+            f"mnx_dsm.buffer.size={BUFFER_SIZE}",
+        ],
     )
 
 # expected
@@ -69,8 +84,7 @@ def test_create_mnx_one_las():
     output_raster = create_mnx_one_las(
         input_file=input_filename, output_dir=output_dir, config=cfg.mnx_dtm, type_raster="dtm"
     )
-
-    assert os.path.isfile(os.path.join(output_dir, expected_dtm_buffer_file))
+    assert pcu.get_nb_points(os.path.join(output_dir, expected_dtm_buffer_file)) > 0
     assert os.path.isfile(os.path.join(output_dir, expected_dtm_interpolation_file))
     assert os.path.isfile(os.path.join(output_dir, expected_dtm_hillshade_file))
     assert output_raster == os.path.join(output_dir, expected_dtm_hillshade_file)
@@ -88,7 +102,7 @@ def test_create_DTM_with_hillshade_one_las_default_pixelsize():
         config=cfg.mnx_dtm,
     )
 
-    assert os.path.isfile(os.path.join(output_dir_2, expected_dtm_buffer_file))
+    assert pcu.get_nb_points(os.path.join(output_dir_2, expected_dtm_buffer_file)) > 0
     assert os.path.isfile(os.path.join(output_dir_2, expected_dtm_interpolation_file))
     assert os.path.isfile(os.path.join(output_dir_2, expected_dtm_hillshade_file))
     assert output_raster == os.path.join(output_dir_2, expected_dtm_hillshade_file)
@@ -107,7 +121,7 @@ def test_create_DSM_with_hillshade_one_las_default_pixelsize():
         type_raster="dsm",
     )
 
-    assert os.path.isfile(os.path.join(output_dir_2, expected_dsm_buffer_file))
+    assert pcu.get_nb_points(os.path.join(output_dir_2, expected_dsm_buffer_file)) > 0
     assert os.path.isfile(os.path.join(output_dir_2, expected_dsm_interpolation_file))
     assert os.path.isfile(os.path.join(output_dir_2, expected_dsm_hillshade_file))
     assert output_raster == os.path.join(output_dir_2, expected_dsm_hillshade_file)
@@ -124,7 +138,7 @@ def test_create_dtm_with_hillshade_one_las_5M_pixelsize():
         input_file=input_filename, output_dir=output_dir_3, config=cfg.mnx_dtm_dens
     )
 
-    assert os.path.isfile(os.path.join(output_dir_3, expected_dtm_dens_buffer_file))
+    assert pcu.get_nb_points(os.path.join(output_dir_3, expected_dtm_dens_buffer_file)) > 0
     assert os.path.isfile(os.path.join(output_dir_3, expected_dtm_dens_interpolation_file))
     assert output_raster == os.path.join(output_dir_3, expected_dtm_dens_hillshade_file)
     with rasterio.open(output_raster) as raster:
@@ -142,7 +156,7 @@ def test_create_dtm_with_hillshade_one_las_1M_pixelsize():
         input_file=input_filename, output_dir=output_dir_3, config=cfg.mnx_dtm
     )
 
-    assert os.path.isfile(os.path.join(output_dir_3, expected_dtm_buffer_file))
+    assert pcu.get_nb_points(os.path.join(output_dir_3, expected_dtm_buffer_file)) > 0
     assert os.path.isfile(os.path.join(output_dir_3, expected_dtm_interpolation_file))
     assert output_raster == os.path.join(output_dir_3, expected_dtm_hillshade_file)
     with rasterio.open(output_raster) as raster:
@@ -160,7 +174,7 @@ def test_create_dsm_with_hillshade_one_las_50CM_pixelsize():
         input_file=input_filename, output_dir=output_dir_3, config=cfg.mnx_dsm
     )
 
-    assert os.path.isfile(os.path.join(output_dir_3, expected_dsm_buffer_file))
+    assert pcu.get_nb_points(os.path.join(output_dir_3, expected_dsm_buffer_file)) > 0
     assert os.path.isfile(os.path.join(output_dir_3, expected_dsm_interpolation_file))
     assert output_raster == os.path.join(output_dir_3, expected_dsm_hillshade_file)
     with rasterio.open(output_raster) as raster:
