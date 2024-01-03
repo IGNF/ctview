@@ -11,7 +11,6 @@ from osgeo import gdal
 
 import ctview.gen_LUT_X_cycle as gen_LUT_X_cycle
 import ctview.utils_gdal as utils_gdal
-from ctview.parameter import dico_param
 
 
 def create_output_tree(output_dir: str):
@@ -19,20 +18,17 @@ def create_output_tree(output_dir: str):
     output_tree = {
         "DTM": {
             "output": os.path.join(output_dir, "DTM"),
-            "filter": os.path.join(output_dir, "tmp_dtm", "filter"),
             "buffer": os.path.join(output_dir, "tmp_dtm", "buffer"),
             "hillshade": os.path.join(output_dir, "tmp_dtm", "hillshade"),
             "color": os.path.join(output_dir, "DTM", "color"),
         },
         "DSM": {
             "output": os.path.join(output_dir, "DSM"),
-            "filter": os.path.join(output_dir, "tmp_dsm", "filter"),
             "buffer": os.path.join(output_dir, "tmp_dsm", "buffer"),
             "hillshade": os.path.join(output_dir, "tmp_dsm", "hillshade"),
         },
         "DTM_DENS": {
             "output": os.path.join(output_dir, "DTM_DENS"),
-            "filter": os.path.join(output_dir, "tmp_dtm_dens", "filter"),
             "buffer": os.path.join(output_dir, "tmp_dtm_dens", "buffer"),
             "hillshade": os.path.join(output_dir, "tmp_dtm_dens", "hillshade"),
         },
@@ -40,7 +36,6 @@ def create_output_tree(output_dir: str):
 
     for n in output_tree:
         os.makedirs(output_tree[n]["output"], exist_ok=True)
-        os.makedirs(output_tree[n]["filter"], exist_ok=True)
         os.makedirs(output_tree[n]["buffer"], exist_ok=True)
         os.makedirs(output_tree[n]["hillshade"], exist_ok=True)
     os.makedirs(output_tree["DTM"]["color"], exist_ok=True)
@@ -55,6 +50,7 @@ def run_pdaltools_buffer(
     buffer_width: int = 100,
     tile_width: int = 1000,
     tile_coord_scale: int = 1000,
+    spatial_ref: str = "EPSG:2154",
 ):
     """Merge lidar tiles around the queried tile and crop them in order to add a buffer
     to the tile (usually 100m).
@@ -67,16 +63,15 @@ def run_pdaltools_buffer(
         tile width (int): width of tiles in meters (usually 1000m)
         tile_coord_scale (int) : scale used in the filename to describe coordinates in meters
                 (usually 1000m)
+        spatial_ref (str) : spatial reference (default EPSG:2154)
     """
-    # param
-    spatial_ref_num = dico_param["EPSG"]
     # run buffer
     pdaltools.las_add_buffer.create_las_with_buffer(
         input_dir,
         tile_filename,
         output_filename,
         buffer_width=buffer_width,
-        spatial_ref=f"EPSG:{spatial_ref_num}",
+        spatial_ref=spatial_ref,
         tile_width=tile_width,
         tile_coord_scale=tile_coord_scale,
     )
@@ -154,9 +149,10 @@ def create_mnx_one_las(input_file: str, output_dir: str, config: DictConfig, typ
         input_dir=input_dir,
         tile_filename=input_file,
         output_filename=file_buffered,
-        buffer_width=config["buffer"]["size"],
-        tile_width=config["tile_geometry"]["tile_width"],
-        tile_coord_scale=config["tile_geometry"]["tile_coord_scale"],
+        buffer_width=config.buffer.size,
+        tile_width=config.tile_geometry.tile_width,
+        tile_coord_scale=config.tile_geometry.tile_coord_scale,
+        spatial_ref=config.io.spatial_reference,
     )
 
     # filter & interpolate
@@ -232,7 +228,7 @@ def color_raster_dtm_hillshade_with_LUT(
 
     for cycle in list_c:
         log.info(f"{cpt}/{len(list_c)}...")
-        folder_DXM_color = dico_fld[f"folder_DTM_color{cycle}"]
+        folder_DXM_color = f"{cycle}cycle{'s' if cycle > 1 else ''}"
         output_dir_raster = os.path.join(output_dir_color, folder_DXM_color)
         os.makedirs(output_dir_raster, exist_ok=True)
 

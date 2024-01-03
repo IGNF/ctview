@@ -6,6 +6,14 @@
 # learn more here: https://hydra.cc/docs/next/tutorials/basic/running_your_app/working_directory
 work_dir: ${hydra:runtime.cwd}
 
+io:
+  input_filename: null
+  input_dir: null
+  output_dir: null
+  output_folder_map_density: DENS_FINAL
+  output_folder_map_class_color: CC_5_fusion
+  output_folder_map_DTM_color: DTM_color
+
 mnx_dtm:
   io:
     spatial_reference: EPSG:2154
@@ -26,6 +34,9 @@ mnx_dtm:
   filter:
     keep_classes: [2, 66]
 
+  color:
+    cycles_DTM_colored: [1]
+
 mnx_dtm_dens:
   io:
     spatial_reference: EPSG:2154
@@ -36,6 +47,7 @@ mnx_dtm_dens:
     tile_width: 1000
     pixel_size: 5
     no_data_value: -9999
+    radius: 2.5
 
   buffer:
     size: 100

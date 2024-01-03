@@ -1,59 +1,14 @@
-import argparse
 import logging as log
 import os
 
-from hydra import compose, initialize
+import hydra
+from omegaconf import DictConfig
 
 import ctview.map_class as map_class
 import ctview.map_density as map_density
 import ctview.map_DTM_DSM as map_DTM_DSM
 import ctview.utils_pdal as utils_pdal
-from ctview.parameter import dico_param
-from ctview.utils_folder import (
-    add_folder_list_cycles,
-    create_folder,
-    delete_empty_folder,
-    dico_folder_template,
-)
-
-# Parameters
-extension = dico_param["raster_extension"]
-
-
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input_file", default=None, help="Must be a las/laz file.")
-    parser.add_argument("-idir", "--input_dir", default=None, help="Directory which contains las/laz files.")
-    parser.add_argument("-odir", "--output_dir", default=None, help="Output directory.")
-    parser.add_argument(
-        "-c",
-        "--cycles_DTM_colored",
-        nargs="+",
-        type=int,
-        default=dico_param["cycles_color_DTM"],
-        help="""Allow to choose the number of coloration cycles for each colorisation.
-        Exemple : -c 1 4 5 (3 colorisation with repectively 1, 4 and 5 cycles).""",
-    )
-    parser.add_argument(
-        "-ofdens",
-        "--output_folder_density",
-        default=dico_folder_template["folder_density_final"],
-        help="Output folder map density final.",
-    )
-    parser.add_argument(
-        "-ofcc",
-        "--output_folder_class_color",
-        default=dico_folder_template["folder_CC_fusion"],
-        help="Output folder map class color with DSM.",
-    )
-    parser.add_argument(
-        "-ofcolor",
-        "--output_folder_DTM_color",
-        default=dico_folder_template["folder_DTM_color"],
-        help="Output folder DTM color.",
-    )
-
-    return parser.parse_args()
+from ctview.utils_folder import create_folder, dico_folder_template
 
 
 def get_las_liste(input_las, input_dir):
@@ -89,55 +44,35 @@ def get_las_liste(input_las, input_dir):
     return las_list, input_dir
 
 
-def main():
+@hydra.main(config_path="../configs/", config_name="config_ctview.yaml", version_base="1.2")
+def main(config: DictConfig):
     log.basicConfig(level=log.INFO, format="%(message)s")
-    dico_folder_modif = dico_folder_template.copy()
 
-    # Get las file, output directory and interpolation method
-    args = parse_args()
-    in_las = args.input_file
-    in_dir = args.input_dir
-    out_dir = args.output_dir
-    list_cycles = args.cycles_DTM_colored
-    # Change destination final folders
-    log.debug(f"\n\ndico_folder BEFORE the user changes folder names on MAIN\n\n{dico_folder_modif}")
-    dico_folder_modif["folder_density_final"] = args.output_folder_density
-    dico_folder_modif["folder_CC_fusion"] = args.output_folder_class_color
-    dico_folder_modif["folder_DTM_color"] = args.output_folder_DTM_color
-    log.debug(f"\ndico_folder AFTER the user changes folder names on MAIN\n\n{dico_folder_modif}")
-
-    # Add folders for all colorisations in dictionnary
-    log.debug(f"\n\nBEFORE ADD folders in dico_folder_modif on MAIN\n\n{dico_folder_modif}")
-    dico_folder_modif = add_folder_list_cycles(
-        List=list_cycles,
-        folder_base=dico_folder_modif["folder_DTM_color"],
-        key_base="folder_DTM_color",
-        dico_fld=dico_folder_modif,
-    )
-    log.debug(f"\nAFTER ADD folders in dico_folder_modif on MAIN\n\n{dico_folder_modif}")
+    initial_las_filename = config.io.input_filename
+    in_dir = config.io.input_dir
+    out_dir = config.io.output_dir
+    list_cycles = config.mnx_dtm.color.cycles_DTM_colored
 
     # Verify args are ok
-    # input
-    if in_las is None and in_dir is None:
+    if initial_las_filename is None or in_dir is None or out_dir is None:
         raise RuntimeError(
-            "In input you have to give a las OR a directory. For more info run the same command by adding --help"
+            """In input you have to give a las, an input directory and an output directory.
+            For more info run the same command by adding --help"""
         )
-    elif isinstance(in_las, str) and isinstance(in_dir, str):
-        raise RuntimeError(
-            "In input you can give a las OR a directory, not both. For more info run the same command by adding --help"
-        )
-    # output
-    if out_dir is None:
-        raise RuntimeError("No output directory. For more info run the same command by adding --help")
+
+    dico_folder_modif = dico_folder_template.copy()
 
     # Create folder test if not exists
     os.makedirs(out_dir, exist_ok=True)
 
     # Create folders of dico_folder_modif in out_dir
     create_folder(out_dir, dico_fld=dico_folder_modif)
-
-    # List las/laz
-    las_liste, in_dir = get_las_liste(in_las, in_dir)
+    output_dir_map_density = os.path.join(out_dir, config.io.output_folder_map_density)
+    os.makedirs(output_dir_map_density)
+    output_dir_map_class_color = os.path.join(out_dir, config.io.output_folder_map_class_color)
+    os.makedirs(output_dir_map_class_color)
+    output_dir_map_DTM_color = os.path.join(out_dir, config.io.output_folder_map_DTM_color)
+    os.makedirs(output_dir_map_DTM_color)
 
     # ## ACTIVATE IF NECESSARY
     # log.warning("#########")
@@ -145,73 +80,66 @@ def main():
     # log.warning("#########")
     # utils_tools.repare_files(las_liste, in_dir)
     # time.sleep(2)
+    initial_las_file = os.path.join(in_dir, initial_las_filename)
+    bounds_las = utils_pdal.get_bounds_from_las(initial_las_file)  # get boundaries
 
-    with initialize(version_base="1.2", config_path="../configs"):
-        # config is relative to a module
-        config = compose(config_name="config_ctview")
-
-    for filename in las_liste:
-        las_input_file = os.path.join(in_dir, filename)
-        bounds_las = utils_pdal.get_bounds_from_las(las_input_file)  # get boundaries
-
-        # DENSITY (DTM brut + density)
-        # Step 1/3 : DTM brut
-        raster_DTM_dens = map_DTM_DSM.create_dtm_with_hillshade_one_las_5M(
-            input_file=las_input_file, output_dir=out_dir, config=config.mnx_dtm_dens
-        )
-        # Step 2 : raster of density
-        log.info("\nStep 2/3 : raster of density\n")
-        raster_dens, success = map_density.generate_raster_of_density(input_las=las_input_file, output_dir=out_dir)
-        # Step 3 : multiply density and DTM layers
-        log.info("\nStep 3/3 : raster of density\n")
-        if success:
-            map_density.multiply_DTM_density(
-                input_DTM=raster_DTM_dens,
-                input_dens_raster=raster_dens,
-                filename=filename,
-                output_dir=out_dir,
-                bounds=bounds_las,
-                dico_fld=dico_folder_modif,
-            )
-        else:
-            log.warning(f"La dalle {filename} ne contient pas de points sol. Carte de densité non générée.")
-
-        # DTM hillshade color
-        # Step 1/2 : DTM hillshade
-        raster_DTM_hs_1M = map_DTM_DSM.create_dtm_with_hillshade_one_las_1M(
-            input_file=las_input_file, output_dir=out_dir, config=config.mnx_dtm
-        )
-
-        # Step 2/2 : color
-        map_DTM_DSM.color_raster_dtm_hillshade_with_LUT(
-            input_initial_basename=filename,
-            input_raster=raster_DTM_hs_1M,
-            output_dir=out_dir,
-            list_c=list_cycles,
-            dico_fld=dico_folder_modif,
-        )
-
-        # Map class color
-        # Step 1/3 : DSM hillshade
-        raster_DSM_hs = map_DTM_DSM.create_dsm_with_hillshade_one_las_50CM(
-            input_file=las_input_file, output_dir=out_dir, config=config.mnx_dsm
-        )
-        # Step 2/3 : create map fill gaps color
-        raster_class_fgc = map_class.create_map_class(
-            input_las=las_input_file, output_dir=out_dir, dico_fld=dico_folder_modif
-        )
-        # Step 3/3 : fusion with MNS
-        map_class.multiply_DSM_class(
-            input_DSM=raster_DSM_hs,
-            input_raster_class=raster_class_fgc,
-            filename=filename,
-            output_dir=out_dir,
+    # DENSITY (DTM brut + density)
+    # Step 1/3 : DTM brut
+    raster_DTM_dens = map_DTM_DSM.create_dtm_with_hillshade_one_las_5M(
+        input_file=initial_las_file, output_dir=out_dir, config=config.mnx_dtm_dens
+    )
+    # Step 2 : raster of density
+    log.info("\nStep 2/3 : raster of density\n")
+    raster_dens, success = map_density.generate_raster_of_density(
+        input_las=initial_las_file, output_dir=out_dir, config=config.mnx_dtm_dens
+    )
+    # Step 3 : multiply density and DTM layers
+    log.info("\nStep 3/3 : raster of density\n")
+    if success:
+        map_density.multiply_DTM_density(
+            input_DTM=raster_DTM_dens,
+            input_dens_raster=raster_dens,
+            filename=initial_las_filename,
+            output_dir=output_dir_map_density,
+            config=config.mnx_dtm_dens,
             bounds=bounds_las,
-            dico_fld=dico_folder_modif,
         )
+    else:
+        log.warning(f"La dalle {initial_las_file} ne contient pas de points sol. Carte de densité non générée.")
 
-        # Delete folder
-        delete_empty_folder(dir=out_dir)
+    # DTM hillshade color
+    # Step 1/2 : DTM hillshade
+    raster_DTM_hs_1M = map_DTM_DSM.create_dtm_with_hillshade_one_las_1M(
+        input_file=initial_las_file, output_dir=out_dir, config=config.mnx_dtm
+    )
+
+    # Step 2/2 : color
+    map_DTM_DSM.color_raster_dtm_hillshade_with_LUT(
+        input_initial_basename=initial_las_filename,
+        input_raster=raster_DTM_hs_1M,
+        output_dir=out_dir,
+        list_c=list_cycles,
+        dico_fld=dico_folder_modif,
+    )
+
+    # Map class color
+    # Step 1/3 : DSM hillshade
+    raster_DSM_hs = map_DTM_DSM.create_dsm_with_hillshade_one_las_50CM(
+        input_file=initial_las_file, output_dir=out_dir, config=config.mnx_dsm
+    )
+    # Step 2/3 : create map fill gaps color
+    raster_class_fgc = map_class.create_map_class(
+        input_las=initial_las_file, output_dir=out_dir, dico_fld=dico_folder_modif, config=config.mnx_dsm
+    )
+    # Step 3/3 : fusion with MNS
+    map_class.multiply_DSM_class(
+        input_DSM=raster_DSM_hs,
+        input_raster_class=raster_class_fgc,
+        filename=initial_las_filename,
+        output_dir=output_dir_map_class_color,
+        bounds=bounds_las,
+        config=config.mnx_dsm,
+    )
 
 
 if __name__ == "__main__":

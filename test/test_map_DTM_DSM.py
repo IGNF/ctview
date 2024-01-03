@@ -8,7 +8,7 @@ import rasterio
 from hydra import compose, initialize
 
 import ctview.map_DTM_DSM as map_DTM_DSM
-from ctview.utils_folder import add_folder_list_cycles, dico_folder_template
+from ctview.utils_folder import dico_folder_template
 
 # GENERAL
 TMP = "tmp"
@@ -17,6 +17,7 @@ COORDY = 627760
 TILE_COORD_SCALE = 10
 TILE_WIDTH = 50
 BUFFER_SIZE = 10
+SPATIAL_REFERENCE = "EPSG:2154"
 
 INPUT_DIR_LAZ = os.path.join("data", "laz")
 INPUT_DIR_LAS = os.path.join("data", "las")
@@ -88,16 +89,13 @@ EXPECTED_DTM_COLOR_5CYCLES = os.path.join(
 OUTPUT_DIR_TOOLS = Path(TMP) / "tools"
 
 EXPECTED_DTM_DIR = os.path.join(OUTPUT_DIR_TOOLS, "DTM")
-EXPECTED_DTM_FILTER_DIR = os.path.join(OUTPUT_DIR_TOOLS, "tmp_dtm", "filter")
 EXPECTED_DTM_BUFFER_DIR = os.path.join(OUTPUT_DIR_TOOLS, "tmp_dtm", "buffer")
 EXPECTED_DTM_HILLSHADE_DIR = os.path.join(OUTPUT_DIR_TOOLS, "tmp_dtm", "hillshade")
 EXPECTED_DTM_COLOR_DIR = os.path.join(OUTPUT_DIR_TOOLS, "DTM", "color")
 EXPECTED_DSM_DIR = os.path.join(OUTPUT_DIR_TOOLS, "DSM")
-EXPECTED_DSM_FILTER_DIR = os.path.join(OUTPUT_DIR_TOOLS, "tmp_dsm", "filter")
 EXPECTED_DSM_BUFFER_DIR = os.path.join(OUTPUT_DIR_TOOLS, "tmp_dsm", "buffer")
 EXPECTED_DSM_HILLSHADE_DIR = os.path.join(OUTPUT_DIR_TOOLS, "tmp_dsm", "hillshade")
 EXPECTED_DTM_DENS_DIR = os.path.join(OUTPUT_DIR_TOOLS, "DTM_DENS")
-EXPECTED_DTM_DENS_FILTER_DIR = os.path.join(OUTPUT_DIR_TOOLS, "tmp_dtm_dens", "filter")
 EXPECTED_DTM_DENS_BUFFER_DIR = os.path.join(OUTPUT_DIR_TOOLS, "tmp_dtm_dens", "buffer")
 EXPECTED_DTM_DENS_HILLSHADE_DIR = os.path.join(OUTPUT_DIR_TOOLS, "tmp_dtm_dens", "hillshade")
 
@@ -167,6 +165,7 @@ def test_run_pdaltools_buffer():
         buffer_width=BUFFER_SIZE,
         tile_width=TILE_WIDTH,
         tile_coord_scale=TILE_COORD_SCALE,
+        spatial_ref=SPATIAL_REFERENCE,
     )
 
     assert os.path.isfile(OUTPUT_FILE_WITH_BUFFER)
@@ -204,20 +203,13 @@ def test_color_raster_dtm_hillshade_with_LUT():
     """
     # preparation
     list_cycles = [1, 5]
-    dico_folder = dico_folder_template.copy()
-    new_dico = add_folder_list_cycles(
-        List=list_cycles,
-        folder_base=dico_folder["folder_DTM_color"],
-        key_base="folder_DTM_color",
-        dico_fld=dico_folder_template,
-    )
     # test function
     map_DTM_DSM.color_raster_dtm_hillshade_with_LUT(
         input_initial_basename=INPUT_LAZ_TILENAME_WITHOUT_COLOR,
         input_raster=INPUT_RASTER_WITHOUT_COLOR,
         output_dir=OUTPUT_DIR_COLOR,
         list_c=list_cycles,
-        dico_fld=new_dico,
+        dico_fld=dico_folder_template,
     )
     assert os.path.exists(EXPECTED_DTM_COLOR_1CYCLE)
     assert os.path.exists(EXPECTED_DTM_COLOR_5CYCLES)
@@ -228,16 +220,13 @@ def test_create_output_tree():
     map_DTM_DSM.create_output_tree(output_dir=OUTPUT_DIR_TOOLS)
 
     assert os.path.isdir(EXPECTED_DTM_DIR)
-    assert os.path.isdir(EXPECTED_DTM_FILTER_DIR)
     assert os.path.isdir(EXPECTED_DTM_BUFFER_DIR)
     assert os.path.isdir(EXPECTED_DTM_HILLSHADE_DIR)
     assert os.path.isdir(EXPECTED_DTM_COLOR_DIR)
     assert os.path.isdir(EXPECTED_DSM_DIR)
-    assert os.path.isdir(EXPECTED_DSM_FILTER_DIR)
     assert os.path.isdir(EXPECTED_DSM_BUFFER_DIR)
     assert os.path.isdir(EXPECTED_DSM_HILLSHADE_DIR)
     assert os.path.isdir(EXPECTED_DTM_DENS_DIR)
-    assert os.path.isdir(EXPECTED_DTM_DENS_FILTER_DIR)
     assert os.path.isdir(EXPECTED_DTM_DENS_BUFFER_DIR)
     assert os.path.isdir(EXPECTED_DTM_DENS_HILLSHADE_DIR)
 
