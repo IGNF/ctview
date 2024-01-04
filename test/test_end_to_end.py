@@ -27,7 +27,7 @@ OUTPUT_LOCAL = "/var/data/store-lidarhd/developpement/ctview/1_tests_local"
 OUTPUT_DOCKER = "/var/data/store-lidarhd/developpement/ctview/2_tests_local_docker"
 
 # test 1 : small dalle with and without docker
-INPUT_FILENAME_1 = "test_data_0000_0000_LA93_IGN69_ground.las"
+INPUT_FILENAME_1 = "test_data_77055_627760_LA93_IGN69_ground.las"
 INPUT_1 = f"{INPUT}/data0"
 OUTPUT_1 = f"{OUTPUT_LOCAL}/test0"
 OUTPUT_1bis = f"{OUTPUT_DOCKER}/test0"
