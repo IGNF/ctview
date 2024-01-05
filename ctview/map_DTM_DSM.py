@@ -182,30 +182,6 @@ def create_dxm_with_hillshade_one_las_XM(
     return raster_dtm_hillshade
 
 
-def create_dtm_with_hillshade_one_las_5M(input_file: str, output_dir: str, config: DictConfig):
-    """Create DSM with hillshade and fix precision (pixel size) at 5 meters"""
-    output_raster = create_dxm_with_hillshade_one_las_XM(
-        input_file=input_file, output_dir=output_dir, config=config, type_raster="dtm_dens"
-    )
-    return output_raster
-
-
-def create_dtm_with_hillshade_one_las_1M(input_file: str, output_dir: str, config: DictConfig):
-    """Create DTM with hillshade and fix precision (pixel size) at 1 meter"""
-    output_raster = create_dxm_with_hillshade_one_las_XM(
-        input_file=input_file, output_dir=output_dir, config=config, type_raster="dtm"
-    )
-    return output_raster
-
-
-def create_dsm_with_hillshade_one_las_50CM(input_file: str, output_dir: str, config: DictConfig):
-    """Create DTM with hillshade and fix precision (pixel size) at 0.5 meter"""
-    output_raster = create_dxm_with_hillshade_one_las_XM(
-        input_file=input_file, output_dir=output_dir, config=config, type_raster="dsm"
-    )
-    return output_raster
-
-
 def color_raster_dtm_hillshade_with_LUT(
     input_initial_basename: str, input_raster: str, output_dir: str, list_c: list, dico_fld: dict
 ):

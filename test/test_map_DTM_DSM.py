@@ -290,8 +290,11 @@ def test_create_dtm_with_hillshade_one_las_5M_pixelsize():
         - output is the raster hillshaded
         - pixel size = 5 meters
     """
-    output_raster = map_DTM_DSM.create_dtm_with_hillshade_one_las_5M(
-        input_file=INPUT_FILENAME_FOR_ALL, output_dir=OUTPUT_DIR_MNT_MNS_MNTDENS_HS, config=CONFIG_2.mnx_dtm_dens
+    output_raster = map_DTM_DSM.create_dxm_with_hillshade_one_las_XM(
+        input_file=INPUT_FILENAME_FOR_ALL,
+        output_dir=OUTPUT_DIR_MNT_MNS_MNTDENS_HS,
+        config=CONFIG_2.mnx_dtm_dens,
+        type_raster="dtm_dens",
     )
 
     assert pcu.get_nb_points(os.path.join(OUTPUT_DIR_MNT_MNS_MNTDENS_HS, EXPECTED_DTM_DENS_BUFFER)) > 0
@@ -308,8 +311,11 @@ def test_create_dtm_with_hillshade_one_las_1M_pixelsize():
         - output is the raster hillshaded
         - pixel size = 1 meters
     """
-    output_raster = map_DTM_DSM.create_dtm_with_hillshade_one_las_1M(
-        input_file=INPUT_FILENAME_FOR_ALL, output_dir=OUTPUT_DIR_MNT_MNS_MNTDENS_HS, config=CONFIG_2.mnx_dtm
+    output_raster = map_DTM_DSM.create_dxm_with_hillshade_one_las_XM(
+        input_file=INPUT_FILENAME_FOR_ALL,
+        output_dir=OUTPUT_DIR_MNT_MNS_MNTDENS_HS,
+        config=CONFIG_2.mnx_dtm,
+        type_raster="dtm",
     )
 
     assert pcu.get_nb_points(os.path.join(OUTPUT_DIR_MNT_MNS_MNTDENS_HS, EXPECTED_DTM_BUFFER)) > 0
@@ -326,8 +332,11 @@ def test_create_dsm_with_hillshade_one_las_50CM_pixelsize():
         - output is the raster hillshaded
         - pixel size = 0.5 meters
     """
-    output_raster = map_DTM_DSM.create_dsm_with_hillshade_one_las_50CM(
-        input_file=INPUT_FILENAME_FOR_ALL, output_dir=OUTPUT_DIR_MNT_MNS_MNTDENS_HS, config=CONFIG_2.mnx_dsm
+    output_raster = map_DTM_DSM.create_dxm_with_hillshade_one_las_XM(
+        input_file=INPUT_FILENAME_FOR_ALL,
+        output_dir=OUTPUT_DIR_MNT_MNS_MNTDENS_HS,
+        config=CONFIG_2.mnx_dsm,
+        type_raster="dsm",
     )
 
     assert pcu.get_nb_points(os.path.join(OUTPUT_DIR_MNT_MNS_MNTDENS_HS, EXPECTED_DSM_BUFFER)) > 0
