@@ -1,7 +1,6 @@
 import os
 import shutil
 import test.utils.point_cloud_utils as pcu
-import test.utils.raster_utils as ru
 from pathlib import Path
 
 import rasterio
@@ -31,33 +30,6 @@ OUTPUT_DIR_BUFFER = os.path.join(TMP, "buffer")
 OUTPUT_FILE_WITH_BUFFER = os.path.join(OUTPUT_DIR_BUFFER, f"test_data_{COORDX}_{COORDY}_LA93_IGN69.las")
 
 EXPECTED_OUTPUT_NB_POINTS = 47037
-
-
-# INTERPOLATION
-PIXEL_SIZE = 0.5
-with initialize(version_base="1.2", config_path="../configs"):
-    # config is relative to a module
-    CONFIG_1 = compose(
-        config_name="config_ctview",
-        overrides=[
-            f"mnx_dtm.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
-            f"mnx_dtm.tile_geometry.tile_width={TILE_WIDTH}",
-            f"mnx_dtm.buffer.size={BUFFER_SIZE}",
-            f"mnx_dtm.tile_geometry.pixel_size={PIXEL_SIZE}",
-        ],
-    )
-
-INPUT_BASENAME = f"test_data_{COORDX}_{COORDY}_LA93_IGN69.laz"
-INPUT_FILENAME = os.path.join(INPUT_DIR_LAZ, INPUT_BASENAME)
-
-OUTPUT_DIR_INTERPOLATION = os.path.join("tmp", "interpolation")
-
-EXPECTED_XMIN = COORDX * TILE_COORD_SCALE - PIXEL_SIZE / 2
-EXPECTED_YMAX = COORDY * TILE_COORD_SCALE + PIXEL_SIZE / 2
-EXPECTED_RASTER_BOUNDS = (EXPECTED_XMIN, EXPECTED_YMAX - TILE_WIDTH), (EXPECTED_XMIN + TILE_WIDTH, EXPECTED_YMAX)
-EXPECTED_OUTPUT_DEFAULT_FILE = os.path.join(
-    OUTPUT_DIR_INTERPOLATION, f"test_data_{COORDX}_{COORDY}_LA93_IGN69_50CM_Laplace.tif"
-)
 
 
 # HILLSHADE
@@ -149,7 +121,6 @@ def setup_module(module):
         pass
     os.mkdir(TMP)
     os.mkdir(OUTPUT_DIR_BUFFER)
-    os.mkdir(OUTPUT_DIR_INTERPOLATION)
     os.mkdir(OUTPUT_DIR_HILLSHADE)
     os.mkdir(OUTPUT_DIR_COLOR)
     os.mkdir(OUTPUT_DIR_LUT)
@@ -170,18 +141,6 @@ def test_run_pdaltools_buffer():
 
     assert os.path.isfile(OUTPUT_FILE_WITH_BUFFER)
     assert pcu.get_nb_points(OUTPUT_FILE_WITH_BUFFER) == EXPECTED_OUTPUT_NB_POINTS
-
-
-def test_run_mnx_interpolation():
-    """Verif interpolation create a file with suffix size (50CM)"""
-    map_DTM_DSM.run_mnx_interpolation(
-        input_file=INPUT_FILENAME, output_raster=EXPECTED_OUTPUT_DEFAULT_FILE, config=CONFIG_1.mnx_dtm
-    )
-
-    assert os.path.isfile(EXPECTED_OUTPUT_DEFAULT_FILE)
-
-    raster_bounds = ru.get_tif_extent(EXPECTED_OUTPUT_DEFAULT_FILE)
-    assert ru.allclose_mm(raster_bounds, EXPECTED_RASTER_BOUNDS)
 
 
 def test_add_hillshade_one_raster():

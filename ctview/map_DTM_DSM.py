@@ -77,29 +77,6 @@ def run_pdaltools_buffer(
     )
 
 
-def run_mnx_interpolation(input_file: str, output_raster: str, config: dict):
-    """Run interpolation
-    Args:
-        input_file(str): File on which to run the interpolation
-        output_raster(str): output file for raster image (with buffer)
-        config(dict): dictionary that must contain
-                { "tile_geometry": { "tile_coord_scale": #int,
-                                    "tile_width": #int,
-                                    "pixel_size": #float,
-                                    "no_data_value": #int },
-                  "io": { "spatial_reference": #str},
-                  "interpolation": { "algo_name": #str }
-                }
-            with
-                tile_coord_scale value(int): coords in tile names are in km
-                tile_width value(int): tile width in meters
-                pixel_size value(float): pixel size for raster generation
-                spatial_ref value(str): spatial reference to use when reading las file
-                interpolation_method value(str): interpolation method for raster generation
-    """
-    produits_derives_lidar.ip_one_tile.interpolate(input_file=input_file, output_raster=output_raster, config=config)
-
-
 def add_hillshade_one_raster(input_raster: str, output_raster: str):
     """Add hillshade to raster
     Arg :
@@ -156,7 +133,22 @@ def create_mnx_one_las(input_file: str, output_dir: str, config: DictConfig, typ
     )
 
     # filter & interpolate
-    run_mnx_interpolation(input_file=file_buffered, output_raster=raster_dxm_brut, config=config)
+    # WARNING: config must correspond to ign-mnx:1.0.0
+    # config must contain
+    # { "tile_geometry": { "tile_coord_scale": #int,
+    #                                 "tile_width": #int,
+    #                                 "pixel_size": #float,
+    #                                 "no_data_value": #int },
+    #               "io": { "spatial_reference": #str},
+    #               "interpolation": { "algo_name": #str }
+    #             }
+    #         with
+    #             tile_coord_scale value(int): coords in tile names are in km
+    #             tile_width value(int): tile width in meters
+    #             pixel_size value(float): pixel size for raster generation
+    #             spatial_ref value(str): spatial reference to use when reading las file
+    #             interpolation_method value(str): interpolation method for raster generation
+    produits_derives_lidar.ip_one_tile.interpolate(input_file=input_file, output_raster=raster_dxm_brut, config=config)
 
     # add hillshade
     add_hillshade_one_raster(input_raster=raster_dxm_brut, output_raster=raster_dxm_hillshade)
