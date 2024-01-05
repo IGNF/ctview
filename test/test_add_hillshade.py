@@ -1,0 +1,39 @@
+import os
+import shutil
+
+import ctview.add_hillshade as add_hillshade
+
+TMP = "tmp"
+COORDX = 77055
+COORDY = 627760
+INPUT_DIR_RASTER = os.path.join("data", "raster")
+
+INPUT_WITHOUT_HILLSHADE = os.path.join(INPUT_DIR_RASTER, f"test_data_{COORDX}_{COORDY}_LA93_IGN69_interp.tif")
+
+OUTPUT_DIR_HILLSHADE = os.path.join(TMP, "hillshade")
+
+EXPECTED_OUTPUT_WITH_HILLSHADE = os.path.join(
+    OUTPUT_DIR_HILLSHADE, f"test_data_{COORDX}_{COORDY}_LA93_IGN69_hillshade.tif"
+)
+
+
+def setup_module(module):
+    try:
+        shutil.rmtree(TMP)
+
+    except FileNotFoundError:
+        pass
+    os.mkdir(TMP)
+    os.mkdir(OUTPUT_DIR_HILLSHADE)
+
+
+def test_add_hillshade_one_raster():
+    """
+    Verify :
+        - .tif is created
+    """
+    assert os.path.isfile(INPUT_WITHOUT_HILLSHADE)
+    add_hillshade.add_hillshade_one_raster(
+        input_raster=INPUT_WITHOUT_HILLSHADE, output_raster=EXPECTED_OUTPUT_WITH_HILLSHADE
+    )
+    assert os.path.isfile(EXPECTED_OUTPUT_WITH_HILLSHADE)

@@ -4,9 +4,10 @@ import os
 import hydra
 from omegaconf import DictConfig
 
+import ctview.add_color as add_color
 import ctview.map_class as map_class
 import ctview.map_density as map_density
-import ctview.map_DTM_DSM as map_DTM_DSM
+import ctview.map_DXM as map_DXM
 import ctview.utils_pdal as utils_pdal
 from ctview.utils_folder import create_folder, dico_folder_template
 
@@ -85,7 +86,7 @@ def main(config: DictConfig):
 
     # DENSITY (DTM brut + density)
     # Step 1/3 : DTM brut
-    raster_DTM_dens = map_DTM_DSM.create_dxm_with_hillshade_one_las_XM(
+    raster_DTM_dens = map_DXM.create_dxm_with_hillshade_one_las_XM(
         input_file=initial_las_file, output_dir=out_dir, config=config.mnx_dtm_dens, type_raster="dtm_dens"
     )
     # Step 2 : raster of density
@@ -109,12 +110,12 @@ def main(config: DictConfig):
 
     # DTM hillshade color
     # Step 1/2 : DTM hillshade
-    raster_DTM_hs_1M = map_DTM_DSM.create_dxm_with_hillshade_one_las_XM(
+    raster_DTM_hs_1M = map_DXM.create_dxm_with_hillshade_one_las_XM(
         input_file=initial_las_file, output_dir=out_dir, config=config.mnx_dtm, type_raster="dtm"
     )
 
     # Step 2/2 : color
-    map_DTM_DSM.color_raster_dtm_hillshade_with_LUT(
+    add_color.color_raster_dtm_hillshade_with_LUT(
         input_initial_basename=initial_las_filename,
         input_raster=raster_DTM_hs_1M,
         output_dir=out_dir,
@@ -124,7 +125,7 @@ def main(config: DictConfig):
 
     # Map class color
     # Step 1/3 : DSM hillshade
-    raster_DSM_hs = map_DTM_DSM.create_dxm_with_hillshade_one_las_XM(
+    raster_DSM_hs = map_DXM.create_dxm_with_hillshade_one_las_XM(
         input_file=initial_las_file, output_dir=out_dir, config=config.mnx_dsm, type_raster="dsm"
     )
     # Step 2/3 : create map fill gaps color
