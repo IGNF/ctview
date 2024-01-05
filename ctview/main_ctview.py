@@ -135,10 +135,10 @@ def main(config: DictConfig):
     map_class.multiply_DSM_class(
         input_DSM=raster_DSM_hs,
         input_raster_class=raster_class_fgc,
-        filename=initial_las_filename,
         output_dir=output_dir_map_class_color,
+        output_filename=initial_las_filename,
+        output_extension=config.mnx_dsm.io.extension,
         bounds=bounds_las,
-        config=config.mnx_dsm,
     )
 
 

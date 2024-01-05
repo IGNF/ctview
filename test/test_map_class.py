@@ -57,7 +57,12 @@ def teardown_module(module):  # run after the last test
 
 def test_step1_create_raster_brut():
     raster = step1_create_raster_brut(
-        in_points=IN_POINTS, output_dir=OUTPUT_DIR, filename=FILENAME, res=1, i=1, config=CONFIG.mnx_dtm
+        in_points=IN_POINTS,
+        output_dir=OUTPUT_DIR,
+        output_filename=FILENAME,
+        res=1,
+        i=1,
+        output_extension=CONFIG.mnx_dtm.io.extension,
     )
     assert raster == PATH1_EXPECTED  # good output filename
     assert os.path.exists(PATH1_EXPECTED)  # file exists
@@ -65,10 +70,19 @@ def test_step1_create_raster_brut():
 
 def test_step2_create_raster_fillgap():
     raster_brut = step1_create_raster_brut(
-        in_points=IN_POINTS, output_dir=OUTPUT_DIR, filename=FILENAME, res=1, i=1, config=CONFIG.mnx_dtm
+        in_points=IN_POINTS,
+        output_dir=OUTPUT_DIR,
+        output_filename=FILENAME,
+        res=1,
+        i=1,
+        output_extension=CONFIG.mnx_dtm.io.extension,
     )
     raster_fillgap = step2_create_raster_fillgap(
-        in_raster=raster_brut, output_dir=OUTPUT_DIR, filename=FILENAME, i=1, config=CONFIG.mnx_dtm
+        in_raster=raster_brut,
+        output_dir=OUTPUT_DIR,
+        output_filename=FILENAME,
+        output_extension=CONFIG.mnx_dtm.io.extension,
+        i=1,
     )
     assert raster_fillgap == PATH2_EXPECTED  # good output filename
     assert os.path.exists(PATH2_EXPECTED)  # file exists
@@ -76,10 +90,20 @@ def test_step2_create_raster_fillgap():
 
 def test_step3_color_raster():
     raster_brut = step1_create_raster_brut(
-        in_points=IN_POINTS, output_dir=OUTPUT_DIR, filename=FILENAME, res=1, i=1, config=CONFIG.mnx_dtm
+        in_points=IN_POINTS,
+        output_dir=OUTPUT_DIR,
+        output_filename=FILENAME,
+        res=1,
+        i=1,
+        output_extension=CONFIG.mnx_dtm.io.extension,
     )
     raster_color = step3_color_raster(
-        in_raster=raster_brut, output_dir=OUTPUT_DIR, filename=FILENAME, verbose=VERBOSE, i=1, config=CONFIG.mnx_dtm
+        in_raster=raster_brut,
+        output_dir=OUTPUT_DIR,
+        output_filename=FILENAME,
+        output_extension=CONFIG.mnx_dtm.io.extension,
+        verbose=VERBOSE,
+        i=1,
     )
     assert raster_color == PATH3_EXPECTED  # good output filename
     assert os.path.exists(PATH3_EXPECTED)  # file exists

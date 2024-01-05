@@ -1,16 +1,10 @@
-# Autor : ELucon
-
-
-import argparse
 import logging as log
 import os
-import shutil
 from typing import Tuple
 
 import numpy as np
 import pdal
 import rasterio
-from hydra import compose, initialize
 from omegaconf import DictConfig
 from osgeo_utils import gdal_calc
 
@@ -219,35 +213,3 @@ def multiply_DTM_density(
         calc="((A-1)<0)*B*(A/255)+((A-1)>=0)*B*((A-1)/255)",
         outfile=out_raster,
     )
-
-
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-idir", "--input_las")
-    parser.add_argument("-odir", "--output_dir")
-
-    return parser.parse_args()
-
-
-if __name__ == "__main__":
-    args = parse_args()
-    input_las = args.input_las
-    output_dir = args.output_dir
-
-    # Create directory if not exists
-    if os.path.exists(output_dir):
-        # Clean folder test if exists
-        shutil.rmtree(output_dir)
-    else:
-        # Create folder test if not exists
-        os.makedirs(output_dir)
-    os.makedirs(os.path.join(output_dir, FOLDER_DENS_VALUE), exist_ok=True)
-    os.makedirs(os.path.join(output_dir, FOLDER_DENS_COLOR), exist_ok=True)
-
-    with initialize(version_base="1.2", config_path="../configs"):
-        # config is relative to a module
-        cfg = compose(
-            config_name="config_ctview",
-        )
-
-    generate_raster_of_density(input_las=input_las, output_dir=output_dir, config=cfg.mnx_dtm_dens)
