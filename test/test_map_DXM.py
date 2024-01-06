@@ -105,28 +105,13 @@ def test_create_output_tree():
     assert os.path.isdir(EXPECTED_DTM_DENS_HILLSHADE_DIR)
 
 
-def test_create_mnx_one_las():
-    """
-    Verify :
-        - every 4 tifs are created
-        - output is the raster hillshaded
-    """
-    output_raster = map_DXM.create_mnx_one_las(
-        input_file=INPUT_FILENAME_FOR_ALL, output_dir=OUTPUT_DIR_MNX, config=CONFIG_2.mnx_dtm, type_raster="dtm"
-    )
-    assert pcu.get_nb_points(os.path.join(OUTPUT_DIR_MNX, EXPECTED_DTM_BUFFER)) > 0
-    assert os.path.isfile(os.path.join(OUTPUT_DIR_MNX, EXPECTED_DTM_INTERP))
-    assert os.path.isfile(os.path.join(OUTPUT_DIR_MNX, EXPECTED_DTM_HILLSHADE))
-    assert output_raster == os.path.join(OUTPUT_DIR_MNX, EXPECTED_DTM_HILLSHADE)
-
-
 def test_create_DTM_with_hillshade_one_las_default_pixelsize():
     """
     Verify :
         - .tif are created
         - output is the raster hillshaded
     """
-    output_raster = map_DXM.create_dxm_with_hillshade_one_las_XM(
+    output_raster = map_DXM.create_dxm_with_hillshade_one_las(
         input_file=INPUT_FILENAME_FOR_ALL,
         output_dir=OUTPUT_DIR_MNX_HS,
         config=CONFIG_2.mnx_dtm,
@@ -144,7 +129,7 @@ def test_create_DSM_with_hillshade_one_las_default_pixelsize():
         - .tif are created
         - output is the raster hillshaded
     """
-    output_raster = map_DXM.create_dxm_with_hillshade_one_las_XM(
+    output_raster = map_DXM.create_dxm_with_hillshade_one_las(
         input_file=INPUT_FILENAME_FOR_ALL,
         output_dir=OUTPUT_DIR_MNX_HS,
         config=CONFIG_2.mnx_dsm,
@@ -164,7 +149,7 @@ def test_create_dtm_with_hillshade_one_las_5M_pixelsize():
         - output is the raster hillshaded
         - pixel size = 5 meters
     """
-    output_raster = map_DXM.create_dxm_with_hillshade_one_las_XM(
+    output_raster = map_DXM.create_dxm_with_hillshade_one_las(
         input_file=INPUT_FILENAME_FOR_ALL,
         output_dir=OUTPUT_DIR_MNT_MNS_MNTDENS_HS,
         config=CONFIG_2.mnx_dtm_dens,
@@ -185,7 +170,7 @@ def test_create_dtm_with_hillshade_one_las_1M_pixelsize():
         - output is the raster hillshaded
         - pixel size = 1 meters
     """
-    output_raster = map_DXM.create_dxm_with_hillshade_one_las_XM(
+    output_raster = map_DXM.create_dxm_with_hillshade_one_las(
         input_file=INPUT_FILENAME_FOR_ALL,
         output_dir=OUTPUT_DIR_MNT_MNS_MNTDENS_HS,
         config=CONFIG_2.mnx_dtm,
@@ -206,7 +191,7 @@ def test_create_dsm_with_hillshade_one_las_50CM_pixelsize():
         - output is the raster hillshaded
         - pixel size = 0.5 meters
     """
-    output_raster = map_DXM.create_dxm_with_hillshade_one_las_XM(
+    output_raster = map_DXM.create_dxm_with_hillshade_one_las(
         input_file=INPUT_FILENAME_FOR_ALL,
         output_dir=OUTPUT_DIR_MNT_MNS_MNTDENS_HS,
         config=CONFIG_2.mnx_dsm,

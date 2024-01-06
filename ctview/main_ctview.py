@@ -86,7 +86,7 @@ def main(config: DictConfig):
 
     # DENSITY (DTM brut + density)
     # Step 1/3 : DTM brut
-    raster_DTM_dens = map_DXM.create_dxm_with_hillshade_one_las_XM(
+    raster_DTM_dens = map_DXM.create_dxm_with_hillshade_one_las(
         input_file=initial_las_file, output_dir=out_dir, config=config.mnx_dtm_dens, type_raster="dtm_dens"
     )
     # Step 2 : raster of density
@@ -110,7 +110,7 @@ def main(config: DictConfig):
 
     # DTM hillshade color
     # Step 1/2 : DTM hillshade
-    raster_DTM_hs_1M = map_DXM.create_dxm_with_hillshade_one_las_XM(
+    raster_DTM_hs_1M = map_DXM.create_dxm_with_hillshade_one_las(
         input_file=initial_las_file, output_dir=out_dir, config=config.mnx_dtm, type_raster="dtm"
     )
 
@@ -125,7 +125,7 @@ def main(config: DictConfig):
 
     # Map class color
     # Step 1/3 : DSM hillshade
-    raster_DSM_hs = map_DXM.create_dxm_with_hillshade_one_las_XM(
+    raster_DSM_hs = map_DXM.create_dxm_with_hillshade_one_las(
         input_file=initial_las_file, output_dir=out_dir, config=config.mnx_dsm, type_raster="dsm"
     )
     # Step 2/3 : create map fill gaps color

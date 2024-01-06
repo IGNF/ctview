@@ -37,11 +37,12 @@ def create_output_tree(output_dir: str):
     return output_tree
 
 
-def create_mnx_one_las(input_file: str, output_dir: str, config: DictConfig, type_raster="dtm"):
+def create_dxm_with_hillshade_one_las(input_file: str, output_dir: str, config: DictConfig, type_raster="dtm"):
     """
     Create a DTM or a DSM from a las tile.
     Args :
         input_file : full path of LAS/LAZ file
+        output_dir : output directory
         config :  dictionary that must contain
                 { "tile_geometry": { "tile_coord_scale": #int,
                                     "tile_width": #int,
@@ -101,21 +102,3 @@ def create_mnx_one_las(input_file: str, output_dir: str, config: DictConfig, typ
     add_hillshade.add_hillshade_one_raster(input_raster=raster_dxm_brut, output_raster=raster_dxm_hillshade)
 
     return raster_dxm_hillshade
-
-
-def create_dxm_with_hillshade_one_las_XM(
-    input_file: str, output_dir: str, config: DictConfig, type_raster: str = "dtm"
-):
-    """Create DXM with hillshade according to a configuration.
-    Args :
-        input_file : LAS file oin input
-        output_dir : output directory
-        config : config hydra
-    """
-
-    # create dtm with hillshade
-    raster_dtm_hillshade = create_mnx_one_las(
-        input_file=input_file, output_dir=output_dir, config=config, type_raster=type_raster
-    )
-
-    return raster_dtm_hillshade
