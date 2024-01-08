@@ -1,9 +1,9 @@
 import os
 
+import pdaltools.las_add_buffer
 import produits_derives_lidar.ip_one_tile
 from omegaconf import DictConfig
 
-import ctview.add_buffer as add_buffer
 import ctview.add_hillshade as add_hillshade
 
 
@@ -70,7 +70,7 @@ def create_dxm_with_hillshade_one_las(input_file: str, output_dir: str, config: 
     raster_dxm_hillshade = os.path.join(output_tree[type_raster.upper()]["hillshade"], basename_hillshade)
 
     # add buffer
-    add_buffer.run_pdaltools_buffer(
+    pdaltools.las_add_buffer.create_las_with_buffer(
         input_dir=input_dir,
         tile_filename=input_file,
         output_filename=file_buffered,
