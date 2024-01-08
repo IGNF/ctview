@@ -34,7 +34,7 @@ def test_main():
         cfg = compose(
             config_name="config_metadata",
             overrides=[
-                "io.input_file=test_data_77055_627755_LA93_IGN69.las",
+                "io.input_filename=test_data_77055_627755_LA93_IGN69.las",
                 f"io.input_dir={INPUT_DIR}",
                 f"io.output_dir={OUTPUT_DIR} ",
                 "tile_geometry.tile_coord_scale=10",

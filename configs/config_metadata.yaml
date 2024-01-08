@@ -7,7 +7,7 @@
 work_dir: ${hydra:runtime.cwd}
 
 io:
-  input_file: null
+  input_filename: null
   input_dir: null
   output_dir: null
   projection_epsg: 2154

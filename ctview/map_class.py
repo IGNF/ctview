@@ -3,6 +3,7 @@ import os
 from numbers import Real
 from typing import Optional
 
+import hydra
 import numpy as np
 from omegaconf import DictConfig
 from osgeo_utils import gdal_calc, gdal_fillnodata
@@ -10,6 +11,7 @@ from osgeo_utils import gdal_calc, gdal_fillnodata
 import ctview.clip_raster as clip_raster
 import ctview.utils_gdal as utils_gdal
 import ctview.utils_pdal as utils_pdal
+from ctview.utils_folder import dico_folder_template
 
 
 def fill_no_data(
@@ -163,7 +165,11 @@ def create_map_class(input_las: str, output_dir: str, dico_fld: dict, config: Di
 
     # Step 3 :  Fill gaps
     fillgap_raster = step2_create_raster_fillgap(
-        raster_brut, output_folder_3, input_las_name_without_extension, output_dir=config.io.extension, i=3
+        in_raster=raster_brut,
+        output_dir=output_folder_3,
+        output_filename=input_las_name_without_extension,
+        output_extension=config.io.extension,
+        i=3,
     )
 
     # Step 4 : Color fill gaps
@@ -216,3 +222,37 @@ def multiply_DSM_class(
         allBands="A",
         overwrite=True,
     )
+
+
+@hydra.main(config_path="../configs/", config_name="config_ctview.yaml", version_base="1.2")
+def main(config: DictConfig):
+    log.basicConfig(level=log.INFO, format="%(message)s")
+    initial_las_file = os.path.join(config.io.input_dir, config.io.input_filename)
+    os.makedirs(config.io.output_dir, exist_ok=True)
+    os.makedirs(
+        os.path.join(config.io.output_dir, dico_folder_template["folder_CC_brut"]),
+        exist_ok=True,
+    )
+    os.makedirs(
+        os.path.join(config.io.output_dir, dico_folder_template["folder_CC_brut_color"]),
+        exist_ok=True,
+    )
+    os.makedirs(
+        os.path.join(config.io.output_dir, dico_folder_template["folder_CC_fillgap"]),
+        exist_ok=True,
+    )
+    os.makedirs(
+        os.path.join(config.io.output_dir, dico_folder_template["folder_CC_fillgap_color"]),
+        exist_ok=True,
+    )
+    create_map_class(
+        input_las=initial_las_file,
+        output_dir=config.io.output_dir,
+        dico_fld=dico_folder_template,
+        config=config.mnx_dsm,
+    )
+    log.info("END.")
+
+
+if __name__ == "__main__":
+    main()

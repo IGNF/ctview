@@ -8,11 +8,13 @@ import rasterio
 
 import ctview.map_density as map_density
 
-INPUT_LAS = "./data/las/test_data_multiclass_65to66.las"
-OUTPUT_DIR = "./tmp/map_density"
+INPUT_DIR = Path("data") / "las"
+OUTPUT_DIR = Path("tmp") / "map_density"
 EPSG = 2154
 
-INPUT_LAS_50m = "./data/las/test_data_0000_0000_LA93_IGN69_ground.las"
+INPUT_FILENAME_50M = "test_data_0000_0000_LA93_IGN69_ground.las"
+
+INPUT_LAS_50m = Path(INPUT_DIR) / INPUT_FILENAME_50M
 LAS = laspy.read(INPUT_LAS_50m)
 INPUT_POINTS = np.vstack((LAS.x, LAS.y, LAS.z)).transpose()
 INPUT_CLASSIFS = np.copy(LAS.classification)
@@ -35,7 +37,7 @@ def test_compute_density():
 
 
 def test_generate_raster_of_density_2():
-    output_tif = os.path.join(OUTPUT_DIR, "output_generate_raster_of_density_2.tif")
+    output_tif = Path(OUTPUT_DIR) / "output_generate_raster_of_density_2.tif"
     map_density.generate_raster_of_density_2(
         input_points=INPUT_POINTS,
         input_classifs=INPUT_CLASSIFS,

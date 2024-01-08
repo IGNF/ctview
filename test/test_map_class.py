@@ -1,6 +1,7 @@
 import os
 import shutil
 
+import rasterio
 from hydra import compose, initialize
 
 import ctview.utils_pdal as utils_pdal
@@ -12,8 +13,10 @@ from ctview.map_class import (
 
 # Test files
 OUTPUT_DIR = os.path.join("tmp", "map_class")
-DATA = os.path.join("data", "las", "test_data_0000_0000_LA93_IGN69_ground.las")
-IN_POINTS = utils_pdal.read_las_file(DATA)  # tested
+INPUT_DIR = os.path.join("data", "las")
+INPUT_FILENAME = "test_data_0000_0000_LA93_IGN69_ground.las"
+INPUT_FILE = os.path.join(INPUT_DIR, INPUT_FILENAME)
+IN_POINTS = utils_pdal.read_las_file(INPUT_FILE)  # tested
 FILENAME = "defaultname"
 VERBOSE = "suffix"
 
@@ -38,6 +41,13 @@ PATH1_EXPECTED = os.path.join(OUTPUT_DIR, "defaultname_raster.tif")
 PATH2_EXPECTED = os.path.join(OUTPUT_DIR, "defaultname_raster_fillgap.tif")
 PATH3_EXPECTED = os.path.join(OUTPUT_DIR, "defaultname_suffix.tif")
 
+EXPECTED_FILLGAP_COLOR = os.path.join(
+    OUTPUT_DIR, "CC_4_fgcolor", "test_data_0000_0000_LA93_IGN69_ground_raster_fillgap_color.tif"
+)
+EXPECTED_FILLGAP_COLOR_JPG = os.path.join(
+    OUTPUT_DIR, "CC_4_fgcolor", "test_data_0000_0000_LA93_IGN69_ground_raster_fillgap_color.jpg"
+)
+
 
 def setup_module(module):  # run before the first test
     try:  # Clean folder test if exists
@@ -46,13 +56,6 @@ def setup_module(module):  # run before the first test
         pass
     # Create folder test if not exists
     os.makedirs(OUTPUT_DIR)
-
-
-def teardown_module(module):  # run after the last test
-    try:  # Clean folder test if exists
-        shutil.rmtree(OUTPUT_DIR)
-    except FileNotFoundError:
-        pass
 
 
 def test_step1_create_raster_brut():
@@ -65,7 +68,7 @@ def test_step1_create_raster_brut():
         output_extension=CONFIG.mnx_dtm.io.extension,
     )
     assert raster == PATH1_EXPECTED  # good output filename
-    assert os.path.exists(PATH1_EXPECTED)  # file exists
+    assert os.path.isfile(PATH1_EXPECTED)  # file exists
 
 
 def test_step2_create_raster_fillgap():
@@ -85,7 +88,7 @@ def test_step2_create_raster_fillgap():
         i=1,
     )
     assert raster_fillgap == PATH2_EXPECTED  # good output filename
-    assert os.path.exists(PATH2_EXPECTED)  # file exists
+    assert os.path.isfile(PATH2_EXPECTED)  # file exists
 
 
 def test_step3_color_raster():
@@ -105,5 +108,55 @@ def test_step3_color_raster():
         verbose=VERBOSE,
         i=1,
     )
-    assert raster_color == PATH3_EXPECTED  # good output filename
-    assert os.path.exists(PATH3_EXPECTED)  # file exists
+    assert raster_color == PATH3_EXPECTED
+    with rasterio.open(PATH3_EXPECTED) as raster:
+        band1 = raster.read(1)
+        band2 = raster.read(2)
+        band3 = raster.read(3)
+        assert band1[0, 0] == 255
+        assert band2[0, 0] == 128
+        assert band3[0, 0] == 0
+
+
+def test_main():
+    execute_main_default()
+    execute_main_change_pixel_size()
+
+
+def execute_main_default():
+    os.system(
+        f"""
+        python -m ctview.map_class \
+        io.input_filename={INPUT_FILENAME} \
+        io.input_dir={INPUT_DIR} \
+        io.output_dir={OUTPUT_DIR} \
+        """
+    )
+    with rasterio.open(EXPECTED_FILLGAP_COLOR) as raster:
+        band1 = raster.read(1)
+        band2 = raster.read(2)
+        band3 = raster.read(3)
+        assert band1[0, 0] == 255
+        assert band2[0, 0] == 128
+        assert band3[0, 0] == 0
+        assert raster.res == (0.5, 0.5)
+
+
+def execute_main_change_pixel_size():
+    os.system(
+        f"""
+    python -m ctview.map_class \
+    io.input_filename={INPUT_FILENAME} \
+    io.input_dir={INPUT_DIR} \
+    io.output_dir={OUTPUT_DIR} \
+    mnx_dsm.tile_geometry.pixel_size=5 \
+    """
+    )
+    with rasterio.open(EXPECTED_FILLGAP_COLOR) as raster:
+        band1 = raster.read(1)
+        band2 = raster.read(2)
+        band3 = raster.read(3)
+        assert band1[0, 0] == 255
+        assert band2[0, 0] == 128
+        assert band3[0, 0] == 0
+        assert raster.res == (5, 5)
