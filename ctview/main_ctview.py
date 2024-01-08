@@ -12,39 +12,6 @@ import ctview.utils_pdal as utils_pdal
 from ctview.utils_folder import create_folder, dico_folder_template
 
 
-def get_las_liste(input_las, input_dir):
-    """
-    Extract list of las/laz file of the input (input_las with arg -i or input_dir with arg -idir
-    Args :
-        input_las : las in input (can be string or NoneType)
-        input_dir : directory in input (can be string or NoneType)
-    Return :
-        las_list : list of las/laz (basename, not filename)
-            ex : '/folder1/folder2/Semis_4145_5556_IGN69.las' -> ['Semis_4145_5556_IGN69.las']
-    """
-    las_list = []
-    if input_las is None:
-        for filename in os.listdir(input_dir):
-            las_input_file = os.path.join(input_dir, filename)
-            if os.path.isfile(las_input_file) & las_input_file.lower().endswith((".las", ".laz")):
-                log.info(filename)
-                las_list.append(filename)
-    else:
-        input_dir = os.path.dirname(input_las)
-        filename = os.path.basename(input_las)
-        las_input_file = input_las
-        if os.path.isfile(las_input_file) & las_input_file.lower().endswith((".las", ".laz")):
-            log.info(filename)
-            las_list.append(filename)
-        else:
-            raise RuntimeError("-i arg is not a las/laz. For more info run the same command by adding --help")
-
-    if len(las_list) == 0:
-        raise RuntimeError("Erreur: Aucun fichier .las ou .laz dans le dossier: " + input_dir)
-
-    return las_list, input_dir
-
-
 @hydra.main(config_path="../configs/", config_name="config_ctview.yaml", version_base="1.2")
 def main(config: DictConfig):
     log.basicConfig(level=log.INFO, format="%(message)s")
