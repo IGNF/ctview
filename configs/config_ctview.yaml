@@ -12,7 +12,6 @@ io:
   output_dir: null
   output_folder_map_density: DENS_FINAL
   output_folder_map_class_color: CC_5_fusion
-  output_folder_map_DTM_color: DTM_color
 
 mnx_dtm:
   io:

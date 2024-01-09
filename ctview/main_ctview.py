@@ -36,11 +36,9 @@ def main(config: DictConfig):
     # Create folders of dico_folder_modif in out_dir
     create_folder(out_dir, dico_fld=dico_folder_modif)
     output_dir_map_density = os.path.join(out_dir, config.io.output_folder_map_density)
-    os.makedirs(output_dir_map_density)
+    os.makedirs(output_dir_map_density, exist_ok=True)
     output_dir_map_class_color = os.path.join(out_dir, config.io.output_folder_map_class_color)
-    os.makedirs(output_dir_map_class_color)
-    output_dir_map_DTM_color = os.path.join(out_dir, config.io.output_folder_map_DTM_color)
-    os.makedirs(output_dir_map_DTM_color)
+    os.makedirs(output_dir_map_class_color, exist_ok=True)
 
     # ## ACTIVATE IF NECESSARY
     # log.warning("#########")
