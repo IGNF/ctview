@@ -1,8 +1,10 @@
 # dev
 
-# v0.2.0.dev
-- ign-mnx : version 1.0.0
-- Metadata : map of density
+# v0.3.0
+- Lib ign-mnx : version 0.3.0 -> version 1.0.0
+- Config : use hydra
+- Docker : docker image is now made from local code instead of a clone of the repository
+- Metadata : new map of density, independant of other views
 - Function `gdal_calc` now called from package `osgeo_utils` instead of lib `lidarutils`.
 - Refactor (lint all code).
 - Refactor (clean useless code).
