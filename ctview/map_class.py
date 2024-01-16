@@ -1,22 +1,17 @@
-# Autor : ELucon
-
-import argparse
 import logging as log
 import os
 from numbers import Real
 from typing import Optional
 
+import hydra
 import numpy as np
+from omegaconf import DictConfig
 from osgeo_utils import gdal_calc, gdal_fillnodata
 
 import ctview.clip_raster as clip_raster
 import ctview.utils_gdal as utils_gdal
 import ctview.utils_pdal as utils_pdal
-from ctview.parameter import dico_param
 from ctview.utils_folder import dico_folder_template
-
-resolution_class = dico_param["resolution_mapclass"]
-extension = dico_param["raster_extension"]
 
 
 def fill_no_data(
@@ -43,19 +38,22 @@ def fill_no_data(
     )
 
 
-def step1_create_raster_brut(in_points: np.ndarray, output_dir: str, filename: str, res: int, i: int):
+def step1_create_raster_brut(
+    in_points: np.ndarray, output_dir: str, output_filename: str, output_extension: str, res: int, i: int
+):
     """
     Create raster of class brut.
     Args :
         in_points : points of las file
         output_dir : output directory
-        filename : name of las file whithout extension
+        output_filename : name of las file whithout extension
+        output_extension : extension of output file
         res : resolution in meters
         i : index step
     Return :
         Full path of raster of class brut
     """
-    raster_brut = os.path.join(output_dir, f"{filename}_raster{extension}")
+    raster_brut = os.path.join(output_dir, f"{output_filename}_raster{output_extension}")
     log.info(f"Step {i}/4 : Raster of class brut : {raster_brut}")
     utils_pdal.write_raster_class(input_points=in_points, output_raster=raster_brut, res=res)
 
@@ -65,20 +63,20 @@ def step1_create_raster_brut(in_points: np.ndarray, output_dir: str, filename: s
     return raster_brut
 
 
-def step2_create_raster_fillgap(in_raster, output_dir, filename, i):
+def step2_create_raster_fillgap(in_raster: str, output_dir: str, output_filename, output_extension: str, i: int):
     """
     Fill gaps on a raster using gdal.
     Args :
         in_raster : raster to fill
         output_dir : output directory
-        filename : name of las file whithout extension
+        output_filename : name of las file whithout extension
+        output_extension : extension of output file
         i : index step
     Return :
         Full path of raster filled
     """
-    fillgap_raster = os.path.join(output_dir, f"{filename}_raster_fillgap{extension}")
+    fillgap_raster = os.path.join(output_dir, f"{output_filename}_raster_fillgap{output_extension}")
     log.info(f"Step {i}/4 : Fill gaps : {fillgap_raster}")
-
     fill_no_data(
         src_raster=in_raster,
         dst_raster=fillgap_raster,
@@ -91,19 +89,22 @@ def step2_create_raster_fillgap(in_raster, output_dir, filename, i):
     return fillgap_raster
 
 
-def step3_color_raster(in_raster, output_dir, filename, verbose, i):
+def step3_color_raster(
+    in_raster: str, output_dir: str, output_filename: str, output_extension: str, verbose: str, i: int
+):
     """
     Color a raster using method gdal DEMProcessing with a specific LUT.
     Args :
         in_raster : raster to color
         output_dir : output directory
-        filename : name of las file whithout extension
+        output_filename : name of las file whithout extension
+        output_extension : extension of output file
         verbose : suffix for the output filename
         i : index step
     Return :
         Full path of raster colored
     """
-    raster_colored = os.path.join(output_dir, f"{filename}_{verbose}{extension}")
+    raster_colored = os.path.join(output_dir, f"{output_filename}_{verbose}{output_extension}")
     log.info(f"Step {i}/4 : {verbose} : {raster_colored}")
 
     utils_gdal.color_raster_with_LUT(
@@ -116,12 +117,14 @@ def step3_color_raster(in_raster, output_dir, filename, verbose, i):
     return raster_colored
 
 
-def create_map_class(input_las: str, output_dir: str, dico_fld: dict):
+def create_map_class(input_las: str, output_dir: str, dico_fld: dict, config: DictConfig):
     """
     Create a raster of class with the fill aps method of gdal and a colorisation.
     Args :
         input_las : las file
         output_dir : output directory
+        dico_fld : dictionnary of output folders
+        config : hydra config
     Return :
         Full path of raster filled and colorised
     """
@@ -142,26 +145,39 @@ def create_map_class(input_las: str, output_dir: str, dico_fld: dict):
 
     # Step 1 : Write raster brut
     raster_brut = step1_create_raster_brut(
-        in_points, output_folder_1, input_las_name_without_extension, resolution_class, i=1
+        in_points=in_points,
+        output_dir=output_folder_1,
+        output_filename=input_las_name_without_extension,
+        res=config.tile_geometry.pixel_size,
+        i=1,
+        output_extension=config.io.extension,
     )
 
     # Step 2 : Color brut
     step3_color_raster(
         in_raster=raster_brut,
         output_dir=output_folder_2,
-        filename=input_las_name_without_extension,
+        output_filename=input_las_name_without_extension,
+        output_extension=config.io.extension,
         verbose="raster_color",
         i=2,
     )
 
     # Step 3 :  Fill gaps
-    fillgap_raster = step2_create_raster_fillgap(raster_brut, output_folder_3, input_las_name_without_extension, i=3)
+    fillgap_raster = step2_create_raster_fillgap(
+        in_raster=raster_brut,
+        output_dir=output_folder_3,
+        output_filename=input_las_name_without_extension,
+        output_extension=config.io.extension,
+        i=3,
+    )
 
     # Step 4 : Color fill gaps
     color_fillgap_raster = step3_color_raster(
         in_raster=fillgap_raster,
         output_dir=output_folder_4,
-        filename=input_las_name_without_extension,
+        output_filename=input_las_name_without_extension,
+        output_extension=config.io.extension,
         verbose="raster_fillgap_color",
         i=4,
     )
@@ -170,30 +186,33 @@ def create_map_class(input_las: str, output_dir: str, dico_fld: dict):
 
 
 def multiply_DSM_class(
-    input_DSM: str, input_raster_class: str, filename: str, output_dir: str, bounds: tuple, dico_fld: dict
+    input_DSM: str,
+    input_raster_class: str,
+    output_dir: str,
+    output_filename: str,
+    output_extension: str,
+    bounds: tuple,
 ):
     """
     Fusion of 2 rasters (DSM and raster of class filled and colored) with a given formula.
     Args :
         input_DSM : DSM
         input_raster_class : raster of class filled and colored
-        filename : name of las file whithout path
         output_dir : output directory
+        output_filename : filename of output file
+        output_extension : extension of output file
         bounds : bounds of las file ([minx,maxx],[miny, maxy])
-        dico_fld : dictionnary of subfolders
     """
     # Crop rasters
     log.info("Crop rasters")
-    input_DSM_crop = f"{os.path.splitext(input_DSM)[0]}_crop{extension}"
+    input_DSM_crop = f"{os.path.splitext(input_DSM)[0]}_crop{output_extension}"
     clip_raster.clip_raster(input_raster=input_DSM, output_raster=input_DSM_crop, bounds=bounds)
 
-    input_raster_class_crop = f"{os.path.splitext(input_raster_class)[0]}_crop{extension}"
+    input_raster_class_crop = f"{os.path.splitext(input_raster_class)[0]}_crop{output_extension}"
     clip_raster.clip_raster(input_raster=input_raster_class, output_raster=input_raster_class_crop, bounds=bounds)
 
     log.info("Multiplication with DSM")
-    # Output file
-    output_folder_5 = os.path.join(output_dir, dico_fld["folder_CC_fusion"])
-    out_raster = os.path.join(output_folder_5, f"{os.path.splitext(filename)[0]}_fusion_DSM_class{extension}")
+    out_raster = os.path.join(output_dir, f"{os.path.splitext(output_filename)[0]}_fusion_DSM_class{output_extension}")
     # Mutiply
     gdal_calc.Calc(
         A=input_raster_class_crop,
@@ -205,26 +224,35 @@ def multiply_DSM_class(
     )
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-las", "--input_las")
-    parser.add_argument("-o", "--output_dir")
-
-    return parser.parse_args()
+@hydra.main(config_path="../configs/", config_name="config_ctview.yaml", version_base="1.2")
+def main(config: DictConfig):
+    log.basicConfig(level=log.INFO, format="%(message)s")
+    initial_las_file = os.path.join(config.io.input_dir, config.io.input_filename)
+    os.makedirs(config.io.output_dir, exist_ok=True)
+    os.makedirs(
+        os.path.join(config.io.output_dir, dico_folder_template["folder_CC_brut"]),
+        exist_ok=True,
+    )
+    os.makedirs(
+        os.path.join(config.io.output_dir, dico_folder_template["folder_CC_brut_color"]),
+        exist_ok=True,
+    )
+    os.makedirs(
+        os.path.join(config.io.output_dir, dico_folder_template["folder_CC_fillgap"]),
+        exist_ok=True,
+    )
+    os.makedirs(
+        os.path.join(config.io.output_dir, dico_folder_template["folder_CC_fillgap_color"]),
+        exist_ok=True,
+    )
+    create_map_class(
+        input_las=initial_las_file,
+        output_dir=config.io.output_dir,
+        dico_fld=dico_folder_template,
+        config=config.mnx_dsm,
+    )
+    log.info("END.")
 
 
 if __name__ == "__main__":
-    # Get las file, output directory and interpolation method
-    args = parse_args()
-    in_las = args.input_las
-    out_dir = args.output_dir
-
-    # Create folders
-    dico_test = dico_folder_template
-    os.makedirs(os.path.join(out_dir, dico_test["folder_CC_brut"]), exist_ok=True)
-    os.makedirs(os.path.join(out_dir, dico_test["folder_CC_fillgap"]), exist_ok=True)
-    os.makedirs(os.path.join(out_dir, dico_test["folder_CC_brut_color"]), exist_ok=True)
-    os.makedirs(os.path.join(out_dir, dico_test["folder_CC_fillgap_color"]), exist_ok=True)
-    os.makedirs(os.path.join(out_dir, dico_test["folder_CC_fusion"]), exist_ok=True)
-
-    create_map_class(in_las, out_dir, dico_fld=dico_test)
+    main()

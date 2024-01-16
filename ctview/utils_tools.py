@@ -1,6 +1,5 @@
 # Autor : ELucon
 
-import json
 import logging as log
 import os
 
@@ -35,16 +34,6 @@ def repare_files(las_liste: str, input_dir):
         f.write(bytes([17, 0, 0, 0]))
         f.close()
         log.info(f"fichier {filename} repare")
-
-
-def convert_json_into_dico(config_file: str):
-    """
-    Translate json into dictionnary
-    """
-    with open(config_file, "r") as file_handler:
-        dico_config = json.load(file_handler)
-
-    return dico_config
 
 
 def get_pointcloud_origin(points: np.array, tile_size: int = 1000, buffer_size: float = 0):

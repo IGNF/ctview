@@ -1,0 +1,84 @@
+# @package _global_
+
+# path to original working directory
+# hydra hijacks working directory by changing it to the current log directory,
+# so it's useful to have this path as a special variable
+# learn more here: https://hydra.cc/docs/next/tutorials/basic/running_your_app/working_directory
+work_dir: ${hydra:runtime.cwd}
+
+io:
+  input_filename: null
+  input_dir: null
+  output_dir: null
+  output_folder_map_density: DENS_FINAL
+  output_folder_map_class_color: CC_5_fusion
+
+mnx_dtm:
+  io:
+    spatial_reference: EPSG:2154
+    extension: .tif
+
+  tile_geometry:
+    tile_coord_scale: 1000
+    tile_width: 1000
+    pixel_size: 1
+    no_data_value: -9999
+
+  buffer:
+    size: 100
+
+  interpolation: 
+    algo_name: pdal-tin
+
+  filter:
+    keep_classes: [2, 66]
+
+  color:
+    cycles_DTM_colored: [1]
+
+mnx_dtm_dens:
+  io:
+    spatial_reference: EPSG:2154
+    extension: .tif
+
+  tile_geometry:
+    tile_coord_scale: 1000
+    tile_width: 1000
+    pixel_size: 5
+    no_data_value: -9999
+    radius: 2.5
+
+  buffer:
+    size: 100
+
+  interpolation: 
+    algo_name: pdal-tin
+
+  filter:
+    keep_classes: [2, 66]
+
+mnx_dsm:
+  io:
+    spatial_reference: EPSG:2154
+    extension: .tif
+
+  tile_geometry:
+    tile_coord_scale: 1000
+    tile_width: 1000
+    pixel_size: 0.5
+    no_data_value: -9999
+
+  buffer:
+    size: 100
+
+  interpolation: 
+    algo_name: pdal-tin
+
+  filter:
+    keep_classes: [1, 2, 3, 4, 5, 6, 9, 17, 64, 65, 66, 67, 202]
+
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .

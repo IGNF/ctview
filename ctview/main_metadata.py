@@ -15,7 +15,7 @@ import ctview.map_density as map_density
 def main(config: DictConfig):
     log.basicConfig(level=log.INFO, format="%(message)s")
 
-    in_las = config.io.input_file
+    in_las = config.io.input_filename
     in_dir = config.io.input_dir
     out_dir = config.io.output_dir
     tile_coord_scale = config.tile_geometry.tile_coord_scale
