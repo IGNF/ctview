@@ -5,6 +5,9 @@ install:
 install-precommit:
 	pre-commit install
 
+testing:
+	./ci/test.sh
+
 ##############################
 # Docker
 ##############################
