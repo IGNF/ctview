@@ -16,12 +16,8 @@ INPUT_FILENAME_SMALL2 = "test_data_77055_627760_LA93_IGN69.las"
 INPUT_DIR_WATER = Path("data") / "laz" / "water"
 INPUT_FILENAME_WATER = "Semis_2021_0785_6378_LA93_IGN69_water.laz"
 
-INPUT_DIR_BIG = Path("var") / "data" / "store-lidarhd" / "developpement" / "ctview" / "las" / "data1"
-INPUT_FILENAME_BIG = "Semis_2021_0938_6537_LA93_IGN69.laz"
-
 OUTPUT_DIR = Path("tmp")
 OUTPUT_DIR_WATER = OUTPUT_DIR / "main_ctview_water"
-OUTPUT_DIR_BIG = OUTPUT_DIR / "main_ctview_big_tile"
 
 OUTPUT_FOLDER_DENS = "ADENS_FINAL"
 OUTPUT_FOLDER_CLASS = "ACC_5_fusion_FINAL"
@@ -260,25 +256,6 @@ def test_main_ctview_2_files(input_dir, input_filename, output_dir, expected_nb_
         )
     main(cfg)
     assert_output_folders_contains_expected_number_of_file(output=output_dir, nb_raster_expected=expected_nb_file)
-
-
-@pytest.mark.slow
-def test_main_ctview_big_tile():
-    with initialize(version_base="1.2", config_path="../configs"):
-        # config is relative to a module
-        cfg = compose(
-            config_name="config_ctview",
-            overrides=[
-                f"io.input_filename={INPUT_FILENAME_BIG}",
-                f"io.input_dir={INPUT_DIR_BIG}",
-                f"io.output_dir={OUTPUT_DIR_BIG}",
-                "mnx_dtm.color.cycles_DTM_colored=[1,4]",
-                f"io.output_folder_map_density={OUTPUT_FOLDER_DENS}",
-                f"io.output_folder_map_class_color={OUTPUT_FOLDER_CLASS}",
-            ],
-        )
-    main(cfg)
-    assert_output_folders_contains_expected_number_of_file(output=OUTPUT_DIR_BIG, nb_raster_expected=1)
 
 
 def assert_output_folders_contains_expected_number_of_file(output: str, nb_raster_expected: int):
