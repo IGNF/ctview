@@ -1,5 +1,6 @@
 # dev
 - new: continuous integration
+- update ign-mnx to 1.0.2 fixing classification values issues
 
 # v0.3.0
 - Lib ign-mnx : version 0.3.0 -> version 1.0.0
