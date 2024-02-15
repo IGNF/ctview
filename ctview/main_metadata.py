@@ -62,7 +62,7 @@ def main(config: DictConfig):
     classifs = np.copy(las.classification)
 
     # Density
-    map_density.generate_raster_of_density_2(
+    map_density.generate_raster_of_density(
         input_points=points_np,
         input_classifs=classifs,
         output_tif=output_tif_density,

@@ -27,7 +27,7 @@ mnx_dtm:
   buffer:
     size: 100
 
-  interpolation: 
+  interpolation:
     algo_name: pdal-tin
 
   filter:
@@ -46,12 +46,11 @@ mnx_dtm_dens:
     tile_width: 1000
     pixel_size: 5
     no_data_value: -9999
-    radius: 2.5
 
   buffer:
     size: 100
 
-  interpolation: 
+  interpolation:
     algo_name: pdal-tin
 
   filter:
@@ -71,7 +70,7 @@ mnx_dsm:
   buffer:
     size: 100
 
-  interpolation: 
+  interpolation:
     algo_name: pdal-tin
 
   filter:

@@ -42,8 +42,8 @@ def get_pointcloud_origin(points: np.array, tile_size: int = 1000, buffer_size: 
     x_max, y_max = np.max(points[:, :2], axis=0) - buffer_size
 
     # Calculate the difference Xmin and Xmax, then Ymin and Ymax
-    diff_x = x_min - x_max
-    diff_y = y_min - y_max
+    diff_x = x_max - x_min
+    diff_y = y_max - y_min
     # Check [x_min - x_max] == amplitude and [y_min - y_max] == amplitude
     if abs(diff_x) <= tile_size and abs(diff_y) <= tile_size:
         origin_x = np.floor(x_min / tile_size) * tile_size  # round low

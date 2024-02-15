@@ -36,9 +36,9 @@ def test_compute_density():
     assert density.shape == (25, 25)
 
 
-def test_generate_raster_of_density_2():
+def test_generate_raster_of_density():
     output_tif = Path(OUTPUT_DIR) / "output_generate_raster_of_density_2.tif"
-    map_density.generate_raster_of_density_2(
+    map_density.generate_raster_of_density(
         input_points=INPUT_POINTS,
         input_classifs=INPUT_CLASSIFS,
         output_tif=output_tif,
@@ -54,9 +54,9 @@ def test_generate_raster_of_density_2():
         assert band1[6, 0] == 0
 
 
-def test_generate_raster_of_density_2_multiband():
+def test_generate_raster_of_density_multiband():
     output_raster_multi = Path(OUTPUT_DIR) / "multiband_raster.tif"
-    map_density.generate_raster_of_density_2(
+    map_density.generate_raster_of_density(
         input_points=INPUT_POINTS,
         input_classifs=INPUT_CLASSIFS,
         classes_by_layer=[[], [125]],
