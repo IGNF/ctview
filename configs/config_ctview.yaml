@@ -12,70 +12,34 @@ io:
   output_dir: null
   output_folder_map_density: DENS_FINAL
   output_folder_map_class_color: CC_5_fusion
+  spatial_reference: EPSG:2154
 
-mnx_dtm:
-  io:
-    spatial_reference: EPSG:2154
-    extension: .tif
+tile_geometry:
+  tile_coord_scale: 1000
+  tile_width: 1000
+  no_data_value: -9999
 
-  tile_geometry:
-    tile_coord_scale: 1000
-    tile_width: 1000
-    pixel_size: 1
-    no_data_value: -9999
+buffer:
+  size: 100
 
-  buffer:
-    size: 100
+density:
+  pixel_size: 5
+  keep_classes: [2, 66]
+  extension: .tif
+  dxm_interpolation: pdal-tin
 
-  interpolation:
-    algo_name: pdal-tin
-
-  filter:
-    keep_classes: [2, 66]
-
+dtm:
+  pixel_size: 1
+  keep_classes: [2, 66]
+  interpolation: pdal-tin
   color:
     cycles_DTM_colored: [1]
 
-mnx_dtm_dens:
-  io:
-    spatial_reference: EPSG:2154
-    extension: .tif
-
-  tile_geometry:
-    tile_coord_scale: 1000
-    tile_width: 1000
-    pixel_size: 5
-    no_data_value: -9999
-
-  buffer:
-    size: 100
-
-  interpolation:
-    algo_name: pdal-tin
-
-  filter:
-    keep_classes: [2, 66]
-
-mnx_dsm:
-  io:
-    spatial_reference: EPSG:2154
-    extension: .tif
-
-  tile_geometry:
-    tile_coord_scale: 1000
-    tile_width: 1000
-    pixel_size: 0.5
-    no_data_value: -9999
-
-  buffer:
-    size: 100
-
-  interpolation:
-    algo_name: pdal-tin
-
-  filter:
-    keep_classes: [1, 2, 3, 4, 5, 6, 9, 17, 64, 65, 66, 67, 202]
-
+class_map:
+  pixel_size: 0.5
+  extension: .tif
+  dxm_interpolation: pdal-tin
+  keep_classes: [1, 2, 3, 4, 5, 6, 9, 17, 64, 65, 66, 67, 202]
 
 hydra:
   output_subdir: null

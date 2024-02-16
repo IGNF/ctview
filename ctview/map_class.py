@@ -117,16 +117,18 @@ def step3_color_raster(
     return raster_colored
 
 
-def create_map_class(input_las: str, output_dir: str, dico_fld: dict, config: DictConfig):
-    """
-    Create a raster of class with the fill aps method of gdal and a colorisation.
-    Args :
-        input_las : las file
-        output_dir : output directory
-        dico_fld : dictionnary of output folders
-        config : hydra config
-    Return :
-        Full path of raster filled and colorised
+def create_map_class(input_las: str, output_dir: str, dico_fld: dict, pixel_size: float, extension: str) -> str:
+    """Create a raster of class with the fill gaps method of gdal and a colorisation.
+
+    Args:
+        input_las (str): las file
+        output_dir (str): output directory
+        dico_fld (dict):  dictionnary of output folders
+        pixel_size (float):  output pixel size of the generated map
+        extension (str): output file extension
+
+    Returns:
+        str: Full path of raster filled and colorised
     """
     log.basicConfig(level=log.INFO, format="%(message)s")
 
@@ -148,9 +150,9 @@ def create_map_class(input_las: str, output_dir: str, dico_fld: dict, config: Di
         in_points=in_points,
         output_dir=output_folder_1,
         output_filename=input_las_name_without_extension,
-        res=config.tile_geometry.pixel_size,
+        res=pixel_size,
         i=1,
-        output_extension=config.io.extension,
+        output_extension=extension,
     )
 
     # Step 2 : Color brut
@@ -158,7 +160,7 @@ def create_map_class(input_las: str, output_dir: str, dico_fld: dict, config: Di
         in_raster=raster_brut,
         output_dir=output_folder_2,
         output_filename=input_las_name_without_extension,
-        output_extension=config.io.extension,
+        output_extension=extension,
         verbose="raster_color",
         i=2,
     )
@@ -168,7 +170,7 @@ def create_map_class(input_las: str, output_dir: str, dico_fld: dict, config: Di
         in_raster=raster_brut,
         output_dir=output_folder_3,
         output_filename=input_las_name_without_extension,
-        output_extension=config.io.extension,
+        output_extension=extension,
         i=3,
     )
 
@@ -177,7 +179,7 @@ def create_map_class(input_las: str, output_dir: str, dico_fld: dict, config: Di
         in_raster=fillgap_raster,
         output_dir=output_folder_4,
         output_filename=input_las_name_without_extension,
-        output_extension=config.io.extension,
+        output_extension=extension,
         verbose="raster_fillgap_color",
         i=4,
     )
@@ -204,10 +206,7 @@ def multiply_DSM_class(
         bounds : bounds of las file ([minx,maxx],[miny, maxy])
     """
     # Crop rasters
-    log.info("Crop rasters")
-    input_DSM_crop = f"{os.path.splitext(input_DSM)[0]}_crop{output_extension}"
-    clip_raster.clip_raster(input_raster=input_DSM, output_raster=input_DSM_crop, bounds=bounds)
-
+    log.info("Crop class_map rasters")
     input_raster_class_crop = f"{os.path.splitext(input_raster_class)[0]}_crop{output_extension}"
     clip_raster.clip_raster(input_raster=input_raster_class, output_raster=input_raster_class_crop, bounds=bounds)
 
@@ -216,7 +215,7 @@ def multiply_DSM_class(
     # Mutiply
     gdal_calc.Calc(
         A=input_raster_class_crop,
-        B=input_DSM_crop,
+        B=input_DSM,
         calc="254*((A*(0.5*(B/255)+0.25))>254)+(A*(0.5*(B/255)+0.25))*((A*(0.5*(B/255)+0.25))<=254)",
         outfile=out_raster,
         allBands="A",
@@ -249,7 +248,8 @@ def main(config: DictConfig):
         input_las=initial_las_file,
         output_dir=config.io.output_dir,
         dico_fld=dico_folder_template,
-        config=config.mnx_dsm,
+        pixel_size=config.class_map.pixel_size,
+        extension=config.class_map.extension,
     )
     log.info("END.")
 
