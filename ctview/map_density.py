@@ -3,14 +3,10 @@ import os
 from typing import Tuple
 
 import numpy as np
-import pdal
 import rasterio
 from omegaconf import DictConfig
 from osgeo_utils import gdal_calc
 
-import ctview.clip_raster as clip_raster
-import ctview.utils_gdal as utils_gdal
-import ctview.utils_pdal as utils_pdal
 from ctview.utils_folder import dico_folder_template
 from ctview.utils_tools import get_pointcloud_origin
 
@@ -73,21 +69,6 @@ def compute_density(points: np.array, origin: Tuple[int, int], tile_size: int, p
     return density
 
 
-def change_unit(input_raster: str, output_raster: str, res: int):
-    """
-    Overwrite and change unity of count from "per res*res m²" to "per m²
-    Args :
-        raster_name : raster of density with units res*res m²
-        res : resolution of the raster
-    """
-    gdal_calc.Calc(
-        f"A/{res*res}",
-        outfile=output_raster,
-        A=input_raster,
-        quiet=True,
-    )
-
-
 def multiply_DTM_density(
     input_DTM: str, input_dens_raster: str, filename: str, output_dir: str, config: DictConfig, bounds: tuple
 ):
@@ -101,21 +82,17 @@ def multiply_DTM_density(
         bounds : bounds of las file ([minx,maxx],[miny, maxy])
     """
     # Crop rasters
-    log.info("Crop rasters")
-    input_DTM_crop = f"{os.path.splitext(input_DTM)[0]}_crop{config.io.extension}"
-    clip_raster.clip_raster(input_raster=input_DTM, output_raster=input_DTM_crop, bounds=bounds)
-
-    input_dens_raster_crop = f"{os.path.splitext(input_dens_raster)[0]}_crop{config.io.extension}"
-    clip_raster.clip_raster(input_raster=input_dens_raster, output_raster=input_dens_raster_crop, bounds=bounds)
-
     log.info("Multiplication with DTM")
     # Output file
     out_raster = os.path.join(output_dir, f"{os.path.splitext(filename)[0]}_DENS{config.io.extension}")
     # Mutiply
     gdal_calc.Calc(
-        A=input_DTM_crop,
-        B=input_dens_raster_crop,
-        calc="((A-1)<0)*B*(A/255)+((A-1)>=0)*B*((A-1)/255)",
+        A=input_DTM,
+        B=input_dens_raster,
+        calc="((A-1)<0)*B*(A/255) + ((A-1)>=0)*B*((A-1)/255)",
         outfile=out_raster,
         NoDataValue=config.tile_geometry.no_data_value,
+        A_band=1,
+        B_band=3,
+        allBands="B",
     )
