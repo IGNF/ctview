@@ -9,7 +9,7 @@ from hydra import compose, initialize
 import ctview.map_DXM as map_DXM
 
 # GENERAL
-TMP = "tmp"
+OUTPUT_DIR = Path("tmp") / "map_DXM"
 COORDX = 77055
 COORDY = 627760
 TILE_COORD_SCALE = 10
@@ -23,7 +23,7 @@ INPUT_DIR_RASTER = os.path.join("data", "raster")
 
 
 # TOOLS
-OUTPUT_DIR_TOOLS = Path(TMP) / "tools"
+OUTPUT_DIR_TOOLS = Path(OUTPUT_DIR) / "tools"
 
 EXPECTED_DTM_DIR = os.path.join(OUTPUT_DIR_TOOLS, "DTM")
 EXPECTED_DTM_BUFFER_DIR = os.path.join(OUTPUT_DIR_TOOLS, "tmp_dtm", "buffer")
@@ -41,7 +41,7 @@ EXPECTED_DTM_DENS_HILLSHADE_DIR = os.path.join(OUTPUT_DIR_TOOLS, "tmp_dtm_dens",
 INPUT_TILENAME_FOR_ALL = f"test_data_{COORDX}_{COORDY}_LA93_IGN69.laz"
 INPUT_FILENAME_FOR_ALL = os.path.join(INPUT_DIR_LAZ, INPUT_TILENAME_FOR_ALL)
 
-OUTPUT_DIR_ALL = os.path.join(TMP, "all")
+OUTPUT_DIR_ALL = os.path.join(OUTPUT_DIR, "all")
 OUTPUT_DIR_MNX = os.path.join(OUTPUT_DIR_ALL, "mnx")
 OUTPUT_DIR_MNX_HS = os.path.join(OUTPUT_DIR_ALL, "mnx_hs")
 OUTPUT_DIR_MNT_MNS_MNTDENS_HS = os.path.join(OUTPUT_DIR_ALL, "mnt_mns_mntdens_hs")
@@ -80,11 +80,11 @@ EXPECTED_DTM_DENS_HILLSHADE = os.path.join(
 
 def setup_module(module):
     try:
-        shutil.rmtree(TMP)
+        shutil.rmtree(OUTPUT_DIR)
 
     except FileNotFoundError:
         pass
-    os.mkdir(TMP)
+    os.mkdir(OUTPUT_DIR)
     os.mkdir(OUTPUT_DIR_TOOLS)
     os.mkdir(OUTPUT_DIR_ALL)
 

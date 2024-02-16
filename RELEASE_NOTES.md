@@ -1,4 +1,7 @@
 # dev
+- density:
+  - use same density map in main_ctView as in main_metadata
+  - fix multiplication with DTM
 - new: continuous integration
 - update ign-mnx to 1.0.2 fixing classification values issues
 

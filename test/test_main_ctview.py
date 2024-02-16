@@ -3,6 +3,7 @@ import shutil
 import test.utils.point_cloud_utils as pcu
 from pathlib import Path
 
+import numpy as np
 import pytest
 import rasterio
 from hydra import compose, initialize
@@ -16,10 +17,10 @@ INPUT_FILENAME_SMALL2 = "test_data_77055_627760_LA93_IGN69.las"
 INPUT_DIR_WATER = Path("data") / "laz" / "water"
 INPUT_FILENAME_WATER = "Semis_2021_0785_6378_LA93_IGN69_water.laz"
 
-OUTPUT_DIR = Path("tmp")
+OUTPUT_DIR = Path("tmp") / "main_ctview"
 OUTPUT_DIR_WATER = OUTPUT_DIR / "main_ctview_water"
 
-OUTPUT_FOLDER_DENS = "ADENS_FINAL"
+OUTPUT_FOLDER_DENS = "DENS_FINAL_CUSTOM"
 OUTPUT_FOLDER_CLASS = "ACC_5_fusion_FINAL"
 
 EXPECTED_OUTPUT_DTM_1C = Path("DTM") / "color" / "1cycle"
@@ -41,10 +42,10 @@ def setup_module(module):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
-@pytest.mark.xfail(reason="Code need to be refactored")
 def test_main_ctview_map_density():
     tile_width = 50
     tile_coord_scale = 10
+    pixel_size = 2
     buffer_size = 10
     output_dir = OUTPUT_DIR / "main_ctview_map_density"
     input_tilename = os.path.splitext(INPUT_FILENAME_SMALL1)[0]
@@ -67,24 +68,27 @@ def test_main_ctview_map_density():
                 f"mnx_dtm_dens.tile_geometry.tile_coord_scale={tile_coord_scale}",
                 f"mnx_dtm_dens.tile_geometry.tile_width={tile_width}",
                 f"mnx_dtm_dens.buffer.size={buffer_size}",
-                f"mnx_dtm_dens.tile_geometry.pixel_size={1}",
-                f"mnx_dtm_dens.tile_geometry.radius={1}",
+                f"mnx_dtm_dens.tile_geometry.pixel_size={pixel_size}",
             ],
         )
     main(cfg)
     with rasterio.Env():
         with rasterio.open(Path(output_dir) / OUTPUT_FOLDER_DENS / f"{input_tilename}_DENS.tif") as raster:
-            band1 = raster.read(1)
-            assert band1[0, 0] == 28 / 2**2  # expected_density_nb_pt / expected_density_pixel_size**2
+            data = raster.read()
+            assert data.shape[0] == 3
+            assert data.shape[1] == tile_width / pixel_size
+            assert data.shape[2] == tile_width / pixel_size
+            for ii in range(3):
+                assert np.any(data[ii, :, :])
 
 
-@pytest.mark.xfail(reason="Code need to be refactored")
 def test_main_ctview_map_density_empty():
-    tile_width = 50
-    tile_coord_scale = 10
+    tile_width = 1000
+    tile_coord_scale = 1000
     buffer_size = 10
-    output_dir = OUTPUT_DIR / "main_ctview_map_density"
-    input_tilename = os.path.splitext(INPUT_FILENAME_SMALL1)[0]
+    pixel_size = 1
+    output_dir = OUTPUT_DIR / "main_ctview_map_density_empty"
+    input_tilename = os.path.splitext(INPUT_FILENAME_WATER)[0]
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
@@ -104,17 +108,18 @@ def test_main_ctview_map_density_empty():
                 f"mnx_dtm_dens.tile_geometry.tile_coord_scale={tile_coord_scale}",
                 f"mnx_dtm_dens.tile_geometry.tile_width={tile_width}",
                 f"mnx_dtm_dens.buffer.size={buffer_size}",
-                f"mnx_dtm_dens.tile_geometry.pixel_size={1}",
-                f"mnx_dtm_dens.tile_geometry.radius={1}",
+                f"mnx_dtm_dens.tile_geometry.pixel_size={pixel_size}",
             ],
         )
     main(cfg)
+
     with rasterio.Env():
-        with rasterio.open(Path(OUTPUT_DIR_WATER) / OUTPUT_FOLDER_DENS / f"{input_tilename}_DENS.tif") as raster:
-            band1 = raster.read(1)
-            for pixelx in range(50):
-                for pixely in range(50):
-                    assert band1[pixely, pixelx] == 0
+        with rasterio.open(Path(output_dir) / OUTPUT_FOLDER_DENS / f"{input_tilename}_DENS.tif") as raster:
+            data = raster.read()
+            assert data.shape[0] == 3
+            assert data.shape[1] == tile_width / pixel_size
+            assert data.shape[2] == tile_width / pixel_size
+            assert np.all(data == 0)
 
 
 def test_main_ctview_map_class():
@@ -143,7 +148,6 @@ def test_main_ctview_map_class():
                 f"mnx_dtm_dens.tile_geometry.tile_width={tile_width}",
                 f"mnx_dtm_dens.buffer.size={buffer_size}",
                 f"mnx_dtm_dens.tile_geometry.pixel_size={1}",
-                f"mnx_dtm_dens.tile_geometry.radius={1}",
             ],
         )
     main(cfg)
@@ -194,7 +198,6 @@ def test_main_ctview_dtm_color():
                 f"mnx_dtm_dens.tile_geometry.tile_width={tile_width}",
                 f"mnx_dtm_dens.buffer.size={buffer_size}",
                 f"mnx_dtm_dens.tile_geometry.pixel_size={1}",
-                f"mnx_dtm_dens.tile_geometry.radius={1}",
             ],
         )
     main(cfg)
@@ -251,7 +254,6 @@ def test_main_ctview_2_files(input_dir, input_filename, output_dir, expected_nb_
                 f"mnx_dtm_dens.tile_geometry.tile_width={tile_width}",
                 f"mnx_dtm_dens.buffer.size={buffer_size}",
                 f"mnx_dtm_dens.tile_geometry.pixel_size={1}",
-                f"mnx_dtm_dens.tile_geometry.radius={1}",
             ],
         )
     main(cfg)

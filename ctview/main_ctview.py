@@ -1,5 +1,7 @@
 import logging as log
 import os
+import laspy
+import numpy as np
 
 import hydra
 from omegaconf import DictConfig
@@ -9,6 +11,7 @@ import ctview.map_class as map_class
 import ctview.map_density as map_density
 import ctview.map_DXM as map_DXM
 import ctview.utils_pdal as utils_pdal
+import ctview.utils_gdal as utils_gdal
 from ctview.utils_folder import create_folder, dico_folder_template
 
 
@@ -56,22 +59,50 @@ def main(config: DictConfig):
     )
     # Step 2 : raster of density
     log.info("\nStep 2/3 : raster of density\n")
-    raster_dens, success = map_density.generate_raster_of_density(
-        input_las=initial_las_file, output_dir=out_dir, config=config.mnx_dtm_dens
+    raster_dens = os.path.join(
+        out_dir,
+        dico_folder_template["folder_density_value"],
+        f"{os.path.splitext(initial_las_filename)[0]}_DENS{config.mnx_dtm_dens.io.extension}",
     )
+    raster_dens_color = os.path.join(
+        out_dir,
+        dico_folder_template["folder_density_color"],
+        f"{os.path.splitext(initial_las_filename)[0]}_DENS_COLOR{config.mnx_dtm_dens.io.extension}",
+    )
+    # Density
+    las = laspy.read(initial_las_file)
+    points_np = np.vstack((las.x, las.y, las.z)).transpose()
+    classifs = np.copy(las.classification)
+
+    map_density.generate_raster_of_density(
+        input_points=points_np,
+        input_classifs=classifs,
+        output_tif=raster_dens,
+        epsg=config.mnx_dtm_dens.io.spatial_reference,
+        classes_by_layer=[config.mnx_dtm_dens.filter.keep_classes],
+        tile_size=config.mnx_dtm_dens.tile_geometry.tile_width,
+        pixel_size=config.mnx_dtm_dens.tile_geometry.pixel_size,
+        buffer_size=0,
+    )
+
+    log.info("Colorisation...")
+    utils_gdal.color_raster_with_LUT(
+        input_raster=raster_dens,
+        output_raster=raster_dens_color,
+        LUT=os.path.join("LUT", "LUT_DENSITY.txt"),
+    )
+
     # Step 3 : multiply density and DTM layers
     log.info("\nStep 3/3 : raster of density\n")
-    if success:
-        map_density.multiply_DTM_density(
-            input_DTM=raster_DTM_dens,
-            input_dens_raster=raster_dens,
-            filename=initial_las_filename,
-            output_dir=output_dir_map_density,
-            config=config.mnx_dtm_dens,
-            bounds=bounds_las,
-        )
-    else:
-        log.warning(f"La dalle {initial_las_file} ne contient pas de points sol. Carte de densité non générée.")
+
+    map_density.multiply_DTM_density(
+        input_DTM=raster_DTM_dens,
+        input_dens_raster=raster_dens_color,
+        filename=initial_las_filename,
+        output_dir=output_dir_map_density,
+        config=config.mnx_dtm_dens,
+        bounds=bounds_las,
+    )
 
     # DTM hillshade color
     # Step 1/2 : DTM hillshade
