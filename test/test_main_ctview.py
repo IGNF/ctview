@@ -1,10 +1,9 @@
 import os
 import shutil
 import test.utils.point_cloud_utils as pcu
-import numpy as np
 from pathlib import Path
 
-
+import numpy as np
 import pytest
 import rasterio
 from hydra import compose, initialize
@@ -77,6 +76,8 @@ def test_main_ctview_map_density():
         with rasterio.open(Path(output_dir) / OUTPUT_FOLDER_DENS / f"{input_tilename}_DENS.tif") as raster:
             data = raster.read()
             assert data.shape[0] == 3
+            assert data.shape[1] == tile_width / pixel_size
+            assert data.shape[2] == tile_width / pixel_size
             for ii in range(3):
                 assert np.any(data[ii, :, :])
 
@@ -85,6 +86,7 @@ def test_main_ctview_map_density_empty():
     tile_width = 1000
     tile_coord_scale = 1000
     buffer_size = 10
+    pixel_size = 1
     output_dir = OUTPUT_DIR / "main_ctview_map_density_empty"
     input_tilename = os.path.splitext(INPUT_FILENAME_WATER)[0]
     with initialize(version_base="1.2", config_path="../configs"):
@@ -106,7 +108,7 @@ def test_main_ctview_map_density_empty():
                 f"mnx_dtm_dens.tile_geometry.tile_coord_scale={tile_coord_scale}",
                 f"mnx_dtm_dens.tile_geometry.tile_width={tile_width}",
                 f"mnx_dtm_dens.buffer.size={buffer_size}",
-                f"mnx_dtm_dens.tile_geometry.pixel_size={1}",
+                f"mnx_dtm_dens.tile_geometry.pixel_size={pixel_size}",
             ],
         )
     main(cfg)
@@ -115,6 +117,8 @@ def test_main_ctview_map_density_empty():
         with rasterio.open(Path(output_dir) / OUTPUT_FOLDER_DENS / f"{input_tilename}_DENS.tif") as raster:
             data = raster.read()
             assert data.shape[0] == 3
+            assert data.shape[1] == tile_width / pixel_size
+            assert data.shape[2] == tile_width / pixel_size
             assert np.all(data == 0)
 
 
