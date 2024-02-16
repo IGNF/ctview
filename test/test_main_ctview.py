@@ -187,7 +187,7 @@ def test_main_ctview_dtm_color():
             band2 = raster.read(2)
             band3 = raster.read(3)
             assert band1[8, 8] == 255
-            assert band2[8, 8] == 165
+            assert band2[8, 8] == 147
             assert band3[8, 8] == 0
             assert raster.res == (1, 1)
         with rasterio.open(
@@ -196,8 +196,8 @@ def test_main_ctview_dtm_color():
             band1 = raster.read(1)
             band2 = raster.read(2)
             band3 = raster.read(3)
-            assert band1[8, 8] == 255
-            assert band2[8, 8] == 151
+            assert band1[8, 8] == 205
+            assert band2[8, 8] == 103
             assert band3[8, 8] == 0
             assert raster.res == (1, 1)
 
