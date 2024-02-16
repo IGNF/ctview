@@ -3,25 +3,25 @@ import shutil
 
 from ctview.utils_folder import create_folder, dico_folder_template
 
-tmp_path = os.path.join("tmp")
+OUTPUT_DIR = os.path.join("tmp", "utils_folder")
 
 # FOLDER TO TEST
 EXPECTED_DIR_LIST = []
 
 for f_name in dico_folder_template:
-    EXPECTED_DIR_LIST.append(os.path.join(tmp_path, dico_folder_template[f_name]))
+    EXPECTED_DIR_LIST.append(os.path.join(OUTPUT_DIR, dico_folder_template[f_name]))
 
 
 def setup_module():
     try:
-        shutil.rmtree(tmp_path)
+        shutil.rmtree(OUTPUT_DIR)
 
     except FileNotFoundError:
         pass
-    os.mkdir(tmp_path)
+    os.mkdir(OUTPUT_DIR)
 
 
-def test_create_folder(dest_dir=tmp_path):
+def test_create_folder(dest_dir=OUTPUT_DIR):
     """Verify :
     - folders are created
     """

@@ -3,14 +3,14 @@ import shutil
 
 import ctview.add_hillshade as add_hillshade
 
-TMP = "tmp"
+OUTPUT_DIR = os.path.join("tmp", "add_hillshade")
 COORDX = 77055
 COORDY = 627760
 INPUT_DIR_RASTER = os.path.join("data", "raster")
 
 INPUT_WITHOUT_HILLSHADE = os.path.join(INPUT_DIR_RASTER, f"test_data_{COORDX}_{COORDY}_LA93_IGN69_interp.tif")
 
-OUTPUT_DIR_HILLSHADE = os.path.join(TMP, "hillshade")
+OUTPUT_DIR_HILLSHADE = os.path.join(OUTPUT_DIR, "hillshade")
 
 EXPECTED_OUTPUT_WITH_HILLSHADE = os.path.join(
     OUTPUT_DIR_HILLSHADE, f"test_data_{COORDX}_{COORDY}_LA93_IGN69_hillshade.tif"
@@ -19,12 +19,12 @@ EXPECTED_OUTPUT_WITH_HILLSHADE = os.path.join(
 
 def setup_module(module):
     try:
-        shutil.rmtree(TMP)
+        shutil.rmtree(OUTPUT_DIR)
 
     except FileNotFoundError:
         pass
-    os.mkdir(TMP)
-    os.mkdir(OUTPUT_DIR_HILLSHADE)
+    os.makedirs(OUTPUT_DIR)
+    os.makedirs(OUTPUT_DIR_HILLSHADE)
 
 
 def test_add_hillshade_one_raster():

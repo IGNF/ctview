@@ -16,7 +16,7 @@ INPUT_FILENAME_SMALL2 = "test_data_77055_627760_LA93_IGN69.las"
 INPUT_DIR_WATER = Path("data") / "laz" / "water"
 INPUT_FILENAME_WATER = "Semis_2021_0785_6378_LA93_IGN69_water.laz"
 
-OUTPUT_DIR = Path("tmp")
+OUTPUT_DIR = Path("tmp") / "main_ctview"
 OUTPUT_DIR_WATER = OUTPUT_DIR / "main_ctview_water"
 
 OUTPUT_FOLDER_DENS = "DENS_FINAL_CUSTOM"
@@ -80,7 +80,7 @@ def test_main_ctview_map_density_empty():
     tile_width = 1000
     tile_coord_scale = 1000
     buffer_size = 10
-    output_dir = OUTPUT_DIR / "main_ctview_map_density"
+    output_dir = OUTPUT_DIR / "main_ctview_map_density_empty"
     input_tilename = os.path.splitext(INPUT_FILENAME_WATER)[0]
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
