@@ -1,7 +1,7 @@
 # dev
-- Generate buffer point cloud only once in the beggining of the algo
+- generate buffer point cloud only once in the beggining of the algo
 - simplify config file
-- add option to GEMprocessing to process hillshade on the sides as well (removes black lines)
+- add option to gdal DEMprocessing to process hillshade on the sides as well (removes black lines)
 - density:
   - use same density map in main_ctView as in main_metadata
   - fix multiplication with DTM
