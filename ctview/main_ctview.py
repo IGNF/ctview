@@ -95,7 +95,7 @@ def main(config: DictConfig):
         f"{os.path.splitext(initial_las_filename)[0]}_DENS_COLOR{config.density.extension}",
     )
     # Density
-    las = laspy.read(initial_las_file)
+    las = laspy.read(str(las_with_buffer))
     points_np = np.vstack((las.x, las.y, las.z)).transpose()
     classifs = np.copy(las.classification)
 
