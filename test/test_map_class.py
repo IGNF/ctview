@@ -19,6 +19,7 @@ INPUT_FILE = os.path.join(INPUT_DIR, INPUT_FILENAME)
 IN_POINTS = utils_pdal.read_las_file(INPUT_FILE)  # tested
 FILENAME = "defaultname"
 VERBOSE = "suffix"
+LUT_FILE = os.path.join("LUT", "LUT_CLASS.txt")
 
 # Config
 TILE_COORD_SCALE = 10
@@ -107,6 +108,7 @@ def test_step3_color_raster():
         output_extension=CONFIG.class_map.extension,
         verbose=VERBOSE,
         i=1,
+        LUT=LUT_FILE,
     )
     assert raster_color == PATH3_EXPECTED
     with rasterio.open(PATH3_EXPECTED) as raster:

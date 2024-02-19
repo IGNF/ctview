@@ -14,7 +14,6 @@ import ctview.map_density as map_density
 import ctview.map_DXM as map_DXM
 import ctview.utils_gdal as utils_gdal
 import ctview.utils_pdal as utils_pdal
-from ctview.utils_folder import create_folder, dico_folder_template
 
 
 @hydra.main(config_path="../configs/", config_name="config_ctview.yaml", version_base="1.2")
@@ -33,16 +32,11 @@ def main(config: DictConfig):
             For more info run the same command by adding --help"""
         )
 
-    dico_folder_modif = dico_folder_template.copy()
-
     # Create folder test if not exists
     os.makedirs(out_dir, exist_ok=True)
 
     # Create folders of dico_folder_modif in out_dir
-    create_folder(out_dir, dico_fld=dico_folder_modif)
-    output_dir_map_density = os.path.join(out_dir, config.io.output_folder_map_density)
-    os.makedirs(output_dir_map_density, exist_ok=True)
-    output_dir_map_class_color = os.path.join(out_dir, config.io.output_folder_map_class_color)
+    output_dir_map_class_color = os.path.join(out_dir, config.class_map.output_dir)
     os.makedirs(output_dir_map_class_color, exist_ok=True)
 
     # ## ACTIVATE IF NECESSARY
@@ -52,7 +46,7 @@ def main(config: DictConfig):
     # utils_tools.repare_files(las_liste, in_dir)
     # time.sleep(2)
     initial_las_file = os.path.join(in_dir, initial_las_filename)
-    las_with_buffer = Path(out_dir) / "tmp" / "buffer" / initial_las_filename
+    las_with_buffer = Path(out_dir) / config.buffer.output_dir / initial_las_filename
     las_with_buffer.parent.mkdir(parents=True, exist_ok=True)
     bounds_las = utils_pdal.get_bounds_from_las(initial_las_file)  # get boundaries
 
@@ -84,16 +78,25 @@ def main(config: DictConfig):
     )
 
     log.info("\nStep 2.2: Create density map\n")
-    raster_dens = os.path.join(
+    raster_dens_values = os.path.join(
         out_dir,
-        dico_folder_template["folder_density_value"],
+        config.density.intermediate_dirs.density_values,
         f"{os.path.splitext(initial_las_filename)[0]}_DENS{config.density.extension}",
     )
+    os.makedirs(os.path.dirname(raster_dens_values), exist_ok=True)
     raster_dens_color = os.path.join(
         out_dir,
-        dico_folder_template["folder_density_color"],
+        config.density.intermediate_dirs.density_color,
         f"{os.path.splitext(initial_las_filename)[0]}_DENS_COLOR{config.density.extension}",
     )
+    os.makedirs(os.path.dirname(raster_dens_color), exist_ok=True)
+    raster_dens = os.path.join(
+        out_dir,
+        config.density.output_dir,
+        f"{os.path.splitext(initial_las_filename)[0]}_DENS{config.density.extension}",
+    )
+    os.makedirs(os.path.dirname(raster_dens), exist_ok=True)
+
     # Density
     las = laspy.read(str(las_with_buffer))
     points_np = np.vstack((las.x, las.y, las.z)).transpose()
@@ -102,7 +105,7 @@ def main(config: DictConfig):
     map_density.generate_raster_of_density(
         input_points=points_np,
         input_classifs=classifs,
-        output_tif=raster_dens,
+        output_tif=raster_dens_values,
         epsg=config.io.spatial_reference,
         classes_by_layer=[config.density.keep_classes],
         tile_size=config.tile_geometry.tile_width,
@@ -112,19 +115,17 @@ def main(config: DictConfig):
 
     log.info("\nStep 2.3: Colorize density map\n")
     utils_gdal.color_raster_with_LUT(
-        input_raster=raster_dens,
+        input_raster=raster_dens_values,
         output_raster=raster_dens_color,
-        LUT=os.path.join("LUT", "LUT_DENSITY.txt"),
+        LUT=os.path.join(config.io.lut_folder, config.density.lut_filename),
     )
 
     log.info("\nStep 2.4: Multiply with DTM for hillshade")
     map_density.multiply_DTM_density(
         input_DTM=raster_DTM_dens,
         input_dens_raster=raster_dens_color,
-        filename=initial_las_filename,
-        output_dir=output_dir_map_density,
+        output_raster=raster_dens,
         no_data=config.tile_geometry.no_data_value,
-        extension=config.density.extension,
     )
 
     # DTM hillshade color
@@ -144,9 +145,9 @@ def main(config: DictConfig):
     add_color.color_raster_dtm_hillshade_with_LUT(
         input_initial_basename=initial_las_filename,
         input_raster=raster_DTM_hs_1M,
-        output_dir=out_dir,
+        output_dir=os.path.join(out_dir, config.dtm.output_dir),
         list_c=list_cycles,
-        dico_fld=dico_folder_modif,
+        output_dir_LUT=os.path.join(out_dir, config.dtm.color.folder_LUT),
     )
 
     # Map class color
@@ -166,9 +167,10 @@ def main(config: DictConfig):
     raster_class_fgc = map_class.create_map_class(
         input_las=str(las_with_buffer),
         output_dir=out_dir,
-        dico_fld=dico_folder_modif,
         pixel_size=config.class_map.pixel_size,
         extension=config.class_map.extension,
+        config_intermediate_dirs=config.class_map.intermediate_dirs,
+        LUT=os.path.join(config.io.lut_folder, config.class_map.lut_filename),
     )
 
     log.info("\nStep 4.2: Multiply with DSM for hillshade")

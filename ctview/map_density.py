@@ -1,17 +1,11 @@
 import logging as log
-import os
 from typing import Tuple
 
 import numpy as np
 import rasterio
 from osgeo_utils import gdal_calc
 
-from ctview.utils_folder import dico_folder_template
 from ctview.utils_tools import get_pointcloud_origin
-
-FOLDER_DENS_VALUE = dico_folder_template["folder_density_value"]
-FOLDER_DENS_COLOR = dico_folder_template["folder_density_color"]
-CLASSIF_GROUND = 2
 
 
 def generate_raster_of_density(
@@ -68,9 +62,7 @@ def compute_density(points: np.array, origin: Tuple[int, int], tile_size: int, p
     return density
 
 
-def multiply_DTM_density(
-    input_DTM: str, input_dens_raster: str, filename: str, output_dir: str, no_data: int, extension: str
-):
+def multiply_DTM_density(input_DTM: str, input_dens_raster: str, output_raster: str, no_data: int):
     """Fusion of 2 rasters (DTM and raster of density) with a given formula.
 
     Args:
@@ -92,14 +84,13 @@ def multiply_DTM_density(
     """
     # Crop rasters
     log.info("Multiplication with DTM")
-    # Output file
-    out_raster = os.path.join(output_dir, f"{os.path.splitext(filename)[0]}_DENS{extension}")
+
     # Mutiply
     gdal_calc.Calc(
         A=input_DTM,
         B=input_dens_raster,
         calc="((A-1)<0)*B*(A/255) + ((A-1)>=0)*B*((A-1)/255)",
-        outfile=out_raster,
+        outfile=output_raster,
         NoDataValue=no_data,
         A_band=1,
         B_band=3,

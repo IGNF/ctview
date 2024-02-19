@@ -11,7 +11,6 @@ from osgeo_utils import gdal_calc, gdal_fillnodata
 import ctview.clip_raster as clip_raster
 import ctview.utils_gdal as utils_gdal
 import ctview.utils_pdal as utils_pdal
-from ctview.utils_folder import dico_folder_template
 
 
 def fill_no_data(
@@ -53,6 +52,7 @@ def step1_create_raster_brut(
     Return :
         Full path of raster of class brut
     """
+    os.makedirs(output_dir, exist_ok=True)
     raster_brut = os.path.join(output_dir, f"{output_filename}_raster{output_extension}")
     log.info(f"Step {i}/4 : Raster of class brut : {raster_brut}")
     utils_pdal.write_raster_class(input_points=in_points, output_raster=raster_brut, res=res)
@@ -75,6 +75,7 @@ def step2_create_raster_fillgap(in_raster: str, output_dir: str, output_filename
     Return :
         Full path of raster filled
     """
+    os.makedirs(output_dir, exist_ok=True)
     fillgap_raster = os.path.join(output_dir, f"{output_filename}_raster_fillgap{output_extension}")
     log.info(f"Step {i}/4 : Fill gaps : {fillgap_raster}")
     fill_no_data(
@@ -90,7 +91,7 @@ def step2_create_raster_fillgap(in_raster: str, output_dir: str, output_filename
 
 
 def step3_color_raster(
-    in_raster: str, output_dir: str, output_filename: str, output_extension: str, verbose: str, i: int
+    in_raster: str, output_dir: str, output_filename: str, output_extension: str, verbose: str, i: int, LUT: str
 ):
     """
     Color a raster using method gdal DEMProcessing with a specific LUT.
@@ -104,12 +105,11 @@ def step3_color_raster(
     Return :
         Full path of raster colored
     """
+    os.makedirs(output_dir, exist_ok=True)
     raster_colored = os.path.join(output_dir, f"{output_filename}_{verbose}{output_extension}")
     log.info(f"Step {i}/4 : {verbose} : {raster_colored}")
 
-    utils_gdal.color_raster_with_LUT(
-        input_raster=in_raster, output_raster=raster_colored, LUT=os.path.join("LUT", "LUT_CLASS.txt")
-    )
+    utils_gdal.color_raster_with_LUT(input_raster=in_raster, output_raster=raster_colored, LUT=LUT)
 
     if not os.path.exists(raster_colored):  # if raster not create, next step with fail
         raise FileNotFoundError(f"{raster_colored} not found")
@@ -117,7 +117,14 @@ def step3_color_raster(
     return raster_colored
 
 
-def create_map_class(input_las: str, output_dir: str, dico_fld: dict, pixel_size: float, extension: str) -> str:
+def create_map_class(
+    input_las: str,
+    output_dir: str,
+    pixel_size: float,
+    extension: str,
+    config_intermediate_dirs: DictConfig,
+    LUT: str,
+) -> str:
     """Create a raster of class with the fill gaps method of gdal and a colorisation.
 
     Args:
@@ -140,10 +147,10 @@ def create_map_class(input_las: str, output_dir: str, dico_fld: dict, pixel_size
     log.info(f"\nMAP OF CLASS : file : {input_las_name}")
 
     # Output_folder_names
-    output_folder_1 = os.path.join(output_dir, dico_fld["folder_CC_brut"])
-    output_folder_2 = os.path.join(output_dir, dico_fld["folder_CC_brut_color"])
-    output_folder_3 = os.path.join(output_dir, dico_fld["folder_CC_fillgap"])
-    output_folder_4 = os.path.join(output_dir, dico_fld["folder_CC_fillgap_color"])
+    output_folder_1 = os.path.join(output_dir, config_intermediate_dirs["CC_brut"])
+    output_folder_2 = os.path.join(output_dir, config_intermediate_dirs["CC_brut_color"])
+    output_folder_3 = os.path.join(output_dir, config_intermediate_dirs["CC_fillgap"])
+    output_folder_4 = os.path.join(output_dir, config_intermediate_dirs["CC_fillgap_color"])
 
     # Step 1 : Write raster brut
     raster_brut = step1_create_raster_brut(
@@ -163,6 +170,7 @@ def create_map_class(input_las: str, output_dir: str, dico_fld: dict, pixel_size
         output_extension=extension,
         verbose="raster_color",
         i=2,
+        LUT=LUT,
     )
 
     # Step 3 :  Fill gaps
@@ -182,6 +190,7 @@ def create_map_class(input_las: str, output_dir: str, dico_fld: dict, pixel_size
         output_extension=extension,
         verbose="raster_fillgap_color",
         i=4,
+        LUT=LUT,
     )
 
     return color_fillgap_raster
@@ -228,28 +237,13 @@ def main(config: DictConfig):
     log.basicConfig(level=log.INFO, format="%(message)s")
     initial_las_file = os.path.join(config.io.input_dir, config.io.input_filename)
     os.makedirs(config.io.output_dir, exist_ok=True)
-    os.makedirs(
-        os.path.join(config.io.output_dir, dico_folder_template["folder_CC_brut"]),
-        exist_ok=True,
-    )
-    os.makedirs(
-        os.path.join(config.io.output_dir, dico_folder_template["folder_CC_brut_color"]),
-        exist_ok=True,
-    )
-    os.makedirs(
-        os.path.join(config.io.output_dir, dico_folder_template["folder_CC_fillgap"]),
-        exist_ok=True,
-    )
-    os.makedirs(
-        os.path.join(config.io.output_dir, dico_folder_template["folder_CC_fillgap_color"]),
-        exist_ok=True,
-    )
     create_map_class(
         input_las=initial_las_file,
         output_dir=config.io.output_dir,
-        dico_fld=dico_folder_template,
+        config_intermediate_dirs=config.class_map.intermediate_dirs,
         pixel_size=config.class_map.pixel_size,
         extension=config.class_map.extension,
+        LUT=os.path.join(config.io.lut_folder, config.class_map.lut_filename),
     )
     log.info("END.")
 
