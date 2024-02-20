@@ -57,21 +57,16 @@ def test_main_ctview_map_density():
                 f"io.input_filename={INPUT_FILENAME_SMALL1}",
                 f"io.input_dir={INPUT_DIR_SMALL}",
                 f"io.output_dir={output_dir}",
-                "mnx_dtm.color.cycles_DTM_colored=[1,4]",
+                "dtm.color.cycles_DTM_colored=[1,4]",
                 f"io.output_folder_map_density={OUTPUT_FOLDER_DENS}",
-                f"mnx_dtm.tile_geometry.tile_coord_scale={tile_coord_scale}",
-                f"mnx_dtm.tile_geometry.tile_width={tile_width}",
-                f"mnx_dtm.buffer.size={buffer_size}",
-                f"mnx_dsm.tile_geometry.tile_coord_scale={tile_coord_scale}",
-                f"mnx_dsm.tile_geometry.tile_width={tile_width}",
-                f"mnx_dsm.buffer.size={buffer_size}",
-                f"mnx_dtm_dens.tile_geometry.tile_coord_scale={tile_coord_scale}",
-                f"mnx_dtm_dens.tile_geometry.tile_width={tile_width}",
-                f"mnx_dtm_dens.buffer.size={buffer_size}",
-                f"mnx_dtm_dens.tile_geometry.pixel_size={pixel_size}",
+                f"tile_geometry.tile_coord_scale={tile_coord_scale}",
+                f"tile_geometry.tile_width={tile_width}",
+                f"buffer.size={buffer_size}",
+                f"density.pixel_size={pixel_size}",
             ],
         )
     main(cfg)
+    assert_las_buffer_is_not_empty(output_dir, INPUT_FILENAME_SMALL1)
     with rasterio.Env():
         with rasterio.open(Path(output_dir) / OUTPUT_FOLDER_DENS / f"{input_tilename}_DENS.tif") as raster:
             data = raster.read()
@@ -97,22 +92,16 @@ def test_main_ctview_map_density_empty():
                 f"io.input_filename={INPUT_FILENAME_WATER}",
                 f"io.input_dir={INPUT_DIR_WATER}",
                 f"io.output_dir={output_dir}",
-                "mnx_dtm.color.cycles_DTM_colored=[1,4]",
+                "dtm.color.cycles_DTM_colored=[1,4]",
                 f"io.output_folder_map_density={OUTPUT_FOLDER_DENS}",
-                f"mnx_dtm.tile_geometry.tile_coord_scale={tile_coord_scale}",
-                f"mnx_dtm.tile_geometry.tile_width={tile_width}",
-                f"mnx_dtm.buffer.size={buffer_size}",
-                f"mnx_dsm.tile_geometry.tile_coord_scale={tile_coord_scale}",
-                f"mnx_dsm.tile_geometry.tile_width={tile_width}",
-                f"mnx_dsm.buffer.size={buffer_size}",
-                f"mnx_dtm_dens.tile_geometry.tile_coord_scale={tile_coord_scale}",
-                f"mnx_dtm_dens.tile_geometry.tile_width={tile_width}",
-                f"mnx_dtm_dens.buffer.size={buffer_size}",
-                f"mnx_dtm_dens.tile_geometry.pixel_size={pixel_size}",
+                f"tile_geometry.tile_coord_scale={tile_coord_scale}",
+                f"tile_geometry.tile_width={tile_width}",
+                f"buffer.size={buffer_size}",
+                f"density.pixel_size={pixel_size}",
             ],
         )
     main(cfg)
-
+    assert_las_buffer_is_not_empty(output_dir, filename=INPUT_FILENAME_WATER)
     with rasterio.Env():
         with rasterio.open(Path(output_dir) / OUTPUT_FOLDER_DENS / f"{input_tilename}_DENS.tif") as raster:
             data = raster.read()
@@ -136,22 +125,16 @@ def test_main_ctview_map_class():
                 f"io.input_filename={INPUT_FILENAME_SMALL1}",
                 f"io.input_dir={INPUT_DIR_SMALL}",
                 f"io.output_dir={output_dir}",
-                "mnx_dtm.color.cycles_DTM_colored=[1,4]",
+                "dtm.color.cycles_DTM_colored=[1,4]",
                 f"io.output_folder_map_class_color={OUTPUT_FOLDER_CLASS}",
-                f"mnx_dtm.tile_geometry.tile_coord_scale={tile_coord_scale}",
-                f"mnx_dtm.tile_geometry.tile_width={tile_width}",
-                f"mnx_dtm.buffer.size={buffer_size}",
-                f"mnx_dsm.tile_geometry.tile_coord_scale={tile_coord_scale}",
-                f"mnx_dsm.tile_geometry.tile_width={tile_width}",
-                f"mnx_dsm.buffer.size={buffer_size}",
-                f"mnx_dtm_dens.tile_geometry.tile_coord_scale={tile_coord_scale}",
-                f"mnx_dtm_dens.tile_geometry.tile_width={tile_width}",
-                f"mnx_dtm_dens.buffer.size={buffer_size}",
-                f"mnx_dtm_dens.tile_geometry.pixel_size={1}",
+                f"tile_geometry.tile_coord_scale={tile_coord_scale}",
+                f"tile_geometry.tile_width={tile_width}",
+                f"buffer.size={buffer_size}",
+                f"density.pixel_size={1}",
             ],
         )
     main(cfg)
-    assert_las_buffer_is_not_empty(output=output_dir)
+    assert_las_buffer_is_not_empty(output_dir, INPUT_FILENAME_SMALL1)
     with rasterio.Env():
         with rasterio.open(Path(output_dir) / "CC_4_fgcolor" / f"{input_tilename}_raster_fillgap_color.tif") as raster:
             band1 = raster.read(1)
@@ -187,21 +170,15 @@ def test_main_ctview_dtm_color():
                 f"io.input_filename={INPUT_FILENAME_SMALL1}",
                 f"io.input_dir={INPUT_DIR_SMALL}",
                 f"io.output_dir={output_dir}",
-                "mnx_dtm.color.cycles_DTM_colored=[1,4]",
-                f"mnx_dtm.tile_geometry.tile_coord_scale={tile_coord_scale}",
-                f"mnx_dtm.tile_geometry.tile_width={tile_width}",
-                f"mnx_dtm.buffer.size={buffer_size}",
-                f"mnx_dsm.tile_geometry.tile_coord_scale={tile_coord_scale}",
-                f"mnx_dsm.tile_geometry.tile_width={tile_width}",
-                f"mnx_dsm.buffer.size={buffer_size}",
-                f"mnx_dtm_dens.tile_geometry.tile_coord_scale={tile_coord_scale}",
-                f"mnx_dtm_dens.tile_geometry.tile_width={tile_width}",
-                f"mnx_dtm_dens.buffer.size={buffer_size}",
-                f"mnx_dtm_dens.tile_geometry.pixel_size={1}",
+                "dtm.color.cycles_DTM_colored=[1,4]",
+                f"tile_geometry.tile_coord_scale={tile_coord_scale}",
+                f"tile_geometry.tile_width={tile_width}",
+                f"buffer.size={buffer_size}",
+                f"dtm.pixel_size={1}",
             ],
         )
     main(cfg)
-    assert_las_buffer_is_not_empty(output=output_dir)
+    assert_las_buffer_is_not_empty(output_dir, INPUT_FILENAME_SMALL1)
     with rasterio.Env():
         with rasterio.open(
             Path(output_dir) / EXPECTED_OUTPUT_DTM_1C / f"{input_tilename}_DTM_hillshade_color1c.tif"
@@ -210,7 +187,7 @@ def test_main_ctview_dtm_color():
             band2 = raster.read(2)
             band3 = raster.read(3)
             assert band1[8, 8] == 255
-            assert band2[8, 8] == 165
+            assert band2[8, 8] == 147
             assert band3[8, 8] == 0
             assert raster.res == (1, 1)
         with rasterio.open(
@@ -219,8 +196,8 @@ def test_main_ctview_dtm_color():
             band1 = raster.read(1)
             band2 = raster.read(2)
             band3 = raster.read(3)
-            assert band1[8, 8] == 255
-            assert band2[8, 8] == 151
+            assert band1[8, 8] == 205
+            assert band2[8, 8] == 103
             assert band3[8, 8] == 0
             assert raster.res == (1, 1)
 
@@ -241,19 +218,13 @@ def test_main_ctview_2_files(input_dir, input_filename, output_dir, expected_nb_
                 f"io.input_filename={input_filename}",
                 f"io.input_dir={input_dir}",
                 f"io.output_dir={output_dir}",
-                "mnx_dtm.color.cycles_DTM_colored=[1,4]",
+                "dtm.color.cycles_DTM_colored=[1,4]",
                 f"io.output_folder_map_density={OUTPUT_FOLDER_DENS}",
                 f"io.output_folder_map_class_color={OUTPUT_FOLDER_CLASS}",
-                f"mnx_dtm.tile_geometry.tile_coord_scale={tile_coord_scale}",
-                f"mnx_dtm.tile_geometry.tile_width={tile_width}",
-                f"mnx_dtm.buffer.size={buffer_size}",
-                f"mnx_dsm.tile_geometry.tile_coord_scale={tile_coord_scale}",
-                f"mnx_dsm.tile_geometry.tile_width={tile_width}",
-                f"mnx_dsm.buffer.size={buffer_size}",
-                f"mnx_dtm_dens.tile_geometry.tile_coord_scale={tile_coord_scale}",
-                f"mnx_dtm_dens.tile_geometry.tile_width={tile_width}",
-                f"mnx_dtm_dens.buffer.size={buffer_size}",
-                f"mnx_dtm_dens.tile_geometry.pixel_size={1}",
+                f"tile_geometry.tile_coord_scale={tile_coord_scale}",
+                f"tile_geometry.tile_width={tile_width}",
+                f"buffer.size={buffer_size}",
+                f"density.pixel_size={1}",
             ],
         )
     main(cfg)
@@ -272,7 +243,7 @@ def assert_output_folders_contains_expected_number_of_file(output: str, nb_raste
         assert len(os.listdir(path)) == nb_raster_expected
 
 
-def assert_las_buffer_is_not_empty(output: str):
-    las_dir = Path(output) / "tmp_dtm_dens" / "buffer"
-    for las in os.listdir(las_dir):
-        assert pcu.get_nb_points(os.path.join(las_dir, las)) > 0
+def assert_las_buffer_is_not_empty(output: str, filename: str):
+    las_dir = Path(output) / "tmp" / "buffer"
+    assert (las_dir / filename).is_file()
+    assert pcu.get_nb_points(las_dir / filename) > 0

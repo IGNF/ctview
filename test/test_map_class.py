@@ -29,9 +29,9 @@ with initialize(version_base="1.2", config_path="../configs"):
     CONFIG = compose(
         config_name="config_ctview",
         overrides=[
-            f"mnx_dtm.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
-            f"mnx_dtm.tile_geometry.tile_width={TILE_WIDTH}",
-            f"mnx_dtm.buffer.size={BUFFER_SIZE}",
+            f"tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
+            f"tile_geometry.tile_width={TILE_WIDTH}",
+            f"buffer.size={BUFFER_SIZE}",
         ],
     )
 
@@ -65,7 +65,7 @@ def test_step1_create_raster_brut():
         output_filename=FILENAME,
         res=1,
         i=1,
-        output_extension=CONFIG.mnx_dtm.io.extension,
+        output_extension=CONFIG.class_map.extension,
     )
     assert raster == PATH1_EXPECTED  # good output filename
     assert os.path.isfile(PATH1_EXPECTED)  # file exists
@@ -78,13 +78,13 @@ def test_step2_create_raster_fillgap():
         output_filename=FILENAME,
         res=1,
         i=1,
-        output_extension=CONFIG.mnx_dtm.io.extension,
+        output_extension=CONFIG.class_map.extension,
     )
     raster_fillgap = step2_create_raster_fillgap(
         in_raster=raster_brut,
         output_dir=OUTPUT_DIR,
         output_filename=FILENAME,
-        output_extension=CONFIG.mnx_dtm.io.extension,
+        output_extension=CONFIG.class_map.extension,
         i=1,
     )
     assert raster_fillgap == PATH2_EXPECTED  # good output filename
@@ -98,13 +98,13 @@ def test_step3_color_raster():
         output_filename=FILENAME,
         res=1,
         i=1,
-        output_extension=CONFIG.mnx_dtm.io.extension,
+        output_extension=CONFIG.class_map.extension,
     )
     raster_color = step3_color_raster(
         in_raster=raster_brut,
         output_dir=OUTPUT_DIR,
         output_filename=FILENAME,
-        output_extension=CONFIG.mnx_dtm.io.extension,
+        output_extension=CONFIG.class_map.extension,
         verbose=VERBOSE,
         i=1,
     )
@@ -149,7 +149,7 @@ def execute_main_change_pixel_size():
     io.input_filename={INPUT_FILENAME} \
     io.input_dir={INPUT_DIR} \
     io.output_dir={OUTPUT_DIR} \
-    mnx_dsm.tile_geometry.pixel_size=5 \
+    class_map.pixel_size=5 \
     """
     )
     with rasterio.open(EXPECTED_FILLGAP_COLOR) as raster:

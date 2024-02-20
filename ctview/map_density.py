@@ -4,7 +4,6 @@ from typing import Tuple
 
 import numpy as np
 import rasterio
-from omegaconf import DictConfig
 from osgeo_utils import gdal_calc
 
 from ctview.utils_folder import dico_folder_template
@@ -70,8 +69,18 @@ def compute_density(points: np.array, origin: Tuple[int, int], tile_size: int, p
 
 
 def multiply_DTM_density(
-    input_DTM: str, input_dens_raster: str, filename: str, output_dir: str, config: DictConfig, bounds: tuple
+    input_DTM: str, input_dens_raster: str, filename: str, output_dir: str, no_data: int, extension: str
 ):
+    """Fusion of 2 rasters (DTM and raster of density) with a given formula.
+
+    Args:
+        input_DTM (str): path to the DTM (hillshade values)
+        input_dens_raster (str): path to the density raster (raw input)
+        filename (str): name of las file whithout path
+        output_dir (str): output directory
+        no_data (int): raster no_data value to pass to gdal_calc
+        extension (str): output file extension
+    """
     """
     Fusion of 2 rasters (DTM and raster of density) with a given formula.
     Args :
@@ -84,14 +93,14 @@ def multiply_DTM_density(
     # Crop rasters
     log.info("Multiplication with DTM")
     # Output file
-    out_raster = os.path.join(output_dir, f"{os.path.splitext(filename)[0]}_DENS{config.io.extension}")
+    out_raster = os.path.join(output_dir, f"{os.path.splitext(filename)[0]}_DENS{extension}")
     # Mutiply
     gdal_calc.Calc(
         A=input_DTM,
         B=input_dens_raster,
         calc="((A-1)<0)*B*(A/255) + ((A-1)>=0)*B*((A-1)/255)",
         outfile=out_raster,
-        NoDataValue=config.tile_geometry.no_data_value,
+        NoDataValue=no_data,
         A_band=1,
         B_band=3,
         allBands="B",
