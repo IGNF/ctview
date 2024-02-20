@@ -55,11 +55,36 @@ def setup_module(module):
     os.mkdir(OUTPUT_DIR)
 
 
-def test_create_DTM_with_hillshade_one_las_default_pixelsize():
+def test_create_raw_DXM_default_pixelsize():
     """
     Verify :
         - .tif are created
         - output is the raster hillshaded
+    """
+    output_dir = os.path.join(OUTPUT_DIR, "raw_dtm_default_pixelsize")
+    raster_dxm_raw = os.path.join(
+        output_dir,
+        CONFIG_2.dtm.intermediate_dirs.dxm_raw,
+        f"{TILENAME}_interp{CONFIG_2.dtm.extension}",
+    )
+    os.makedirs(os.path.dirname(raster_dxm_raw))
+    map_DXM.create_raw_dxm(
+        input_file=INPUT_FILE,
+        output_dxm=raster_dxm_raw,
+        pixel_size=CONFIG_2.dtm.pixel_size,
+        keep_classes=CONFIG_2.dtm.keep_classes,
+        dxm_interpolation=CONFIG_2.dtm.interpolation,
+        config=CONFIG_2,
+    )
+
+    assert os.path.isfile(os.path.join(output_dir, EXPECTED_DTM_INTERP))
+    assert raster_dxm_raw == os.path.join(output_dir, EXPECTED_DTM_INTERP)
+
+
+def test_create_DTM_with_hillshade_default_pixelsize():
+    """
+    Verify :
+        - .tif are created
     """
     output_dir = os.path.join(OUTPUT_DIR, "dtm_default_pixelsize")
     raster_dxm_raw = os.path.join(
@@ -72,7 +97,7 @@ def test_create_DTM_with_hillshade_one_las_default_pixelsize():
         CONFIG_2.dtm.intermediate_dirs.dxm_hillshade,
         f"{TILENAME}_hillshade{CONFIG_2.io.extension}",
     )
-    map_DXM.create_dxm_with_hillshade_one_las(
+    map_DXM.create_dxm_with_hillshade(
         input_file=INPUT_FILE,
         output_dxm_raw=raster_dxm_raw,
         output_dxm_hillshade=raster_dxm_hillshade,
@@ -87,11 +112,10 @@ def test_create_DTM_with_hillshade_one_las_default_pixelsize():
     assert raster_dxm_hillshade == os.path.join(output_dir, EXPECTED_DTM_HILLSHADE)
 
 
-def test_create_DSM_with_hillshade_one_las_default_pixelsize():
+def test_create_DSM_with_hillshade_default_pixelsize():
     """
     Verify :
         - .tif are created
-        - output is the raster hillshaded
     """
     output_dir = os.path.join(OUTPUT_DIR, "dsm_default_pixelsize")
     raster_dxm_raw = os.path.join(
@@ -104,7 +128,7 @@ def test_create_DSM_with_hillshade_one_las_default_pixelsize():
         CONFIG_2.class_map.intermediate_dirs.dxm_hillshade,
         f"{TILENAME}_hillshade{CONFIG_2.io.extension}",
     )
-    map_DXM.create_dxm_with_hillshade_one_las(
+    map_DXM.create_dxm_with_hillshade(
         input_file=INPUT_FILE,
         output_dxm_raw=raster_dxm_raw,
         output_dxm_hillshade=raster_dxm_hillshade,
@@ -112,7 +136,6 @@ def test_create_DSM_with_hillshade_one_las_default_pixelsize():
         keep_classes=CONFIG_2.class_map.keep_classes,
         dxm_interpolation=CONFIG_2.class_map.dxm_interpolation,
         config=CONFIG_2,
-        type_raster="dsm",
     )
 
     assert os.path.isfile(os.path.join(output_dir, EXPECTED_DSM_INTERP))
@@ -120,11 +143,10 @@ def test_create_DSM_with_hillshade_one_las_default_pixelsize():
     assert raster_dxm_hillshade == os.path.join(output_dir, EXPECTED_DSM_HILLSHADE)
 
 
-def test_create_dtm_with_hillshade_one_las_5M_pixelsize():
+def test_create_DTM_with_hillshade_5M_pixelsize():
     """
     Verify :
         - .tif are created
-        - output is the raster hillshaded
         - pixel size = 5 meters
     """
     output_dir = os.path.join(OUTPUT_DIR, "dtm_5m_density")
@@ -138,7 +160,7 @@ def test_create_dtm_with_hillshade_one_las_5M_pixelsize():
         CONFIG_2.density.intermediate_dirs.dxm_hillshade,
         f"{TILENAME}_hillshade{CONFIG_2.io.extension}",
     )
-    map_DXM.create_dxm_with_hillshade_one_las(
+    map_DXM.create_dxm_with_hillshade(
         input_file=INPUT_FILE,
         output_dxm_raw=raster_dxm_raw,
         output_dxm_hillshade=raster_dxm_hillshade,
@@ -146,7 +168,6 @@ def test_create_dtm_with_hillshade_one_las_5M_pixelsize():
         keep_classes=CONFIG_2.density.keep_classes,
         dxm_interpolation=CONFIG_2.density.dxm_interpolation,
         config=CONFIG_2,
-        type_raster="dtm_dens",
     )
 
     assert os.path.isfile(os.path.join(output_dir, EXPECTED_DTM_DENS_INTERP))
@@ -155,11 +176,10 @@ def test_create_dtm_with_hillshade_one_las_5M_pixelsize():
         assert raster.res == (5, 5)
 
 
-def test_create_dtm_with_hillshade_one_las_1M_pixelsize():
+def test_create_DTM_with_hillshade_1M_pixelsize():
     """
     Verify :
         - .tif are created
-        - output is the raster hillshaded
         - pixel size = 1 meters
     """
     output_dir = os.path.join(OUTPUT_DIR, "dtm_1m")
@@ -173,7 +193,7 @@ def test_create_dtm_with_hillshade_one_las_1M_pixelsize():
         CONFIG_2.dtm.intermediate_dirs.dxm_hillshade,
         f"{TILENAME}_hillshade{CONFIG_2.io.extension}",
     )
-    map_DXM.create_dxm_with_hillshade_one_las(
+    map_DXM.create_dxm_with_hillshade(
         input_file=INPUT_FILE,
         output_dxm_raw=raster_dxm_raw,
         output_dxm_hillshade=raster_dxm_hillshade,
@@ -181,7 +201,6 @@ def test_create_dtm_with_hillshade_one_las_1M_pixelsize():
         keep_classes=CONFIG_2.dtm.keep_classes,
         dxm_interpolation=CONFIG_2.dtm.interpolation,
         config=CONFIG_2,
-        type_raster="dtm",
     )
 
     assert os.path.isfile(os.path.join(output_dir, EXPECTED_DTM_INTERP))
@@ -190,11 +209,10 @@ def test_create_dtm_with_hillshade_one_las_1M_pixelsize():
         assert raster.res == (1, 1)
 
 
-def test_create_dsm_with_hillshade_one_las_50CM_pixelsize():
+def test_create_DSM_with_hillshade_50CM_pixelsize():
     """
     Verify :
         - .tif are created
-        - output is the raster hillshaded
         - pixel size = 0.5 meters
     """
     output_dir = os.path.join(OUTPUT_DIR, "dsm_50cm")
@@ -209,7 +227,7 @@ def test_create_dsm_with_hillshade_one_las_50CM_pixelsize():
         CONFIG_2.class_map.intermediate_dirs.dxm_hillshade,
         f"{TILENAME}_hillshade{CONFIG_2.io.extension}",
     )
-    map_DXM.create_dxm_with_hillshade_one_las(
+    map_DXM.create_dxm_with_hillshade(
         input_file=INPUT_FILE,
         output_dxm_raw=raster_dxm_raw,
         output_dxm_hillshade=raster_dxm_hillshade,
@@ -217,7 +235,6 @@ def test_create_dsm_with_hillshade_one_las_50CM_pixelsize():
         keep_classes=CONFIG_2.class_map.keep_classes,
         dxm_interpolation=CONFIG_2.class_map.dxm_interpolation,
         config=CONFIG_2,
-        type_raster="dsm",
     )
 
     assert os.path.isfile(os.path.join(output_dir, EXPECTED_DSM_INTERP))

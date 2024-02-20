@@ -77,7 +77,7 @@ def main(config: DictConfig):
     )
 
     # Filename and config.tile_geometry are used to generate rasters with the expected geometry
-    map_DXM.create_dxm_with_hillshade_one_las(
+    map_DXM.create_dxm_with_hillshade(
         input_file=str(las_with_buffer),
         output_dxm_raw=raster_density_dxm_raw,
         output_dxm_hillshade=raster_density_dxm_hillshade,
@@ -85,7 +85,6 @@ def main(config: DictConfig):
         keep_classes=config.density.keep_classes,
         dxm_interpolation=config.density.dxm_interpolation,
         config=config,
-        type_raster="dtm_dens",
     )
 
     log.info("\nStep 2.2: Create density map\n")
@@ -155,7 +154,7 @@ def main(config: DictConfig):
     )
 
     log.info("\nStep 3.1: Generate DTM with hillshade")
-    map_DXM.create_dxm_with_hillshade_one_las(
+    map_DXM.create_dxm_with_hillshade(
         input_file=str(las_with_buffer),
         output_dxm_raw=raster_dtm_dxm_raw,
         output_dxm_hillshade=raster_dtm_dxm_hillshade,
@@ -163,7 +162,6 @@ def main(config: DictConfig):
         keep_classes=config.dtm.keep_classes,
         dxm_interpolation=config.dtm.interpolation,
         config=config,
-        type_raster="dtm",
     )
 
     log.info("\nStep 3.2: Colorize DTM")
@@ -193,7 +191,7 @@ def main(config: DictConfig):
     output_dir_map_class_color = os.path.join(out_dir, config.class_map.output_dir)
     os.makedirs(output_dir_map_class_color, exist_ok=True)
 
-    map_DXM.create_dxm_with_hillshade_one_las(
+    map_DXM.create_dxm_with_hillshade(
         input_file=str(las_with_buffer),
         output_dxm_raw=raster_class_map_dxm_raw,
         output_dxm_hillshade=raster_class_map_dxm_hillshade,
@@ -201,7 +199,6 @@ def main(config: DictConfig):
         keep_classes=config.class_map.keep_classes,
         dxm_interpolation=config.class_map.dxm_interpolation,
         config=config,
-        type_raster="dsm",
     )
 
     log.info("\nStep 4.1: Generate colored class map with post-processing")
