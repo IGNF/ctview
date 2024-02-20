@@ -68,19 +68,8 @@ def multiply_DTM_density(input_DTM: str, input_dens_raster: str, output_raster: 
     Args:
         input_DTM (str): path to the DTM (hillshade values)
         input_dens_raster (str): path to the density raster (raw input)
-        filename (str): name of las file whithout path
-        output_dir (str): output directory
+        output_raster (str): path to the output mixed raster
         no_data (int): raster no_data value to pass to gdal_calc
-        extension (str): output file extension
-    """
-    """
-    Fusion of 2 rasters (DTM and raster of density) with a given formula.
-    Args :
-        input_DTM : DTM
-        input_dens_raster : raster of density
-        filename : name of las file whithout path
-        output_dir : output directory
-        bounds : bounds of las file ([minx,maxx],[miny, maxy])
     """
     # Crop rasters
     log.info("Multiplication with DTM")

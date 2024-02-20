@@ -104,7 +104,7 @@ def test_step3_color_raster():
     raster_color = step3_color_raster(
         in_raster=raster_brut,
         output_dir=OUTPUT_DIR,
-        output_filename=FILENAME,
+        tilename=FILENAME,
         output_extension=CONFIG.class_map.extension,
         verbose=VERBOSE,
         i=1,

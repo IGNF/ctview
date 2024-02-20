@@ -189,6 +189,8 @@ def main(config: DictConfig):
         config.class_map.intermediate_dirs.dxm_hillshade,
         f"{tilename}_hillshade{config.class_map.extension}",
     )
+    output_dir_map_class_color = os.path.join(out_dir, config.class_map.output_dir)
+    os.makedirs(output_dir_map_class_color, exist_ok=True)
 
     map_DXM.create_dxm_with_hillshade_one_las(
         input_file=str(las_with_buffer),
@@ -212,8 +214,6 @@ def main(config: DictConfig):
     )
 
     log.info("\nStep 4.2: Multiply with DSM for hillshade")
-    output_dir_map_class_color = os.path.join(out_dir, config.class_map.output_dir)
-    os.makedirs(output_dir_map_class_color, exist_ok=True)
     map_class.multiply_DSM_class(
         input_DSM=raster_class_map_dxm_hillshade,
         input_raster_class=raster_class_fgc,

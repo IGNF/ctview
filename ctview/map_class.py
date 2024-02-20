@@ -91,22 +91,27 @@ def step2_create_raster_fillgap(in_raster: str, output_dir: str, output_filename
 
 
 def step3_color_raster(
-    in_raster: str, output_dir: str, output_filename: str, output_extension: str, verbose: str, i: int, LUT: str
-):
-    """
-    Color a raster using method gdal DEMProcessing with a specific LUT.
-    Args :
-        in_raster : raster to color
-        output_dir : output directory
-        output_filename : name of las file whithout extension
-        output_extension : extension of output file
-        verbose : suffix for the output filename
-        i : index step
-    Return :
-        Full path of raster colored
+    in_raster: str, output_dir: str, tilename: str, output_extension: str, verbose: str, i: int, LUT: str
+) -> str:
+    """Color a raster using method gdal DEMProcessing with a specific LUT.
+
+    Args:
+        in_raster (str): path to the input raster (to be colored)
+        output_dir (str): path to the output directory
+        tilename (str): name of the tile (usually las filename without extension, used to generate an output filename)
+        output_extension (str): extension of the output file
+        verbose (str):  suffix for the output filename
+        i (int): index of the step, used for logging
+        LUT (str): path to the LUT used to color the raster
+
+    Raises:
+        FileNotFoundError: if the output raster has not been created
+
+    Returns:
+        str: Full path of colored raster
     """
     os.makedirs(output_dir, exist_ok=True)
-    raster_colored = os.path.join(output_dir, f"{output_filename}_{verbose}{output_extension}")
+    raster_colored = os.path.join(output_dir, f"{tilename}_{verbose}{output_extension}")
     log.info(f"Step {i}/4 : {verbose} : {raster_colored}")
 
     utils_gdal.color_raster_with_LUT(input_raster=in_raster, output_raster=raster_colored, LUT=LUT)
@@ -130,9 +135,11 @@ def create_map_class(
     Args:
         input_las (str): las file
         output_dir (str): output directory
-        dico_fld (dict):  dictionnary of output folders
         pixel_size (float):  output pixel size of the generated map
         extension (str): output file extension
+        config_intermediate_dirs (DictConfig): dictionary that contains path to all the intermediate directories.
+        Expected keys are {"CC_brut", "CC_brut_color", "CC_fillgap", "CC_fillgap_color"}
+        LUT (str): path to the LUT used to color the raster
 
     Returns:
         str: Full path of raster filled and colorised
@@ -166,7 +173,7 @@ def create_map_class(
     step3_color_raster(
         in_raster=raster_brut,
         output_dir=output_folder_2,
-        output_filename=input_las_name_without_extension,
+        tilename=input_las_name_without_extension,
         output_extension=extension,
         verbose="raster_color",
         i=2,
@@ -186,7 +193,7 @@ def create_map_class(
     color_fillgap_raster = step3_color_raster(
         in_raster=fillgap_raster,
         output_dir=output_folder_4,
-        output_filename=input_las_name_without_extension,
+        tilename=input_las_name_without_extension,
         output_extension=extension,
         verbose="raster_fillgap_color",
         i=4,
