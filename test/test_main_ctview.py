@@ -21,7 +21,7 @@ OUTPUT_DIR = Path("tmp") / "main_ctview"
 OUTPUT_DIR_WATER = OUTPUT_DIR / "main_ctview_water"
 
 OUTPUT_FOLDER_DENS = "DENS_FINAL_CUSTOM"
-OUTPUT_FOLDER_CLASS = "ACC_5_fusion_FINAL"
+OUTPUT_FOLDER_CLASS = "CC_6_fusion_FINAL_CUSTOM"
 
 EXPECTED_OUTPUT_DTM_1C = Path("DTM") / "color" / "1cycle"
 EXPECTED_OUTPUT_DTM_4C = Path("DTM") / "color" / "4cycles"

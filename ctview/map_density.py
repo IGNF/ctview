@@ -3,7 +3,6 @@ from typing import Tuple
 
 import numpy as np
 import rasterio
-from osgeo_utils import gdal_calc
 
 from ctview.utils_tools import get_pointcloud_origin
 
@@ -85,28 +84,3 @@ def compute_density(points: np.array, origin: Tuple[int, int], tile_size: int, p
     density = np.flipud(density)
 
     return density
-
-
-def multiply_DTM_density(input_DTM: str, input_dens_raster: str, output_raster: str, no_data: int):
-    """Fusion of 2 rasters (DTM and raster of density) with a given formula.
-
-    Args:
-        input_DTM (str): path to the DTM (hillshade values)
-        input_dens_raster (str): path to the density raster (raw input)
-        output_raster (str): path to the output mixed raster
-        no_data (int): raster no_data value to pass to gdal_calc
-    """
-    # Crop rasters
-    log.info("Multiplication with DTM")
-
-    # Mutiply
-    gdal_calc.Calc(
-        A=input_DTM,
-        B=input_dens_raster,
-        calc="((A-1)<0)*B*(A/255) + ((A-1)>=0)*B*((A-1)/255)",
-        outfile=output_raster,
-        NoDataValue=no_data,
-        A_band=1,
-        B_band=3,
-        allBands="B",
-    )

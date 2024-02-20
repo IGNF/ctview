@@ -1,10 +1,11 @@
 import logging as log
 import os
+from typing import Tuple
 
 import hydra
 import numpy as np
 from omegaconf import DictConfig
-from osgeo_utils import gdal_calc, gdal_fillnodata
+from osgeo_utils import gdal_fillnodata
 
 import ctview.clip_raster as clip_raster
 import ctview.utils_gdal as utils_gdal
@@ -130,6 +131,7 @@ def create_map_class(
     input_las: str,
     output_dir: str,
     pixel_size: float,
+    output_bounds: Tuple,
     extension: str,
     config_intermediate_dirs: DictConfig,
     LUT: str,
@@ -138,12 +140,14 @@ def create_map_class(
     """Create a raster of class with the fill gaps method of gdal and a colorisation.
 
     Args:
-        input_las (str): las file
+        input_las (str): path to input las file
         output_dir (str): output directory
         pixel_size (float):  output pixel size of the generated map
-        extension (str): output file extension
+        output_bounds (Tuple): bounds of the output raster file ([minx,maxx],[miny, maxy]).
+            Should correspond to the las input file before adding any buffer
+        extension (str):  output files extension
         config_intermediate_dirs (DictConfig): dictionary that contains path to all the intermediate directories.
-        Expected keys are {"CC_brut", "CC_brut_color", "CC_fillgap", "CC_fillgap_color"}
+            Expected keys are {"CC_brut", "CC_brut_color", "CC_fillgap", "CC_fillgap_color"}
         LUT (str): path to the LUT used to color the raster
         raster_driver (str): One of GDAL raster drivers formats
         (cf. https://gdal.org/drivers/raster/index.html#raster-drivers)
@@ -165,6 +169,7 @@ def create_map_class(
     output_folder_2 = os.path.join(output_dir, config_intermediate_dirs["CC_brut_color"])
     output_folder_3 = os.path.join(output_dir, config_intermediate_dirs["CC_fillgap"])
     output_folder_4 = os.path.join(output_dir, config_intermediate_dirs["CC_fillgap_color"])
+    output_folder_5 = os.path.join(output_dir, config_intermediate_dirs["CC_crop"])
 
     # Step 1 : Write raster brut
     raster_brut = step1_create_raster_brut(
@@ -208,58 +213,21 @@ def create_map_class(
         i=4,
         LUT=LUT,
     )
+    # Step 5: Crop
+    os.makedirs(output_folder_5, exist_ok=True)
+    output_clip_raster = os.path.join(output_folder_5, f"{input_las_name_without_extension}_raster{extension}")
+    clip_raster.clip_raster(input_raster=color_fillgap_raster, output_raster=output_clip_raster, bounds=output_bounds,
+                            raster_driver=raster_driver)
 
-    return color_fillgap_raster
+    return output_clip_raster
 
-
-def multiply_DSM_class(
-    input_DSM: str,
-    input_raster_class: str,
-    output_dir: str,
-    output_filename: str,
-    output_extension: str,
-    bounds: tuple,
-    raster_driver: str,
-):
-    """Fusion of 2 rasters (DSM and raster of class filled and colored) with a given formula.
-
-    Args:
-        input_DSM (str): path to the input DSM raster
-        input_raster_class (str): path to the input class_map raster
-        output_dir (str): path to the output directory
-        output_filename (str): filename of the output file
-        output_extension (str): extension of theutput file
-        bounds (tuple): bounds of output file ([minx,maxx],[miny, maxy])
-        raster_driver (str): One of GDAL raster drivers formats
-        (cf. https://gdal.org/drivers/raster/index.html#raster-drivers)
-    """
-    # Crop rasters
-    log.info("Crop class_map rasters")
-    input_raster_class_crop = f"{os.path.splitext(input_raster_class)[0]}_crop{output_extension}"
-    clip_raster.clip_raster(
-        input_raster=input_raster_class,
-        output_raster=input_raster_class_crop,
-        bounds=bounds,
-        raster_driver=raster_driver,
-    )
-
-    log.info("Multiplication with DSM")
-    out_raster = os.path.join(output_dir, f"{os.path.splitext(output_filename)[0]}_fusion_DSM_class{output_extension}")
-    # Mutiply
-    gdal_calc.Calc(
-        A=input_raster_class_crop,
-        B=input_DSM,
-        calc="254*((A*(0.5*(B/255)+0.25))>254)+(A*(0.5*(B/255)+0.25))*((A*(0.5*(B/255)+0.25))<=254)",
-        outfile=out_raster,
-        allBands="A",
-        overwrite=True,
-    )
 
 
 @hydra.main(config_path="../configs/", config_name="config_ctview.yaml", version_base="1.2")
 def main(config: DictConfig):
     log.basicConfig(level=log.INFO, format="%(message)s")
     initial_las_file = os.path.join(config.io.input_dir, config.io.input_filename)
+    las_bounds = utils_pdal.get_bounds_from_las(initial_las_file)
     os.makedirs(config.io.output_dir, exist_ok=True)
     create_map_class(
         input_las=initial_las_file,
@@ -268,6 +236,7 @@ def main(config: DictConfig):
         pixel_size=config.class_map.pixel_size,
         extension=config.io.extension,
         LUT=os.path.join(config.io.lut_folder, config.class_map.lut_filename),
+        output_bounds=las_bounds,
         raster_driver=config.io.raster_driver,
     )
     log.info("END.")
