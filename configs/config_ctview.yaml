@@ -27,20 +27,26 @@ density:
   keep_classes: [2, 66]
   extension: .tif
   dxm_interpolation: pdal-tin
-  output_dir: DENS_FINAL
   lut_filename: LUT_DENSITY.txt
+  output_dir: DENS_FINAL
   intermediate_dirs:
     density_values: DENS_VAL
     density_color: DENS_COLOR
+    dxm_raw: DTM_DENS
+    dxm_hillshade: "tmp_dtm_dens/hillshade"
 
 dtm:
   pixel_size: 1
   keep_classes: [2, 66]
   interpolation: pdal-tin
+  extension: .tif
   color:
     cycles_DTM_colored: [1]
     folder_LUT: "LUT"
   output_dir: "DTM/color"
+  intermediate_dirs:
+    dxm_raw: "DTM"
+    dxm_hillshade: "tmp_dtm/hillshade"
 
 class_map:
   pixel_size: 0.5
@@ -54,7 +60,8 @@ class_map:
     CC_brut_color: CC_2_bcolor
     CC_fillgap: CC_3_fg
     CC_fillgap_color: CC_4_fgcolor
-
+    dxm_raw: "DSM"
+    dxm_hillshade: "tmp_dsm/hillshade"
 
 hydra:
   output_subdir: null

@@ -21,23 +21,19 @@ def main(config: DictConfig):
     log.basicConfig(level=log.INFO, format="%(message)s")
 
     initial_las_filename = config.io.input_filename
+    tilename = os.path.splitext(initial_las_filename)[0]
+
+    # Check input/output files and folders
     in_dir = config.io.input_dir
     out_dir = config.io.output_dir
-    list_cycles = config.dtm.color.cycles_DTM_colored
 
-    # Verify args are ok
     if initial_las_filename is None or in_dir is None or out_dir is None:
         raise RuntimeError(
             """In input you have to give a las, an input directory and an output directory.
             For more info run the same command by adding --help"""
         )
 
-    # Create folder test if not exists
     os.makedirs(out_dir, exist_ok=True)
-
-    # Create folders of dico_folder_modif in out_dir
-    output_dir_map_class_color = os.path.join(out_dir, config.class_map.output_dir)
-    os.makedirs(output_dir_map_class_color, exist_ok=True)
 
     # ## ACTIVATE IF NECESSARY
     # log.warning("#########")
@@ -50,7 +46,7 @@ def main(config: DictConfig):
     las_with_buffer.parent.mkdir(parents=True, exist_ok=True)
     bounds_las = utils_pdal.get_bounds_from_las(initial_las_file)  # get boundaries
 
-    # Buffer
+    # BUFFER
     log.info(f"\nStep 1: Create buffered las file with buffer = {config.buffer.size}")
     epsg = config.io.spatial_reference
     create_las_with_buffer(
@@ -66,10 +62,24 @@ def main(config: DictConfig):
     # DENSITY (DTM brut + density)
     log.info("\nStep 2: Create density maps")
     log.info("\nStep 2.1: Create dtm map for density shading")
+
+    # prepare outputs
+    raster_density_dxm_raw = os.path.join(
+        out_dir,
+        config.density.intermediate_dirs.dxm_raw,
+        f"{tilename}_interp{config.density.extension}",
+    )
+    raster_density_dxm_hillshade = os.path.join(
+        out_dir,
+        config.density.intermediate_dirs.dxm_hillshade,
+        f"{tilename}_hillshade{config.density.extension}",
+    )
+
     # Filename and config.tile_geometry are used to generate rasters with the expected geometry
-    raster_DTM_dens = map_DXM.create_dxm_with_hillshade_one_las(
+    map_DXM.create_dxm_with_hillshade_one_las(
         input_file=str(las_with_buffer),
-        output_dir=str(out_dir),
+        output_dxm_raw=raster_density_dxm_raw,
+        output_dxm_hillshade=raster_density_dxm_hillshade,
         pixel_size=config.density.pixel_size,
         keep_classes=config.density.keep_classes,
         dxm_interpolation=config.density.dxm_interpolation,
@@ -81,23 +91,23 @@ def main(config: DictConfig):
     raster_dens_values = os.path.join(
         out_dir,
         config.density.intermediate_dirs.density_values,
-        f"{os.path.splitext(initial_las_filename)[0]}_DENS{config.density.extension}",
+        f"{tilename}_DENS{config.density.extension}",
     )
     os.makedirs(os.path.dirname(raster_dens_values), exist_ok=True)
     raster_dens_color = os.path.join(
         out_dir,
         config.density.intermediate_dirs.density_color,
-        f"{os.path.splitext(initial_las_filename)[0]}_DENS_COLOR{config.density.extension}",
+        f"{tilename}_DENS_COLOR{config.density.extension}",
     )
     os.makedirs(os.path.dirname(raster_dens_color), exist_ok=True)
     raster_dens = os.path.join(
         out_dir,
         config.density.output_dir,
-        f"{os.path.splitext(initial_las_filename)[0]}_DENS{config.density.extension}",
+        f"{tilename}_DENS{config.density.extension}",
     )
     os.makedirs(os.path.dirname(raster_dens), exist_ok=True)
 
-    # Density
+    # DENSITY
     las = laspy.read(str(las_with_buffer))
     points_np = np.vstack((las.x, las.y, las.z)).transpose()
     classifs = np.copy(las.classification)
@@ -122,7 +132,7 @@ def main(config: DictConfig):
 
     log.info("\nStep 2.4: Multiply with DTM for hillshade")
     map_density.multiply_DTM_density(
-        input_DTM=raster_DTM_dens,
+        input_DTM=raster_density_dxm_hillshade,
         input_dens_raster=raster_dens_color,
         output_raster=raster_dens,
         no_data=config.tile_geometry.no_data_value,
@@ -130,10 +140,23 @@ def main(config: DictConfig):
 
     # DTM hillshade color
     log.info("\nStep 3: Generate DTM")
+    # prepare outputs
+    raster_dtm_dxm_raw = os.path.join(
+        out_dir,
+        config.dtm.intermediate_dirs.dxm_raw,
+        f"{tilename}_interp{config.dtm.extension}",
+    )
+    raster_dtm_dxm_hillshade = os.path.join(
+        out_dir,
+        config.dtm.intermediate_dirs.dxm_hillshade,
+        f"{tilename}_hillshade{config.dtm.extension}",
+    )
+
     log.info("\nStep 3.1: Generate DTM with hillshade")
-    raster_DTM_hs_1M = map_DXM.create_dxm_with_hillshade_one_las(
+    map_DXM.create_dxm_with_hillshade_one_las(
         input_file=str(las_with_buffer),
-        output_dir=out_dir,
+        output_dxm_raw=raster_dtm_dxm_raw,
+        output_dxm_hillshade=raster_dtm_dxm_hillshade,
         pixel_size=config.dtm.pixel_size,
         keep_classes=config.dtm.keep_classes,
         dxm_interpolation=config.dtm.interpolation,
@@ -144,18 +167,32 @@ def main(config: DictConfig):
     log.info("\nStep 3.2: Colorize DTM")
     add_color.color_raster_dtm_hillshade_with_LUT(
         input_initial_basename=initial_las_filename,
-        input_raster=raster_DTM_hs_1M,
+        input_raster=raster_dtm_dxm_hillshade,
         output_dir=os.path.join(out_dir, config.dtm.output_dir),
-        list_c=list_cycles,
+        list_c=config.dtm.color.cycles_DTM_colored,
         output_dir_LUT=os.path.join(out_dir, config.dtm.color.folder_LUT),
     )
 
     # Map class color
     log.info("\nStep 4: Generate Classification map")
     log.info("\nStep 4.1: Generate MNs for hillshade")
-    raster_DSM_hs = map_DXM.create_dxm_with_hillshade_one_las(
+
+    # prepare outputs
+    raster_class_map_dxm_raw = os.path.join(
+        out_dir,
+        config.class_map.intermediate_dirs.dxm_raw,
+        f"{tilename}_interp{config.class_map.extension}",
+    )
+    raster_class_map_dxm_hillshade = os.path.join(
+        out_dir,
+        config.class_map.intermediate_dirs.dxm_hillshade,
+        f"{tilename}_hillshade{config.class_map.extension}",
+    )
+
+    map_DXM.create_dxm_with_hillshade_one_las(
         input_file=str(las_with_buffer),
-        output_dir=out_dir,
+        output_dxm_raw=raster_class_map_dxm_raw,
+        output_dxm_hillshade=raster_class_map_dxm_hillshade,
         pixel_size=config.class_map.pixel_size,
         keep_classes=config.class_map.keep_classes,
         dxm_interpolation=config.class_map.dxm_interpolation,
@@ -174,8 +211,10 @@ def main(config: DictConfig):
     )
 
     log.info("\nStep 4.2: Multiply with DSM for hillshade")
+    output_dir_map_class_color = os.path.join(out_dir, config.class_map.output_dir)
+    os.makedirs(output_dir_map_class_color, exist_ok=True)
     map_class.multiply_DSM_class(
-        input_DSM=raster_DSM_hs,
+        input_DSM=raster_class_map_dxm_hillshade,
         input_raster_class=raster_class_fgc,
         output_dir=output_dir_map_class_color,
         output_filename=initial_las_filename,
