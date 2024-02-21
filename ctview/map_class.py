@@ -159,7 +159,7 @@ def create_map_class_raster_with_postprocessing_color_and_hillshade(
               dxm_hillshade: "tmp_dsm/hillshade"
 
         }
-                config_io (DictConfig | dict): hydra configuration with the general io parameters
+        config_io (DictConfig | dict): hydra configuration with the general io parameters
         eg.  {
             input_filename: null
             input_dir: null

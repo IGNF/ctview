@@ -20,6 +20,9 @@ def create_raw_dxm(
     """Create a Digital Model (DSM or DTM) with the classes listed in `keep_classes` using the produits_derives_lidar
     library
 
+    WARNING: the dtm bounds are infered from the filename inside the produits_derives_lidar library
+    (dtm is not computed on the potential additional buffer)
+
     Args:
         input_file (str): Patht o the input file
         output_dxm (str): path to the output digital model raster
@@ -110,55 +113,76 @@ def add_dxm_hillshade_to_raster(
 
 
 def create_colored_dxm_with_hillshade(
-    input_file: str,
-    output_dir: str,
-    output_dir_LUT: str,
-    output_dxm_raw: str,
-    output_dxm_hillshade: str,
-    color_cycles: List[int],
-    pixel_size: float,
-    keep_classes: List,
-    dxm_interpolation: str,
-    config_io: DictConfig,
+    input_las: str,
+    tilename: str,
+    config_dtm: DictConfig | dict,
+    config_io: DictConfig | dict,
 ):
     """Create a DTM or a DSM from a las tile and a configuration
 
     Args:
-        input_file (str): full path of LAS/LAZ file
-        output_dir (str): output directory
-            output_dir_LUT (str):  Path to output color lut
-        output_dxm_raw (str): Path to raw digital model (intermediate result)
-        output_dxm_hillshade (str):  Path to hillshade model (intermediate result)
-        color_cycles (List[int]): the number of cycles that determines how th use the LUT,
-        one colored digital model is generated for each value of the list
-        pixel_size (float): output pixel size of the generated dsm/dtm
-        keep_classes (List): classes to keep in the generated dsm/dtm
-        dxm_interpolation (str): interpolation method for the generated dsm/dtm
-        (see available methods in produits_derives_lidar)
-        config (DictConfig): general ctview configuration dictionary the must contain:
-            "spatial_reference": #str,
-            "no_data_value": #int,
-            "tile_geometry": {
-                "tile_coord_scale": #int,
-                "tile_width": #int,
-              }
-        cf. configs/config_ctview.yaml for an example.
-        The config will be completed with pixel_size, keep_classes and dxm_interpolation
-        to match produits_derive_lidar configuration expectations
+        input_las (str): full path of LAS/LAZ file
+        tilename (str): tilename used to generate the output filename
+        config_dtm (DictConfig | dict): hydra configuration with the dtm parameters
+        eg. {
+          pixel_size: 1  # Pixel size of the output raster
+          keep_classes: [2, 66]  # List of classes to use in the elevation model
+          dxm_interpolation: pdal-tin  # Interpolation method for the elevation model
+          color:
+              cycles_DTM_colored: [1]  # List of numbers of LUT cycles for the colorisation
+                                       # (one raster is generated for each value)
+              folder_LUT: "LUT"  # Output subfolder for the output LUTs
+          output_subdir: "DTM/color"  # Output subfolder for the final dtm output
+          intermediate_dirs:  # paths to the saved intermediate results
+            dxm_raw: "DTM"
+            dxm_hillshade: "tmp_dtm/hillshade"
 
+        }
+        config_io (DictConfig | dict): hydra configuration with the general io parameters
+        eg.  {
+            input_filename: null
+            input_dir: null
+            output_dir: null
+            spatial_reference: EPSG:2154
+            lut_folder: LUT
+            extension: .tif
+            raster_driver: GTiff
+            no_data_value: -9999
+            tile_geometry:
+                tile_coord_scale: 1000
+                tile_width: 1000
+            }
     """
-    os.makedirs(os.path.dirname(output_dxm_raw), exist_ok=True)
-    os.makedirs(os.path.dirname(output_dxm_hillshade), exist_ok=True)
+    out_dir = config_io.output_dir
+    inter_dirs = config_dtm.intermediate_dirs
+    ext = config_io.extension
 
-    create_raw_dxm(input_file, output_dxm_raw, pixel_size, dxm_interpolation, keep_classes, config_io)
+    # prepare outputs
+    raster_dtm_dxm_raw = os.path.join(out_dir, inter_dirs.dxm_raw, f"{tilename}_interp{ext}")
+    raster_dtm_dxm_hillshade = os.path.join(out_dir, inter_dirs.dxm_hillshade, f"{tilename}_hillshade{ext}")
+
+    dir_dtm_colored = os.path.join(out_dir, config_dtm.output_subdir)
+    dir_dtm_lut = os.path.join(out_dir, config_dtm.color.folder_LUT)
+
+    os.makedirs(os.path.dirname(raster_dtm_dxm_raw), exist_ok=True)
+    os.makedirs(os.path.dirname(raster_dtm_dxm_hillshade), exist_ok=True)
+
+    create_raw_dxm(
+        input_las,
+        raster_dtm_dxm_raw,
+        config_dtm.pixel_size,
+        config_dtm.dxm_interpolation,
+        config_dtm.keep_classes,
+        config_io,
+    )
 
     # add hillshade
-    add_hillshade.add_hillshade_one_raster(input_raster=output_dxm_raw, output_raster=output_dxm_hillshade)
+    add_hillshade.add_hillshade_one_raster(input_raster=raster_dtm_dxm_raw, output_raster=raster_dtm_dxm_hillshade)
 
     add_color.color_raster_dtm_hillshade_with_LUT(
-        input_initial_basename=os.path.basename(input_file),
-        input_raster=output_dxm_hillshade,
-        output_dir=output_dir,
-        list_c=color_cycles,
-        output_dir_LUT=output_dir_LUT,
+        input_initial_basename=os.path.basename(input_las),
+        input_raster=raster_dtm_dxm_hillshade,
+        output_dir=dir_dtm_colored,
+        list_c=config_dtm.color.cycles_DTM_colored,
+        output_dir_LUT=dir_dtm_lut,
     )

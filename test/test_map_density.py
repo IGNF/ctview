@@ -177,3 +177,40 @@ def test_create_density_raster_with_color_and_hillshade_multiple_layers():
         map_density.create_density_raster_with_color_and_hillshade(
             os.path.join(input_dir, input_filename), input_tilename, cfg.density, cfg.io, cfg.buffer.size
         )
+
+
+def test_create_density_raster_with_color_and_hillshade_density_empty():
+    """Test that the create_density_raster_with_color_and_hillshade function
+    creates a black tif when there is no points with the requested classes"""
+    input_dir_water = Path("data") / "laz" / "water"
+    input_filename_water = "Semis_2021_0785_6378_LA93_IGN69_water.laz"
+    tile_width = 1000
+    tile_coord_scale = 1000
+    buffer_size = 10
+    pixel_size = 1
+    output_dir = OUTPUT_DIR / "create_density_raster_with_color_and_hillshade_density_empty"
+    input_tilename = os.path.splitext(input_filename_water)[0]
+    with initialize(version_base="1.2", config_path="../configs"):
+        # config is relative to a module
+        cfg = compose(
+            config_name="config_ctview",
+            overrides=[
+                f"io.input_filename={input_filename_water}",
+                f"io.input_dir={input_dir_water}",
+                f"io.output_dir={output_dir}",
+                f"io.tile_geometry.tile_coord_scale={tile_coord_scale}",
+                f"io.tile_geometry.tile_width={tile_width}",
+                f"buffer.size={buffer_size}",
+                f"density.pixel_size={pixel_size}",
+            ],
+        )
+    map_density.create_density_raster_with_color_and_hillshade(
+        os.path.join(input_dir_water, input_filename_water), input_tilename, cfg.density, cfg.io, cfg.buffer.size
+    )
+    with rasterio.Env():
+        with rasterio.open(Path(output_dir) / "DENS_FINAL" / f"{input_tilename}_DENS.tif") as raster:
+            data = raster.read()
+            assert data.shape[0] == 3
+            assert data.shape[1] == tile_width / pixel_size
+            assert data.shape[2] == tile_width / pixel_size
+            assert np.all(data == 0)

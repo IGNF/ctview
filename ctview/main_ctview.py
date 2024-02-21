@@ -64,31 +64,10 @@ def main(config: DictConfig):
 
     # DTM hillshade color
     log.info("\nStep 3: Generate DTM")
-    # prepare outputs
-    raster_dtm_dxm_raw = os.path.join(
-        out_dir,
-        config.dtm.intermediate_dirs.dxm_raw,
-        f"{tilename}_interp{config.io.extension}",
-    )
-    raster_dtm_dxm_hillshade = os.path.join(
-        out_dir,
-        config.dtm.intermediate_dirs.dxm_hillshade,
-        f"{tilename}_hillshade{config.io.extension}",
-    )
-
-    dir_dtm_colored = os.path.join(out_dir, config.dtm.output_subdir)
-    dir_dtm_lut = os.path.join(out_dir, config.dtm.color.folder_LUT)
-
     map_DXM.create_colored_dxm_with_hillshade(
-        input_file=str(las_with_buffer),
-        output_dir=dir_dtm_colored,
-        output_dxm_raw=raster_dtm_dxm_raw,
-        output_dxm_hillshade=raster_dtm_dxm_hillshade,
-        pixel_size=config.dtm.pixel_size,
-        keep_classes=config.dtm.keep_classes,
-        dxm_interpolation=config.dtm.interpolation,
-        color_cycles=config.dtm.color.cycles_DTM_colored,
-        output_dir_LUT=dir_dtm_lut,
+        input_las=str(las_with_buffer),
+        tilename=tilename,
+        config_dtm=config.dtm,
         config_io=config.io,
     )
 

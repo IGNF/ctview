@@ -39,7 +39,7 @@ density:
 dtm:
   pixel_size: 1
   keep_classes: [2, 66]
-  interpolation: pdal-tin
+  dxm_interpolation: pdal-tin
   color:
     cycles_DTM_colored: [1]
     folder_LUT: "LUT"
