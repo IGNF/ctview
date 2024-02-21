@@ -15,7 +15,7 @@ def create_raw_dxm(
     pixel_size: int,
     dxm_interpolation: str,
     keep_classes: List[int],
-    config: DictConfig,
+    config_io: DictConfig,
 ):
     """Create a Digital Model (DSM or DTM) with the classes listed in `keep_classes` using the produits_derives_lidar
     library
@@ -28,12 +28,12 @@ def create_raw_dxm(
         (see available methods in produits_derives_lidar)
         keep_classes (List[int]): classes to keep in the generated digital model
         config (DictConfig): general ctview configuration dictionary the must contain:
+            "spatial_reference": #str,
+            "no_data_value": #int,
             "tile_geometry": {
                 "tile_coord_scale": #int,
                 "tile_width": #int,
-                "no_data_value": #int,
-            "io": {
-                "spatial_reference": #str},
+              }
         cf. configs/config_ctview.yaml for an example.
         The config will be completed with pixel_size, keep_classes and dxm_interpolation
         to match produits_derive_lidar configuration expectations
@@ -41,9 +41,10 @@ def create_raw_dxm(
 
     # Generate config that suits for produits_derive_lidar interpolation
     pdl_config = {}
-    pdl_config["io"] = dict(config.io)
-    pdl_config["tile_geometry"] = dict(config.tile_geometry)
+    pdl_config["io"] = {"spatial_reference": config_io.spatial_reference}
+    pdl_config["tile_geometry"] = dict(config_io.tile_geometry)
     pdl_config["tile_geometry"]["pixel_size"] = pixel_size
+    pdl_config["tile_geometry"]["no_data_value"] = config_io.no_data_value
     pdl_config["interpolation"] = {"algo_name": dxm_interpolation}
     pdl_config["filter"] = {"keep_classes": keep_classes}
     log.debug("Config for dxm generation")
@@ -62,7 +63,7 @@ def add_dxm_hillshade_to_raster(
     output_dxm_raw: str,
     output_dxm_hillshade: str,
     hillshade_calc: str,
-    config: DictConfig,
+    config_io: DictConfig,
 ):
     """Add hillshade to a raster by computing a Digital Model with the classes listed in keep_classes,
     hillshading it then mixing it with the input raster using the hillshade_calc operation in gdal_calc
@@ -79,14 +80,14 @@ def add_dxm_hillshade_to_raster(
         output_dxm_hillshade (str):  Path to hillshade model (intermediate result)
         hillshade_calc (str): Formula used by gdalcalc to mix the raster and its hillshade
         (with A: input_raster, B: hillshade)
-        config (DictConfig): general ctview configuration dictionary the must contain:
+        config_io (DictConfig): configuration dictionary the must contain:
+            "spatial_reference": #str,
+            "no_data_value": #int,
             "tile_geometry": {
                 "tile_coord_scale": #int,
                 "tile_width": #int,
-                "no_data_value": #int,
-            "io": {
-                "spatial_reference": #str},
-        cf. configs/config_ctview.yaml for an example.
+              }
+        cf. configs/config_ctview.yaml for an example ("io" subdivision)
         The config will be completed with pixel_size, keep_classes and dxm_interpolation
         to match produits_derive_lidar configuration expectations
     """
@@ -94,7 +95,7 @@ def add_dxm_hillshade_to_raster(
     os.makedirs(os.path.dirname(output_dxm_hillshade), exist_ok=True)
     os.makedirs(os.path.dirname(output_raster), exist_ok=True)
 
-    create_raw_dxm(input_pointcloud, output_dxm_raw, pixel_size, dxm_interpolation, keep_classes, config)
+    create_raw_dxm(input_pointcloud, output_dxm_raw, pixel_size, dxm_interpolation, keep_classes, config_io)
     add_hillshade.add_hillshade_one_raster(input_raster=output_dxm_raw, output_raster=output_dxm_hillshade)
 
     gdal_calc.Calc(
@@ -104,7 +105,7 @@ def add_dxm_hillshade_to_raster(
         outfile=output_raster,
         allBands="A",
         overwrite=True,
-        NoDataValue=config.tile_geometry.no_data_value,
+        NoDataValue=config_io.no_data_value,
     )
 
 
@@ -118,7 +119,7 @@ def create_colored_dxm_with_hillshade(
     pixel_size: float,
     keep_classes: List,
     dxm_interpolation: str,
-    config: DictConfig,
+    config_io: DictConfig,
 ):
     """Create a DTM or a DSM from a las tile and a configuration
 
@@ -135,12 +136,12 @@ def create_colored_dxm_with_hillshade(
         dxm_interpolation (str): interpolation method for the generated dsm/dtm
         (see available methods in produits_derives_lidar)
         config (DictConfig): general ctview configuration dictionary the must contain:
+            "spatial_reference": #str,
+            "no_data_value": #int,
             "tile_geometry": {
                 "tile_coord_scale": #int,
                 "tile_width": #int,
-                "no_data_value": #int,
-            "io": {
-                "spatial_reference": #str},
+              }
         cf. configs/config_ctview.yaml for an example.
         The config will be completed with pixel_size, keep_classes and dxm_interpolation
         to match produits_derive_lidar configuration expectations
@@ -149,7 +150,7 @@ def create_colored_dxm_with_hillshade(
     os.makedirs(os.path.dirname(output_dxm_raw), exist_ok=True)
     os.makedirs(os.path.dirname(output_dxm_hillshade), exist_ok=True)
 
-    create_raw_dxm(input_file, output_dxm_raw, pixel_size, dxm_interpolation, keep_classes, config)
+    create_raw_dxm(input_file, output_dxm_raw, pixel_size, dxm_interpolation, keep_classes, config_io)
 
     # add hillshade
     add_hillshade.add_hillshade_one_raster(input_raster=output_dxm_raw, output_raster=output_dxm_hillshade)

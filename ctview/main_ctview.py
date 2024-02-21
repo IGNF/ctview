@@ -3,15 +3,12 @@ import os
 from pathlib import Path
 
 import hydra
-import laspy
-import numpy as np
 from omegaconf import DictConfig
 from pdaltools.las_add_buffer import create_las_with_buffer
 
 import ctview.map_class as map_class
 import ctview.map_density as map_density
 import ctview.map_DXM as map_DXM
-import ctview.utils_gdal as utils_gdal
 import ctview.utils_pdal as utils_pdal
 
 
@@ -42,7 +39,7 @@ def main(config: DictConfig):
     # time.sleep(2)
     tilename = os.path.splitext(initial_las_filename)[0]
     initial_las_file = os.path.join(in_dir, initial_las_filename)
-    las_with_buffer = Path(out_dir) / config.buffer.output_dir / initial_las_filename
+    las_with_buffer = Path(out_dir) / config.buffer.output_subdir / initial_las_filename
     las_with_buffer.parent.mkdir(parents=True, exist_ok=True)
     bounds_las = utils_pdal.get_bounds_from_las(initial_las_file)  # get boundaries
 
@@ -55,80 +52,13 @@ def main(config: DictConfig):
         output_filename=str(las_with_buffer),
         buffer_width=config.buffer.size,
         spatial_ref=f"EPSG:{epsg}" if str(epsg).isdigit() else epsg,
-        tile_width=config.tile_geometry.tile_width,
-        tile_coord_scale=config.tile_geometry.tile_coord_scale,
+        tile_width=config.io.tile_geometry.tile_width,
+        tile_coord_scale=config.io.tile_geometry.tile_coord_scale,
     )
 
     # DENSITY (DTM brut + density)
-    log.info("\nStep 2: Create density maps")
-    log.info("\nStep 2.1: Create dtm map for density shading")
-    log.info("\nStep 2.2: Create density map\n")
-    raster_dens_values = os.path.join(
-        out_dir,
-        config.density.intermediate_dirs.density_values,
-        f"{tilename}_DENS{config.io.extension}",
-    )
-    os.makedirs(os.path.dirname(raster_dens_values), exist_ok=True)
-    raster_dens_color = os.path.join(
-        out_dir,
-        config.density.intermediate_dirs.density_color,
-        f"{tilename}_DENS_COLOR{config.io.extension}",
-    )
-    os.makedirs(os.path.dirname(raster_dens_color), exist_ok=True)
-    raster_dens = os.path.join(
-        out_dir,
-        config.density.output_dir,
-        f"{tilename}_DENS{config.io.extension}",
-    )
-    os.makedirs(os.path.dirname(raster_dens), exist_ok=True)
-
-    # DENSITY
-    las = laspy.read(str(las_with_buffer))
-    points_np = np.vstack((las.x, las.y, las.z)).transpose()
-    classifs = np.copy(las.classification)
-
-    map_density.generate_raster_of_density(
-        input_points=points_np,
-        input_classifs=classifs,
-        output_tif=raster_dens_values,
-        epsg=config.io.spatial_reference,
-        classes_by_layer=[config.density.keep_classes],
-        tile_size=config.tile_geometry.tile_width,
-        pixel_size=config.density.pixel_size,
-        buffer_size=config.buffer.size,
-        raster_driver=config.io.raster_driver,
-    )
-
-    log.info("\nStep 2.3: Colorize density map\n")
-    utils_gdal.color_raster_with_LUT(
-        input_raster=raster_dens_values,
-        output_raster=raster_dens_color,
-        LUT=os.path.join(config.io.lut_folder, config.density.lut_filename),
-    )
-
-    # prepare outputs
-    raster_density_dxm_raw = os.path.join(
-        out_dir,
-        config.density.intermediate_dirs.dxm_raw,
-        f"{tilename}_interp{config.io.extension}",
-    )
-    raster_density_dxm_hillshade = os.path.join(
-        out_dir,
-        config.density.intermediate_dirs.dxm_hillshade,
-        f"{tilename}_hillshade{config.io.extension}",
-    )
-
-    map_DXM.add_dxm_hillshade_to_raster(
-        input_raster=raster_dens_color,
-        input_pointcloud=str(las_with_buffer),
-        output_raster=raster_dens,
-        pixel_size=config.density.pixel_size,
-        keep_classes=config.density.keep_classes,
-        dxm_interpolation=config.density.dxm_interpolation,
-        output_dxm_raw=raster_density_dxm_raw,
-        output_dxm_hillshade=raster_density_dxm_hillshade,
-        hillshade_calc=config.density.hillshade_calc,
-        config=config,
+    map_density.create_density_raster_with_color_and_hillshade(
+        str(las_with_buffer), tilename, config.density, config.io, config.buffer.size
     )
 
     # DTM hillshade color
@@ -145,7 +75,7 @@ def main(config: DictConfig):
         f"{tilename}_hillshade{config.io.extension}",
     )
 
-    dir_dtm_colored = os.path.join(out_dir, config.dtm.output_dir)
+    dir_dtm_colored = os.path.join(out_dir, config.dtm.output_subdir)
     dir_dtm_lut = os.path.join(out_dir, config.dtm.color.folder_LUT)
 
     log.info("\nStep 3.1: Generate DTM with hillshade")
@@ -159,7 +89,7 @@ def main(config: DictConfig):
         dxm_interpolation=config.dtm.interpolation,
         color_cycles=config.dtm.color.cycles_DTM_colored,
         output_dir_LUT=dir_dtm_lut,
-        config=config,
+        config_io=config.io,
     )
 
     # Map class color
@@ -175,7 +105,7 @@ def main(config: DictConfig):
         config_intermediate_dirs=config.class_map.intermediate_dirs,
         LUT=os.path.join(config.io.lut_folder, config.class_map.lut_filename),
         output_bounds=bounds_las,
-        raster_driver=config.io.raster_driver
+        raster_driver=config.io.raster_driver,
     )
 
     # prepare outputs
@@ -189,12 +119,12 @@ def main(config: DictConfig):
         config.class_map.intermediate_dirs.dxm_hillshade,
         f"{tilename}_hillshade{config.io.extension}",
     )
-    output_dir_map_class_color = os.path.join(out_dir, config.class_map.output_dir)
+    output_dir_map_class_color = os.path.join(out_dir, config.class_map.output_subdir)
     os.makedirs(output_dir_map_class_color, exist_ok=True)
 
     raster_class_map = os.path.join(
         out_dir,
-        config.class_map.output_dir,
+        config.class_map.output_subdir,
         f"{tilename}_fusion_DSM_class{config.io.extension}",
     )
     os.makedirs(os.path.dirname(raster_class_map), exist_ok=True)
@@ -209,8 +139,9 @@ def main(config: DictConfig):
         output_dxm_raw=raster_class_map_dxm_raw,
         output_dxm_hillshade=raster_class_map_dxm_hillshade,
         hillshade_calc=config.class_map.hillshade_calc,
-        config=config,
+        config_io=config.io,
     )
+
 
 if __name__ == "__main__":
     main()

@@ -29,8 +29,8 @@ with initialize(version_base="1.2", config_path="../configs"):
     CONFIG_2 = compose(
         config_name="config_ctview",
         overrides=[
-            f"tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
-            f"tile_geometry.tile_width={TILE_WIDTH}",
+            f"io.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
+            f"io.tile_geometry.tile_width={TILE_WIDTH}",
         ],
     )
 
@@ -81,7 +81,7 @@ def test_create_raw_DXM_default_pixelsize():
         pixel_size=CONFIG_2.dtm.pixel_size,
         keep_classes=CONFIG_2.dtm.keep_classes,
         dxm_interpolation=CONFIG_2.dtm.interpolation,
-        config=CONFIG_2,
+        config_io=CONFIG_2.io,
     )
 
     assert os.path.isfile(os.path.join(output_dir, EXPECTED_DTM_INTERP))
@@ -109,7 +109,7 @@ def test_create_colored_dxm_with_hillshade_dtm_1m():
 
     map_DXM.create_colored_dxm_with_hillshade(
         input_file=INPUT_FILE,
-        output_dir=os.path.join(output_dir, CONFIG_2.dtm.output_dir),
+        output_dir=os.path.join(output_dir, CONFIG_2.dtm.output_subdir),
         output_dir_LUT=os.path.join(output_dir, CONFIG_2.dtm.color.folder_LUT),
         output_dxm_raw=raster_dxm_raw,
         output_dxm_hillshade=raster_dxm_hillshade,
@@ -117,7 +117,7 @@ def test_create_colored_dxm_with_hillshade_dtm_1m():
         pixel_size=1,
         keep_classes=CONFIG_2.dtm.keep_classes,
         dxm_interpolation=CONFIG_2.dtm.interpolation,
-        config=CONFIG_2,
+        config_io=CONFIG_2.io,
     )
 
     assert os.path.isfile(os.path.join(output_dir, EXPECTED_DTM_INTERP))
@@ -138,7 +138,7 @@ def test_add_dxm_hillshade_to_raster_dsm_50cm():
     input_raster = os.path.join(INPUT_DIR_RASTER, f"test_data_{COORDX}_{COORDY}_LA93_IGN69_COLOR_MAP_50cm.tif")
     output_raster = os.path.join(
         output_dir,
-        CONFIG_2.class_map.output_dir,
+        CONFIG_2.class_map.output_subdir,
         f"{TILENAME}_color_map{CONFIG_2.io.extension}",
     )
     raster_dxm_raw = os.path.join(
@@ -162,7 +162,7 @@ def test_add_dxm_hillshade_to_raster_dsm_50cm():
         output_dxm_raw=raster_dxm_raw,
         output_dxm_hillshade=raster_dxm_hillshade,
         hillshade_calc=CONFIG_2.class_map.hillshade_calc,
-        config=CONFIG_2,
+        config_io=CONFIG_2.io,
     )
 
     assert os.path.isfile(os.path.join(output_dir, EXPECTED_DSM_INTERP))
@@ -183,7 +183,7 @@ def test_add_dxm_hillshade_to_raster_density_5m():
     input_raster = os.path.join(INPUT_DIR_RASTER, f"test_data_{COORDX}_{COORDY}_LA93_IGN69_DENS_COLOR_5m.tif")
     output_raster = os.path.join(
         output_dir,
-        CONFIG_2.density.output_dir,
+        CONFIG_2.density.output_subdir,
         f"{TILENAME}_DENS{CONFIG_2.io.extension}",
     )
     raster_dxm_raw = os.path.join(
@@ -206,7 +206,7 @@ def test_add_dxm_hillshade_to_raster_density_5m():
         output_dxm_raw=raster_dxm_raw,
         output_dxm_hillshade=raster_dxm_hillshade,
         hillshade_calc=CONFIG_2.density.hillshade_calc,
-        config=CONFIG_2,
+        config_io=CONFIG_2.io,
     )
 
     assert os.path.isfile(os.path.join(output_dir, EXPECTED_DTM_DENS_INTERP))
@@ -215,4 +215,3 @@ def test_add_dxm_hillshade_to_raster_density_5m():
     assert os.path.isfile(os.path.join(output_dir, EXPECTED_DENS_WITH_HILLSHADE))
     with rasterio.open(output_raster) as raster:
         assert raster.res == (5, 5)
-

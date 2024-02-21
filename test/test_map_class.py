@@ -31,8 +31,8 @@ with initialize(version_base="1.2", config_path="../configs"):
     CONFIG = compose(
         config_name="config_ctview",
         overrides=[
-            f"tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
-            f"tile_geometry.tile_width={TILE_WIDTH}",
+            f"io.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
+            f"io.tile_geometry.tile_width={TILE_WIDTH}",
             f"buffer.size={BUFFER_SIZE}",
         ],
     )
