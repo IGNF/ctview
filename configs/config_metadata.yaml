@@ -12,6 +12,7 @@ io:
   output_dir: null
   projection_epsg: 2154
   extension: .tif
+  raster_driver: "GTiff"
 
 tile_geometry:
   tile_coord_scale: 1000

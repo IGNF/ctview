@@ -68,12 +68,12 @@ def main(config: DictConfig):
     raster_density_dxm_raw = os.path.join(
         out_dir,
         config.density.intermediate_dirs.dxm_raw,
-        f"{tilename}_interp{config.density.extension}",
+        f"{tilename}_interp{config.io.extension}",
     )
     raster_density_dxm_hillshade = os.path.join(
         out_dir,
         config.density.intermediate_dirs.dxm_hillshade,
-        f"{tilename}_hillshade{config.density.extension}",
+        f"{tilename}_hillshade{config.io.extension}",
     )
 
     # Filename and config.tile_geometry are used to generate rasters with the expected geometry
@@ -92,19 +92,19 @@ def main(config: DictConfig):
     raster_dens_values = os.path.join(
         out_dir,
         config.density.intermediate_dirs.density_values,
-        f"{tilename}_DENS{config.density.extension}",
+        f"{tilename}_DENS{config.io.extension}",
     )
     os.makedirs(os.path.dirname(raster_dens_values), exist_ok=True)
     raster_dens_color = os.path.join(
         out_dir,
         config.density.intermediate_dirs.density_color,
-        f"{tilename}_DENS_COLOR{config.density.extension}",
+        f"{tilename}_DENS_COLOR{config.io.extension}",
     )
     os.makedirs(os.path.dirname(raster_dens_color), exist_ok=True)
     raster_dens = os.path.join(
         out_dir,
         config.density.output_dir,
-        f"{tilename}_DENS{config.density.extension}",
+        f"{tilename}_DENS{config.io.extension}",
     )
     os.makedirs(os.path.dirname(raster_dens), exist_ok=True)
 
@@ -122,6 +122,7 @@ def main(config: DictConfig):
         tile_size=config.tile_geometry.tile_width,
         pixel_size=config.density.pixel_size,
         buffer_size=config.buffer.size,
+        raster_driver=config.io.raster_driver,
     )
 
     log.info("\nStep 2.3: Colorize density map\n")
@@ -145,12 +146,12 @@ def main(config: DictConfig):
     raster_dtm_dxm_raw = os.path.join(
         out_dir,
         config.dtm.intermediate_dirs.dxm_raw,
-        f"{tilename}_interp{config.dtm.extension}",
+        f"{tilename}_interp{config.io.extension}",
     )
     raster_dtm_dxm_hillshade = os.path.join(
         out_dir,
         config.dtm.intermediate_dirs.dxm_hillshade,
-        f"{tilename}_hillshade{config.dtm.extension}",
+        f"{tilename}_hillshade{config.io.extension}",
     )
 
     log.info("\nStep 3.1: Generate DTM with hillshade")
@@ -182,12 +183,12 @@ def main(config: DictConfig):
     raster_class_map_dxm_raw = os.path.join(
         out_dir,
         config.class_map.intermediate_dirs.dxm_raw,
-        f"{tilename}_interp{config.class_map.extension}",
+        f"{tilename}_interp{config.io.extension}",
     )
     raster_class_map_dxm_hillshade = os.path.join(
         out_dir,
         config.class_map.intermediate_dirs.dxm_hillshade,
-        f"{tilename}_hillshade{config.class_map.extension}",
+        f"{tilename}_hillshade{config.io.extension}",
     )
     output_dir_map_class_color = os.path.join(out_dir, config.class_map.output_dir)
     os.makedirs(output_dir_map_class_color, exist_ok=True)
@@ -208,9 +209,10 @@ def main(config: DictConfig):
         input_las=str(las_with_buffer),
         output_dir=out_dir,
         pixel_size=config.class_map.pixel_size,
-        extension=config.class_map.extension,
+        extension=config.io.extension,
         config_intermediate_dirs=config.class_map.intermediate_dirs,
         LUT=os.path.join(config.io.lut_folder, config.class_map.lut_filename),
+        raster_driver=config.io.raster_driver,
     )
 
     log.info("\nStep 4.2: Multiply with DSM for hillshade")
@@ -219,8 +221,9 @@ def main(config: DictConfig):
         input_raster_class=raster_class_fgc,
         output_dir=output_dir_map_class_color,
         output_filename=initial_las_filename,
-        output_extension=config.class_map.extension,
+        output_extension=config.io.extension,
         bounds=bounds_las,
+        raster_driver=config.io.raster_driver,
     )
 
 

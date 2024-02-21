@@ -1,7 +1,5 @@
 import logging as log
 import os
-from numbers import Real
-from typing import Optional
 
 import hydra
 import numpy as np
@@ -13,49 +11,39 @@ import ctview.utils_gdal as utils_gdal
 import ctview.utils_pdal as utils_pdal
 
 
-def fill_no_data(
-    src_raster: Optional[str] = None,
-    dst_raster: Optional[str] = None,
-    max_Search_Distance: Real = 2,
-):
-    """Fill gap in the data.
-    input_raster : raster to fill
-    output_raster : raster with no gap
-    max_Search_Distance : maximum distance (in pixel) that the algorithm will search out for values to interpolate.
-    """
-    gdal_fillnodata.gdal_fillnodata(
-        src_filename=src_raster,
-        band_number=2,
-        dst_filename=dst_raster,
-        driver_name="GTiff",
-        creation_options=None,
-        quiet=True,
-        mask="default",
-        max_distance=max_Search_Distance,
-        smoothing_iterations=0,
-        options=None,
-    )
-
-
 def step1_create_raster_brut(
-    in_points: np.ndarray, output_dir: str, output_filename: str, output_extension: str, res: int, i: int
-):
-    """
-    Create raster of class brut.
-    Args :
-        in_points : points of las file
-        output_dir : output directory
-        output_filename : name of las file whithout extension
-        output_extension : extension of output file
-        res : resolution in meters
-        i : index step
-    Return :
-        Full path of raster of class brut
+    in_points: np.ndarray,
+    output_dir: str,
+    output_filename: str,
+    output_extension: str,
+    res: int,
+    i: int,
+    raster_driver: str,
+) -> str:
+    """Create raw raster of classes.
+
+    Args:
+        input_points (np.array): Points of the input las (as read with a pdal.readers.las)
+        output_dir (str): path to the output raster directory
+        output_filename (_type_): name of output file whithout extension
+        output_extension (str): extension of output file
+        res (int): pixel size of the output raster
+        i (int): step index (for logging)
+        raster_driver (str): One of GDAL raster drivers formats
+        (cf. https://gdal.org/drivers/raster/index.html#raster-drivers)
+
+    Raises:
+        FileNotFoundError: if the output raster has not been created
+
+    Returns:
+        str: Full path to the output filled raster
     """
     os.makedirs(output_dir, exist_ok=True)
     raster_brut = os.path.join(output_dir, f"{output_filename}_raster{output_extension}")
     log.info(f"Step {i}/4 : Raster of class brut : {raster_brut}")
-    utils_pdal.write_raster_class(input_points=in_points, output_raster=raster_brut, res=res)
+    utils_pdal.write_raster_class(
+        input_points=in_points, output_raster=raster_brut, res=res, raster_driver=raster_driver
+    )
 
     if not os.path.exists(raster_brut):  # if raster not create, next step with fail
         raise FileNotFoundError(f"{raster_brut} not found")
@@ -63,25 +51,41 @@ def step1_create_raster_brut(
     return raster_brut
 
 
-def step2_create_raster_fillgap(in_raster: str, output_dir: str, output_filename, output_extension: str, i: int):
+def step2_create_raster_fillgap(
+    in_raster: str, output_dir: str, output_filename, output_extension: str, i: int, raster_driver: str
+) -> str:
+    """Fill gaps on a raster using gdal.
+
+    Args:
+        in_raster (str): path to the raster to fill
+        output_dir (str): path to the output raster directory
+        output_filename (_type_): name of output file whithout extension
+        output_extension (str): extension of output file
+        i (int): step index (for logging)
+        raster_driver (str): One of GDAL raster drivers formats
+        (cf. https://gdal.org/drivers/raster/index.html#raster-drivers)
+
+    Raises:
+        FileNotFoundError: if the output raster has not been created
+
+    Returns:
+        str: Full path to the output filled raster
     """
-    Fill gaps on a raster using gdal.
-    Args :
-        in_raster : raster to fill
-        output_dir : output directory
-        output_filename : name of las file whithout extension
-        output_extension : extension of output file
-        i : index step
-    Return :
-        Full path of raster filled
-    """
+
     os.makedirs(output_dir, exist_ok=True)
     fillgap_raster = os.path.join(output_dir, f"{output_filename}_raster_fillgap{output_extension}")
     log.info(f"Step {i}/4 : Fill gaps : {fillgap_raster}")
-    fill_no_data(
-        src_raster=in_raster,
-        dst_raster=fillgap_raster,
-        max_Search_Distance=2,  # modif 10/01/2023
+    gdal_fillnodata.gdal_fillnodata(
+        src_filename=in_raster,
+        band_number=2,
+        dst_filename=fillgap_raster,
+        driver_name=raster_driver,
+        creation_options=None,
+        quiet=True,
+        mask="default",
+        max_distance=2,
+        smoothing_iterations=0,
+        options=None,
     )
 
     if not os.path.exists(fillgap_raster):  # if raster not create, next step with fail
@@ -129,6 +133,7 @@ def create_map_class(
     extension: str,
     config_intermediate_dirs: DictConfig,
     LUT: str,
+    raster_driver: str,
 ) -> str:
     """Create a raster of class with the fill gaps method of gdal and a colorisation.
 
@@ -140,6 +145,8 @@ def create_map_class(
         config_intermediate_dirs (DictConfig): dictionary that contains path to all the intermediate directories.
         Expected keys are {"CC_brut", "CC_brut_color", "CC_fillgap", "CC_fillgap_color"}
         LUT (str): path to the LUT used to color the raster
+        raster_driver (str): One of GDAL raster drivers formats
+        (cf. https://gdal.org/drivers/raster/index.html#raster-drivers)
 
     Returns:
         str: Full path of raster filled and colorised
@@ -167,6 +174,7 @@ def create_map_class(
         res=pixel_size,
         i=1,
         output_extension=extension,
+        raster_driver=raster_driver,
     )
 
     # Step 2 : Color brut
@@ -187,6 +195,7 @@ def create_map_class(
         output_filename=input_las_name_without_extension,
         output_extension=extension,
         i=3,
+        raster_driver=raster_driver,
     )
 
     # Step 4 : Color fill gaps
@@ -210,21 +219,29 @@ def multiply_DSM_class(
     output_filename: str,
     output_extension: str,
     bounds: tuple,
+    raster_driver: str,
 ):
-    """
-    Fusion of 2 rasters (DSM and raster of class filled and colored) with a given formula.
-    Args :
-        input_DSM : DSM
-        input_raster_class : raster of class filled and colored
-        output_dir : output directory
-        output_filename : filename of output file
-        output_extension : extension of output file
-        bounds : bounds of las file ([minx,maxx],[miny, maxy])
+    """Fusion of 2 rasters (DSM and raster of class filled and colored) with a given formula.
+
+    Args:
+        input_DSM (str): path to the input DSM raster
+        input_raster_class (str): path to the input class_map raster
+        output_dir (str): path to the output directory
+        output_filename (str): filename of the output file
+        output_extension (str): extension of theutput file
+        bounds (tuple): bounds of output file ([minx,maxx],[miny, maxy])
+        raster_driver (str): One of GDAL raster drivers formats
+        (cf. https://gdal.org/drivers/raster/index.html#raster-drivers)
     """
     # Crop rasters
     log.info("Crop class_map rasters")
     input_raster_class_crop = f"{os.path.splitext(input_raster_class)[0]}_crop{output_extension}"
-    clip_raster.clip_raster(input_raster=input_raster_class, output_raster=input_raster_class_crop, bounds=bounds)
+    clip_raster.clip_raster(
+        input_raster=input_raster_class,
+        output_raster=input_raster_class_crop,
+        bounds=bounds,
+        raster_driver=raster_driver,
+    )
 
     log.info("Multiplication with DSM")
     out_raster = os.path.join(output_dir, f"{os.path.splitext(output_filename)[0]}_fusion_DSM_class{output_extension}")
@@ -249,8 +266,9 @@ def main(config: DictConfig):
         output_dir=config.io.output_dir,
         config_intermediate_dirs=config.class_map.intermediate_dirs,
         pixel_size=config.class_map.pixel_size,
-        extension=config.class_map.extension,
+        extension=config.io.extension,
         LUT=os.path.join(config.io.lut_folder, config.class_map.lut_filename),
+        raster_driver=config.io.raster_driver,
     )
     log.info("END.")
 

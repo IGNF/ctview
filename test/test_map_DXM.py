@@ -65,12 +65,12 @@ def test_create_DTM_with_hillshade_one_las_default_pixelsize():
     raster_dxm_raw = os.path.join(
         output_dir,
         CONFIG_2.dtm.intermediate_dirs.dxm_raw,
-        f"{TILENAME}_interp{CONFIG_2.dtm.extension}",
+        f"{TILENAME}_interp{CONFIG_2.io.extension}",
     )
     raster_dxm_hillshade = os.path.join(
         output_dir,
         CONFIG_2.dtm.intermediate_dirs.dxm_hillshade,
-        f"{TILENAME}_hillshade{CONFIG_2.dtm.extension}",
+        f"{TILENAME}_hillshade{CONFIG_2.io.extension}",
     )
     map_DXM.create_dxm_with_hillshade_one_las(
         input_file=INPUT_FILE,
@@ -97,12 +97,12 @@ def test_create_DSM_with_hillshade_one_las_default_pixelsize():
     raster_dxm_raw = os.path.join(
         output_dir,
         CONFIG_2.class_map.intermediate_dirs.dxm_raw,
-        f"{TILENAME}_interp{CONFIG_2.class_map.extension}",
+        f"{TILENAME}_interp{CONFIG_2.io.extension}",
     )
     raster_dxm_hillshade = os.path.join(
         output_dir,
         CONFIG_2.class_map.intermediate_dirs.dxm_hillshade,
-        f"{TILENAME}_hillshade{CONFIG_2.class_map.extension}",
+        f"{TILENAME}_hillshade{CONFIG_2.io.extension}",
     )
     map_DXM.create_dxm_with_hillshade_one_las(
         input_file=INPUT_FILE,
@@ -131,12 +131,12 @@ def test_create_dtm_with_hillshade_one_las_5M_pixelsize():
     raster_dxm_raw = os.path.join(
         output_dir,
         CONFIG_2.density.intermediate_dirs.dxm_raw,
-        f"{TILENAME}_interp{CONFIG_2.density.extension}",
+        f"{TILENAME}_interp{CONFIG_2.io.extension}",
     )
     raster_dxm_hillshade = os.path.join(
         output_dir,
         CONFIG_2.density.intermediate_dirs.dxm_hillshade,
-        f"{TILENAME}_hillshade{CONFIG_2.density.extension}",
+        f"{TILENAME}_hillshade{CONFIG_2.io.extension}",
     )
     map_DXM.create_dxm_with_hillshade_one_las(
         input_file=INPUT_FILE,
@@ -166,12 +166,12 @@ def test_create_dtm_with_hillshade_one_las_1M_pixelsize():
     raster_dxm_raw = os.path.join(
         output_dir,
         CONFIG_2.dtm.intermediate_dirs.dxm_raw,
-        f"{TILENAME}_interp{CONFIG_2.dtm.extension}",
+        f"{TILENAME}_interp{CONFIG_2.io.extension}",
     )
     raster_dxm_hillshade = os.path.join(
         output_dir,
         CONFIG_2.dtm.intermediate_dirs.dxm_hillshade,
-        f"{TILENAME}_hillshade{CONFIG_2.dtm.extension}",
+        f"{TILENAME}_hillshade{CONFIG_2.io.extension}",
     )
     map_DXM.create_dxm_with_hillshade_one_las(
         input_file=INPUT_FILE,
@@ -202,12 +202,12 @@ def test_create_dsm_with_hillshade_one_las_50CM_pixelsize():
     raster_dxm_raw = os.path.join(
         output_dir,
         CONFIG_2.class_map.intermediate_dirs.dxm_raw,
-        f"{TILENAME}_interp{CONFIG_2.class_map.extension}",
+        f"{TILENAME}_interp{CONFIG_2.io.extension}",
     )
     raster_dxm_hillshade = os.path.join(
         output_dir,
         CONFIG_2.class_map.intermediate_dirs.dxm_hillshade,
-        f"{TILENAME}_hillshade{CONFIG_2.class_map.extension}",
+        f"{TILENAME}_hillshade{CONFIG_2.io.extension}",
     )
     map_DXM.create_dxm_with_hillshade_one_las(
         input_file=INPUT_FILE,

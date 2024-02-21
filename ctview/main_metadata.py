@@ -71,6 +71,7 @@ def main(config: DictConfig):
         tile_size=tile_size,
         pixel_size=pixel_size,
         buffer_size=buffer_size,
+        raster_driver=config.io.raster_driver,
     )
 
 
