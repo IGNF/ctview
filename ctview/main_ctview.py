@@ -57,6 +57,7 @@ def main(config: DictConfig):
     )
 
     # DENSITY (DTM brut + density)
+    log.info("\nStep 2: Create a density map")
     map_density.create_density_raster_with_color_and_hillshade(
         str(las_with_buffer), tilename, config.density, config.io, config.buffer.size
     )
@@ -78,7 +79,6 @@ def main(config: DictConfig):
     dir_dtm_colored = os.path.join(out_dir, config.dtm.output_subdir)
     dir_dtm_lut = os.path.join(out_dir, config.dtm.color.folder_LUT)
 
-    log.info("\nStep 3.1: Generate DTM with hillshade")
     map_DXM.create_colored_dxm_with_hillshade(
         input_file=str(las_with_buffer),
         output_dir=dir_dtm_colored,
@@ -94,52 +94,12 @@ def main(config: DictConfig):
 
     # Map class color
     log.info("\nStep 4: Generate Classification map")
-    log.info("\nStep 4.1: Generate MNs for hillshade")
-
-    log.info("\nStep 4.1: Generate colored class map with post-processing")
-    raster_class_fgc = map_class.create_map_class(
+    map_class.create_map_class_raster_with_postprocessing_color_and_hillshade(
         input_las=str(las_with_buffer),
-        output_dir=out_dir,
-        pixel_size=config.class_map.pixel_size,
-        extension=config.io.extension,
-        config_intermediate_dirs=config.class_map.intermediate_dirs,
-        LUT=os.path.join(config.io.lut_folder, config.class_map.lut_filename),
-        output_bounds=bounds_las,
-        raster_driver=config.io.raster_driver,
-    )
-
-    # prepare outputs
-    raster_class_map_dxm_raw = os.path.join(
-        out_dir,
-        config.class_map.intermediate_dirs.dxm_raw,
-        f"{tilename}_interp{config.io.extension}",
-    )
-    raster_class_map_dxm_hillshade = os.path.join(
-        out_dir,
-        config.class_map.intermediate_dirs.dxm_hillshade,
-        f"{tilename}_hillshade{config.io.extension}",
-    )
-    output_dir_map_class_color = os.path.join(out_dir, config.class_map.output_subdir)
-    os.makedirs(output_dir_map_class_color, exist_ok=True)
-
-    raster_class_map = os.path.join(
-        out_dir,
-        config.class_map.output_subdir,
-        f"{tilename}_fusion_DSM_class{config.io.extension}",
-    )
-    os.makedirs(os.path.dirname(raster_class_map), exist_ok=True)
-
-    map_DXM.add_dxm_hillshade_to_raster(
-        input_raster=raster_class_fgc,
-        input_pointcloud=str(las_with_buffer),
-        output_raster=raster_class_map,
-        pixel_size=config.class_map.pixel_size,
-        keep_classes=config.class_map.keep_classes,
-        dxm_interpolation=config.class_map.dxm_interpolation,
-        output_dxm_raw=raster_class_map_dxm_raw,
-        output_dxm_hillshade=raster_class_map_dxm_hillshade,
-        hillshade_calc=config.class_map.hillshade_calc,
+        tilename=tilename,
+        config_class=config.class_map,
         config_io=config.io,
+        output_bounds=bounds_las,
     )
 
 
