@@ -1,11 +1,13 @@
 import os
 import shutil
+from pathlib import Path
 
 import rasterio
 from hydra import compose, initialize
 
 import ctview.utils_pdal as utils_pdal
 from ctview.map_class import (
+    create_map_class_raster_with_postprocessing_color_and_hillshade,
     step1_create_raster_brut,
     step2_create_raster_fillgap,
     step3_color_raster,
@@ -31,8 +33,8 @@ with initialize(version_base="1.2", config_path="../configs"):
     CONFIG = compose(
         config_name="config_ctview",
         overrides=[
-            f"tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
-            f"tile_geometry.tile_width={TILE_WIDTH}",
+            f"io.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
+            f"io.tile_geometry.tile_width={TILE_WIDTH}",
             f"buffer.size={BUFFER_SIZE}",
         ],
     )
@@ -167,3 +169,47 @@ def execute_main_change_pixel_size():
         assert band2[0, 0] == 128
         assert band3[0, 0] == 0
         assert raster.res == (5, 5)
+
+
+def test_create_map_class_raster_with_postprocessing_color_and_hillshade():
+    input_dir = Path("data") / "las" / "ground"
+    input_filename = "test_data_77055_627755_LA93_IGN69.las"
+    input_tilename = os.path.splitext(input_filename)[0]
+    tile_width = 50
+    tile_coord_scale = 10
+    buffer_size = 10
+    output_dir = Path(OUTPUT_DIR) / "create_map_class_raster_with_postprocessing_color_and_hillshade"
+    las_bounds = utils_pdal.get_bounds_from_las(os.path.join(input_dir, input_filename))
+    with initialize(version_base="1.2", config_path="../configs"):
+        # config is relative to a module
+        cfg = compose(
+            config_name="config_ctview",
+            overrides=[
+                f"io.input_filename={input_dir}",
+                f"io.input_dir={input_dir}",
+                f"io.output_dir={output_dir}",
+                f"io.tile_geometry.tile_coord_scale={tile_coord_scale}",
+                f"io.tile_geometry.tile_width={tile_width}",
+                f"buffer.size={buffer_size}",
+            ],
+        )
+    create_map_class_raster_with_postprocessing_color_and_hillshade(
+        os.path.join(input_dir, input_filename), input_tilename, cfg.class_map, cfg.io, las_bounds
+    )
+    with rasterio.Env():
+        with rasterio.open(Path(output_dir) / "CC_4_fgcolor" / f"{input_tilename}_raster_fillgap_color.tif") as raster:
+            band1 = raster.read(1)
+            band2 = raster.read(2)
+            band3 = raster.read(3)
+            assert band1[0, 0] == 255
+            assert band2[0, 0] == 128
+            assert band3[0, 0] == 0
+            assert raster.res == (0.5, 0.5)
+        with rasterio.open(Path(output_dir) / "CC_6_fusion" / f"{input_tilename}_fusion_DSM_class.tif") as raster:
+            band1 = raster.read(1)
+            band2 = raster.read(2)
+            band3 = raster.read(3)
+            assert band1[0, 0] is not None
+            assert band2[0, 0] is not None
+            assert band3[0, 0] is not None
+            assert raster.res == (0.5, 0.5)

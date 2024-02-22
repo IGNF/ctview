@@ -14,22 +14,22 @@ io:
   lut_folder: LUT
   extension: .tif
   raster_driver: GTiff
-
-tile_geometry:
-  tile_coord_scale: 1000
-  tile_width: 1000
   no_data_value: -9999
+  tile_geometry:
+    tile_coord_scale: 1000
+    tile_width: 1000
 
 buffer:
   size: 100
-  output_dir: "tmp/buffer"
+  output_subdir: "tmp/buffer"
 
 density:
   pixel_size: 5
   keep_classes: [2, 66]
   dxm_interpolation: pdal-tin
   lut_filename: LUT_DENSITY.txt
-  output_dir: DENS_FINAL
+  output_subdir: DENS_FINAL
+  hillshade_calc: "((B-1)<0)*A*(B/255) + ((B-1)>=0)*A*((B-1)/255)"
   intermediate_dirs:
     density_values: DENS_VAL
     density_color: DENS_COLOR
@@ -39,11 +39,11 @@ density:
 dtm:
   pixel_size: 1
   keep_classes: [2, 66]
-  interpolation: pdal-tin
+  dxm_interpolation: pdal-tin
   color:
     cycles_DTM_colored: [1]
     folder_LUT: "LUT"
-  output_dir: "DTM/color"
+  output_subdir: "DTM/color"
   intermediate_dirs:
     dxm_raw: "DTM"
     dxm_hillshade: "tmp_dtm/hillshade"
@@ -53,12 +53,14 @@ class_map:
   dxm_interpolation: pdal-tin
   keep_classes: [1, 2, 3, 4, 5, 6, 9, 17, 64, 65, 66, 67, 202]
   lut_filename: LUT_CLASS.txt
-  output_dir: CC_5_fusion
+  output_subdir: CC_6_fusion
+  hillshade_calc: "254*((A*(0.5*(B/255)+0.25))>254)+(A*(0.5*(B/255)+0.25))*((A*(0.5*(B/255)+0.25))<=254)"
   intermediate_dirs:
     CC_brut: CC_1_brut
     CC_brut_color: CC_2_bcolor
     CC_fillgap: CC_3_fg
     CC_fillgap_color: CC_4_fgcolor
+    CC_crop: CC_5_crop
     dxm_raw: "DSM"
     dxm_hillshade: "tmp_dsm/hillshade"
 

@@ -1,14 +1,13 @@
 import logging as log
 import os
+from typing import Tuple
 
 import hydra
 import numpy as np
 from omegaconf import DictConfig
-from osgeo_utils import gdal_calc, gdal_fillnodata
+from osgeo_utils import gdal_fillnodata
 
-import ctview.clip_raster as clip_raster
-import ctview.utils_gdal as utils_gdal
-import ctview.utils_pdal as utils_pdal
+from ctview import clip_raster, map_DXM, utils_gdal, utils_pdal
 
 
 def step1_create_raster_brut(
@@ -126,149 +125,165 @@ def step3_color_raster(
     return raster_colored
 
 
-def create_map_class(
+def create_map_class_raster_with_postprocessing_color_and_hillshade(
     input_las: str,
-    output_dir: str,
-    pixel_size: float,
-    extension: str,
-    config_intermediate_dirs: DictConfig,
-    LUT: str,
-    raster_driver: str,
+    tilename: str,
+    config_class: DictConfig | dict,
+    config_io: DictConfig | dict,
+    output_bounds: Tuple,
 ) -> str:
-    """Create a raster of class with the fill gaps method of gdal and a colorisation.
+    """Create a raster of class with post processing steps:
+    * fill gaps with a method of gdal
+    * colorisation
+    * mix with a hillshade that comes from an elevation model
 
     Args:
-        input_las (str): las file
-        output_dir (str): output directory
-        pixel_size (float):  output pixel size of the generated map
-        extension (str): output file extension
-        config_intermediate_dirs (DictConfig): dictionary that contains path to all the intermediate directories.
-        Expected keys are {"CC_brut", "CC_brut_color", "CC_fillgap", "CC_fillgap_color"}
-        LUT (str): path to the LUT used to color the raster
-        raster_driver (str): One of GDAL raster drivers formats
-        (cf. https://gdal.org/drivers/raster/index.html#raster-drivers)
+        input_las (str): path to the input las file
+        tilename (str): tilename used to generate the output filename
+        config_class (DictConfig | dict):  hydra configuration with the class map parameters
+        eg. {
+          pixel_size: 0.5  # pixel size of the output raster
+          dxm_interpolation: pdal-tin  # interpolation used to generate the hillshade elevation model
+          keep_classes: [1, 2, 3, 4]  # classes used in the hillshae elevation model
+          lut_filename: LUT_CLASS.txt  # filename for the lut that colorizes the classification map
+          output_subdir: CC_6_fusion  # folder name for the final class map output
+          hillshade_calc: "254*((A*(0.5*(B/255)+0.25))>254)+(A*(0.5*(B/255)+0.25))*((A*(0.5*(B/255)+0.25))<=254)"
+          # formula used to mix the classification map with its hillshade
+          intermediate_dirs:  # paths to the saved intermediate results
+              CC_brut: CC_1_brut
+              CC_brut_color: CC_2_bcolor
+              CC_fillgap: CC_3_fg
+              CC_fillgap_color: CC_4_fgcolor
+              CC_crop: CC_5_crop
+              dxm_raw: "DSM"
+              dxm_hillshade: "tmp_dsm/hillshade"
+
+        }
+        config_io (DictConfig | dict): hydra configuration with the general io parameters
+        eg.  {
+            input_filename: null
+            input_dir: null
+            output_dir: null
+            spatial_reference: EPSG:2154
+            lut_folder: LUT
+            extension: .tif
+            raster_driver: GTiff
+            no_data_value: -9999
+            tile_geometry:
+                tile_coord_scale: 1000
+                tile_width: 1000
+            }
+        output_bounds (Tuple): bounds of the output raster file ([minx,maxx],[miny, maxy]).
+            Should correspond to the las input file before adding any buffer
+
 
     Returns:
-        str: Full path of raster filled and colorised
+        str: Full path of raster filled, colorised and mixed with hillshade
     """
     log.basicConfig(level=log.INFO, format="%(message)s")
 
     # File names
     input_las_name = os.path.basename(input_las)
-    input_las_name_without_extension = os.path.splitext(input_las_name)[0]  # Read las
     in_points = utils_pdal.read_las_file(input_las)
 
     log.info(f"\nMAP OF CLASS : file : {input_las_name}")
 
     # Output_folder_names
-    output_folder_1 = os.path.join(output_dir, config_intermediate_dirs["CC_brut"])
-    output_folder_2 = os.path.join(output_dir, config_intermediate_dirs["CC_brut_color"])
-    output_folder_3 = os.path.join(output_dir, config_intermediate_dirs["CC_fillgap"])
-    output_folder_4 = os.path.join(output_dir, config_intermediate_dirs["CC_fillgap_color"])
+    out_dir = config_io.output_dir
+    inter_dirs = config_class.intermediate_dirs
+    ext = config_io.extension
+    output_folder_1 = os.path.join(out_dir, inter_dirs["CC_brut"])
+    output_folder_2 = os.path.join(out_dir, inter_dirs["CC_brut_color"])
+    output_folder_3 = os.path.join(out_dir, inter_dirs["CC_fillgap"])
+    output_folder_4 = os.path.join(out_dir, inter_dirs["CC_fillgap_color"])
+    output_folder_5 = os.path.join(out_dir, inter_dirs["CC_crop"])
+
+    # prepare outputs
+    raster_class_map_dxm_raw = os.path.join(out_dir, inter_dirs.dxm_raw, f"{tilename}_interp{ext}")
+    raster_class_map_dxm_hillshade = os.path.join(out_dir, inter_dirs.dxm_hillshade, f"{tilename}_hillshade{ext}")
+    raster_class_map = os.path.join(out_dir, config_class.output_subdir, f"{tilename}_fusion_DSM_class{ext}")
+    os.makedirs(os.path.dirname(raster_class_map), exist_ok=True)
 
     # Step 1 : Write raster brut
     raster_brut = step1_create_raster_brut(
         in_points=in_points,
         output_dir=output_folder_1,
-        output_filename=input_las_name_without_extension,
-        res=pixel_size,
+        output_filename=tilename,
+        res=config_class.pixel_size,
         i=1,
-        output_extension=extension,
-        raster_driver=raster_driver,
+        output_extension=ext,
+        raster_driver=config_io.raster_driver,
     )
 
     # Step 2 : Color brut
     step3_color_raster(
         in_raster=raster_brut,
         output_dir=output_folder_2,
-        tilename=input_las_name_without_extension,
-        output_extension=extension,
+        tilename=tilename,
+        output_extension=ext,
         verbose="raster_color",
         i=2,
-        LUT=LUT,
+        LUT=os.path.join(config_io.lut_folder, config_class.lut_filename),
     )
 
     # Step 3 :  Fill gaps
     fillgap_raster = step2_create_raster_fillgap(
         in_raster=raster_brut,
         output_dir=output_folder_3,
-        output_filename=input_las_name_without_extension,
-        output_extension=extension,
+        output_filename=tilename,
+        output_extension=ext,
         i=3,
-        raster_driver=raster_driver,
+        raster_driver=config_io.raster_driver,
     )
 
     # Step 4 : Color fill gaps
     color_fillgap_raster = step3_color_raster(
         in_raster=fillgap_raster,
         output_dir=output_folder_4,
-        tilename=input_las_name_without_extension,
-        output_extension=extension,
+        tilename=tilename,
+        output_extension=ext,
         verbose="raster_fillgap_color",
         i=4,
-        LUT=LUT,
+        LUT=os.path.join(config_io.lut_folder, config_class.lut_filename),
     )
-
-    return color_fillgap_raster
-
-
-def multiply_DSM_class(
-    input_DSM: str,
-    input_raster_class: str,
-    output_dir: str,
-    output_filename: str,
-    output_extension: str,
-    bounds: tuple,
-    raster_driver: str,
-):
-    """Fusion of 2 rasters (DSM and raster of class filled and colored) with a given formula.
-
-    Args:
-        input_DSM (str): path to the input DSM raster
-        input_raster_class (str): path to the input class_map raster
-        output_dir (str): path to the output directory
-        output_filename (str): filename of the output file
-        output_extension (str): extension of theutput file
-        bounds (tuple): bounds of output file ([minx,maxx],[miny, maxy])
-        raster_driver (str): One of GDAL raster drivers formats
-        (cf. https://gdal.org/drivers/raster/index.html#raster-drivers)
-    """
-    # Crop rasters
-    log.info("Crop class_map rasters")
-    input_raster_class_crop = f"{os.path.splitext(input_raster_class)[0]}_crop{output_extension}"
+    # Step 5: Crop
+    os.makedirs(output_folder_5, exist_ok=True)
+    output_clip_raster = os.path.join(output_folder_5, f"{tilename}_raster{ext}")
     clip_raster.clip_raster(
-        input_raster=input_raster_class,
-        output_raster=input_raster_class_crop,
-        bounds=bounds,
-        raster_driver=raster_driver,
+        input_raster=color_fillgap_raster,
+        output_raster=output_clip_raster,
+        bounds=output_bounds,
+        raster_driver=config_io.raster_driver,
     )
 
-    log.info("Multiplication with DSM")
-    out_raster = os.path.join(output_dir, f"{os.path.splitext(output_filename)[0]}_fusion_DSM_class{output_extension}")
-    # Mutiply
-    gdal_calc.Calc(
-        A=input_raster_class_crop,
-        B=input_DSM,
-        calc="254*((A*(0.5*(B/255)+0.25))>254)+(A*(0.5*(B/255)+0.25))*((A*(0.5*(B/255)+0.25))<=254)",
-        outfile=out_raster,
-        allBands="A",
-        overwrite=True,
+    map_DXM.add_dxm_hillshade_to_raster(
+        input_raster=output_clip_raster,
+        input_pointcloud=str(input_las),
+        output_raster=raster_class_map,
+        pixel_size=config_class.pixel_size,
+        keep_classes=config_class.keep_classes,
+        dxm_interpolation=config_class.dxm_interpolation,
+        output_dxm_raw=raster_class_map_dxm_raw,
+        output_dxm_hillshade=raster_class_map_dxm_hillshade,
+        hillshade_calc=config_class.hillshade_calc,
+        config_io=config_io,
     )
+
+    return raster_class_map
 
 
 @hydra.main(config_path="../configs/", config_name="config_ctview.yaml", version_base="1.2")
 def main(config: DictConfig):
     log.basicConfig(level=log.INFO, format="%(message)s")
     initial_las_file = os.path.join(config.io.input_dir, config.io.input_filename)
+    las_bounds = utils_pdal.get_bounds_from_las(initial_las_file)
     os.makedirs(config.io.output_dir, exist_ok=True)
-    create_map_class(
+    create_map_class_raster_with_postprocessing_color_and_hillshade(
         input_las=initial_las_file,
-        output_dir=config.io.output_dir,
-        config_intermediate_dirs=config.class_map.intermediate_dirs,
-        pixel_size=config.class_map.pixel_size,
-        extension=config.io.extension,
-        LUT=os.path.join(config.io.lut_folder, config.class_map.lut_filename),
-        raster_driver=config.io.raster_driver,
+        tilename=os.path.splitext(os.path.basename(initial_las_file))[0],
+        config_class=config.class_map,
+        config_io=config.io,
+        output_bounds=las_bounds,
     )
     log.info("END.")
 
