@@ -1,5 +1,6 @@
 # dev
 - new:
+  - default config does not save intermediate files for dxm
   - default config does not save intermediate files for density
 - dependencies: update pdal to 2.6+, python to 3.10+
 - refactor: 

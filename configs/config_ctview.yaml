@@ -42,11 +42,11 @@ dtm:
   dxm_interpolation: pdal-tin
   color:
     cycles_DTM_colored: [1]
-    folder_LUT: "LUT"
-  output_subdir: "DTM/color"
+  output_subdir: "DTM_FINAL"
   intermediate_dirs:
-    dxm_raw: "DTM"
-    dxm_hillshade: "tmp_dtm/hillshade"
+    dxm_raw: null  # exemple: DTM_VAL
+    dxm_hillshade: null  # exemple: tmp_dtm/hillshade
+    folder_LUT: null  # exemple: "DTM_FINAL/LUT"
 
 class_map:
   pixel_size: 0.5

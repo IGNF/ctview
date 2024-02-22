@@ -1,5 +1,6 @@
 import logging as log
 import os
+import tempfile
 from typing import List
 
 import produits_derives_lidar.ip_one_tile
@@ -131,11 +132,11 @@ def create_colored_dxm_with_hillshade(
           color:
               cycles_DTM_colored: [1]  # List of numbers of LUT cycles for the colorisation
                                        # (one raster is generated for each value)
-              folder_LUT: "LUT"  # Output subfolder for the output LUT(s)
           output_subdir: "DTM/color"  # Output subfolder for the final dtm output
           intermediate_dirs:  # paths to the saved intermediate results
             dxm_raw: "DTM"
             dxm_hillshade: "tmp_dtm/hillshade"
+            folder_LUT: "LUT"  # Output subfolder for the output LUT(s)
 
         }
         config_io (DictConfig | dict): hydra configuration with the general io parameters
@@ -157,32 +158,38 @@ def create_colored_dxm_with_hillshade(
     inter_dirs = config_dtm.intermediate_dirs
     ext = config_io.extension
 
-    # prepare outputs
-    raster_dtm_dxm_raw = os.path.join(out_dir, inter_dirs.dxm_raw, f"{tilename}_interp{ext}")
-    raster_dtm_dxm_hillshade = os.path.join(out_dir, inter_dirs.dxm_hillshade, f"{tilename}_hillshade{ext}")
+    with tempfile.TemporaryDirectory(prefix="tmp_dxm", dir="tmp") as tmpdir:
+        if inter_dirs.dxm_raw:
+            raster_dtm_dxm_raw = os.path.join(out_dir, inter_dirs.dxm_raw, f"{tilename}_interp{ext}")
+        else:
+            raster_dtm_dxm_raw = os.path.join(tmpdir, f"{tilename}_interp{ext}")
+        if inter_dirs.dxm_hillshade:
+            raster_dtm_dxm_hillshade = os.path.join(out_dir, inter_dirs.dxm_hillshade, f"{tilename}_hillshade{ext}")
+        else:
+            raster_dtm_dxm_hillshade = os.path.join(tmpdir, f"{tilename}_hillshade{ext}")
+        if inter_dirs.folder_LUT:
+            output_dir_LUT = os.path.join(out_dir, inter_dirs.folder_LUT)
+        else:
+            output_dir_LUT = tmpdir
 
-    dir_dtm_colored = os.path.join(out_dir, config_dtm.output_subdir)
-    dir_dtm_lut = os.path.join(out_dir, config_dtm.color.folder_LUT)
+        os.makedirs(os.path.dirname(raster_dtm_dxm_raw), exist_ok=True)
+        os.makedirs(os.path.dirname(raster_dtm_dxm_hillshade), exist_ok=True)
 
-    os.makedirs(os.path.dirname(raster_dtm_dxm_raw), exist_ok=True)
-    os.makedirs(os.path.dirname(raster_dtm_dxm_hillshade), exist_ok=True)
+        create_raw_dxm(
+            input_las,
+            raster_dtm_dxm_raw,
+            config_dtm.pixel_size,
+            config_dtm.dxm_interpolation,
+            config_dtm.keep_classes,
+            config_io,
+        )
 
-    create_raw_dxm(
-        input_las,
-        raster_dtm_dxm_raw,
-        config_dtm.pixel_size,
-        config_dtm.dxm_interpolation,
-        config_dtm.keep_classes,
-        config_io,
-    )
+        add_hillshade.add_hillshade_one_raster(input_raster=raster_dtm_dxm_raw, output_raster=raster_dtm_dxm_hillshade)
 
-    # add hillshade
-    add_hillshade.add_hillshade_one_raster(input_raster=raster_dtm_dxm_raw, output_raster=raster_dtm_dxm_hillshade)
-
-    add_color.color_raster_dtm_hillshade_with_LUT(
-        input_initial_basename=os.path.basename(input_las),
-        input_raster=raster_dtm_dxm_hillshade,
-        output_dir=dir_dtm_colored,
-        list_c=config_dtm.color.cycles_DTM_colored,
-        output_dir_LUT=dir_dtm_lut,
-    )
+        add_color.color_raster_dtm_hillshade_with_LUT(
+            input_initial_basename=os.path.basename(input_las),
+            input_raster=raster_dtm_dxm_hillshade,
+            output_dir=os.path.join(out_dir, config_dtm.output_subdir),
+            list_c=config_dtm.color.cycles_DTM_colored,
+            output_dir_LUT=output_dir_LUT,
+        )
