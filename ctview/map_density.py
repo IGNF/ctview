@@ -1,5 +1,6 @@
 import logging as log
 import os
+import tempfile
 from collections.abc import Iterable
 from typing import Tuple
 
@@ -169,52 +170,66 @@ def create_density_raster_with_color_and_hillshade(
             f"got {config_density['keep_classes']} instead)"
         )
 
-    raster_dens_values = os.path.join(out_dir, inter_dirs.density_values, f"{tilename}_DENS{ext}")
-    raster_dens_color = os.path.join(out_dir, inter_dirs.density_color, f"{tilename}_DENS_COLOR{ext}")
-    raster_dens = os.path.join(out_dir, config_density.output_subdir, f"{tilename}_DENS{ext}")
-    raster_density_dxm_raw = os.path.join(out_dir, inter_dirs.dxm_raw, f"{tilename}_interp{ext}")
-    raster_density_dxm_hillshade = os.path.join(out_dir, inter_dirs.dxm_hillshade, f"{tilename}_hillshade{ext}")
+    with tempfile.TemporaryDirectory(prefix="tmp_density", dir="tmp") as tmpdir:
+        if inter_dirs.density_values:
+            raster_dens_values = os.path.join(out_dir, inter_dirs.density_values, f"{tilename}_DENS{ext}")
+        else:
+            raster_dens_values = os.path.join(tmpdir, f"{tilename}_DENS{ext}")
+        if inter_dirs.density_color:
+            raster_dens_color = os.path.join(out_dir, inter_dirs.density_color, f"{tilename}_DENS_COLOR{ext}")
+        else:
+            raster_dens_color = os.path.join(tmpdir, f"{tilename}_DENS_COLOR{ext}")
+        if inter_dirs.dxm_raw:
+            raster_density_dxm_raw = os.path.join(out_dir, inter_dirs.dxm_raw, f"{tilename}_interp{ext}")
+        else:
+            raster_density_dxm_raw = os.path.join(tmpdir, f"{tilename}_interp{ext}")
+        if inter_dirs.dxm_hillshade:
+            raster_density_dxm_hs = os.path.join(out_dir, inter_dirs.dxm_hillshade, f"{tilename}_hillshade{ext}")
+        else:
+            raster_density_dxm_hs = os.path.join(tmpdir, f"{tilename}_hillshade{ext}")
 
-    os.makedirs(os.path.dirname(raster_dens_values), exist_ok=True)
-    os.makedirs(os.path.dirname(raster_dens_color), exist_ok=True)
-    os.makedirs(os.path.dirname(raster_dens), exist_ok=True)
+        raster_dens = os.path.join(out_dir, config_density.output_subdir, f"{tilename}_DENS{ext}")
 
-    log.info("\nRead point cloud\n")
-    las = laspy.read(input_las)
-    points_np = np.vstack((las.x, las.y, las.z)).transpose()
-    classifs = np.copy(las.classification)
+        os.makedirs(os.path.dirname(raster_dens_values), exist_ok=True)
+        os.makedirs(os.path.dirname(raster_dens_color), exist_ok=True)
+        os.makedirs(os.path.dirname(raster_dens), exist_ok=True)
 
-    log.info("\nCreate density map (values)\n")
-    generate_raster_of_density(
-        input_points=points_np,
-        input_classifs=classifs,
-        output_tif=raster_dens_values,
-        epsg=config_io.spatial_reference,
-        classes_by_layer=[config_density.keep_classes],
-        tile_size=config_io.tile_geometry.tile_width,
-        pixel_size=config_density.pixel_size,
-        buffer_size=buffer_size,
-    )
+        log.info("\nRead point cloud\n")
+        las = laspy.read(input_las)
+        points_np = np.vstack((las.x, las.y, las.z)).transpose()
+        classifs = np.copy(las.classification)
 
-    log.info("\nColorize density map\n")
-    utils_gdal.color_raster_with_LUT(
-        input_raster=raster_dens_values,
-        output_raster=raster_dens_color,
-        LUT=os.path.join(config_io.lut_folder, config_density.lut_filename),
-    )
+        log.info("\nCreate density map (values)\n")
+        generate_raster_of_density(
+            input_points=points_np,
+            input_classifs=classifs,
+            output_tif=raster_dens_values,
+            epsg=config_io.spatial_reference,
+            classes_by_layer=[config_density.keep_classes],
+            tile_size=config_io.tile_geometry.tile_width,
+            pixel_size=config_density.pixel_size,
+            buffer_size=buffer_size,
+        )
 
-    log.info("\nMix with hillshade from elevation model\n")
-    map_DXM.add_dxm_hillshade_to_raster(
-        input_raster=raster_dens_color,
-        input_pointcloud=input_las,
-        output_raster=raster_dens,
-        pixel_size=config_density.pixel_size,
-        keep_classes=config_density.keep_classes,
-        dxm_interpolation=config_density.dxm_interpolation,
-        output_dxm_raw=raster_density_dxm_raw,
-        output_dxm_hillshade=raster_density_dxm_hillshade,
-        hillshade_calc=config_density.hillshade_calc,
-        config_io=config_io,
-    )
+        log.info("\nColorize density map\n")
+        utils_gdal.color_raster_with_LUT(
+            input_raster=raster_dens_values,
+            output_raster=raster_dens_color,
+            LUT=os.path.join(config_io.lut_folder, config_density.lut_filename),
+        )
+
+        log.info("\nMix with hillshade from elevation model\n")
+        map_DXM.add_dxm_hillshade_to_raster(
+            input_raster=raster_dens_color,
+            input_pointcloud=input_las,
+            output_raster=raster_dens,
+            pixel_size=config_density.pixel_size,
+            keep_classes=config_density.keep_classes,
+            dxm_interpolation=config_density.dxm_interpolation,
+            output_dxm_raw=raster_density_dxm_raw,
+            output_dxm_hillshade=raster_density_dxm_hs,
+            hillshade_calc=config_density.hillshade_calc,
+            config_io=config_io,
+        )
 
     return raster_dens

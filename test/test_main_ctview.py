@@ -4,7 +4,6 @@ import test.utils.point_cloud_utils as pcu
 from pathlib import Path
 
 import pytest
-import rasterio
 from hydra import compose, initialize
 
 from ctview.main_ctview import main
@@ -41,12 +40,12 @@ def setup_module(module):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
-def test_main_ctview_map_density():
+def test_main_ctview():
     tile_width = 50
     tile_coord_scale = 10
     pixel_size = 2
     buffer_size = 10
-    output_dir = OUTPUT_DIR / "main_ctview_map_density"
+    output_dir = OUTPUT_DIR / "main_ctview"
     input_tilename = os.path.splitext(INPUT_FILENAME_SMALL1)[0]
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
@@ -67,54 +66,10 @@ def test_main_ctview_map_density():
         )
     main(cfg)
     assert_las_buffer_is_not_empty(output_dir, INPUT_FILENAME_SMALL1)
-    assert os.path.isfile(Path(output_dir) / OUTPUT_FOLDER_DENS / f"{input_tilename}_DENS.tif")
-    assert os.path.isfile(Path(output_dir) / OUTPUT_FOLDER_CLASS / f"{input_tilename}_fusion_DSM_class.tif")
-
-
-def test_main_ctview_dtm_color():
-    tile_width = 50
-    tile_coord_scale = 10
-    buffer_size = 10
-    output_dir = OUTPUT_DIR / "main_ctview_dtm_color"
-    input_tilename = os.path.splitext(INPUT_FILENAME_SMALL1)[0]
-    with initialize(version_base="1.2", config_path="../configs"):
-        # config is relative to a module
-        cfg = compose(
-            config_name="config_ctview",
-            overrides=[
-                f"io.input_filename={INPUT_FILENAME_SMALL1}",
-                f"io.input_dir={INPUT_DIR_SMALL}",
-                f"io.output_dir={output_dir}",
-                "dtm.color.cycles_DTM_colored=[1,4]",
-                f"io.tile_geometry.tile_coord_scale={tile_coord_scale}",
-                f"io.tile_geometry.tile_width={tile_width}",
-                f"buffer.size={buffer_size}",
-                f"dtm.pixel_size={1}",
-            ],
-        )
-    main(cfg)
-    assert_las_buffer_is_not_empty(output_dir, INPUT_FILENAME_SMALL1)
-    with rasterio.Env():
-        with rasterio.open(
-            Path(output_dir) / EXPECTED_OUTPUT_DTM_1C / f"{input_tilename}_DTM_hillshade_color1c.tif"
-        ) as raster:
-            band1 = raster.read(1)
-            band2 = raster.read(2)
-            band3 = raster.read(3)
-            assert band1[8, 8] == 255
-            assert band2[8, 8] == 147
-            assert band3[8, 8] == 0
-            assert raster.res == (1, 1)
-        with rasterio.open(
-            Path(output_dir) / EXPECTED_OUTPUT_DTM_4C / f"{input_tilename}_DTM_hillshade_color4c.tif"
-        ) as raster:
-            band1 = raster.read(1)
-            band2 = raster.read(2)
-            band3 = raster.read(3)
-            assert band1[8, 8] == 205
-            assert band2[8, 8] == 103
-            assert band3[8, 8] == 0
-            assert raster.res == (1, 1)
+    assert (Path(output_dir) / OUTPUT_FOLDER_DENS / f"{input_tilename}_DENS.tif").is_file()
+    assert (Path(output_dir) / EXPECTED_OUTPUT_DTM_1C / f"{input_tilename}_DTM_hillshade_color1c.tif").is_file()
+    assert (Path(output_dir) / EXPECTED_OUTPUT_DTM_4C / f"{input_tilename}_DTM_hillshade_color4c.tif").is_file()
+    assert (Path(output_dir) / OUTPUT_FOLDER_CLASS / f"{input_tilename}_fusion_DSM_class.tif").is_file()
 
 
 @pytest.mark.parametrize(

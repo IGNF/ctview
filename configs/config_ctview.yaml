@@ -31,10 +31,10 @@ density:
   output_subdir: DENS_FINAL
   hillshade_calc: "((B-1)<0)*A*(B/255) + ((B-1)>=0)*A*((B-1)/255)"
   intermediate_dirs:
-    density_values: DENS_VAL
-    density_color: DENS_COLOR
-    dxm_raw: DTM_DENS
-    dxm_hillshade: "tmp_dtm_dens/hillshade"
+    density_values: null  # exemple: DENS_VAL
+    density_color: null  # exemple: DENS_COLOR
+    dxm_raw: null  # exemple: DTM_DENS
+    dxm_hillshade: null  # exemple: "tmp_dtm_dens/hillshade"
 
 dtm:
   pixel_size: 1
