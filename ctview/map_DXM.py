@@ -83,7 +83,7 @@ def add_dxm_hillshade_to_raster(
         output_dxm_hillshade (str):  Path to hillshade model (intermediate result)
         hillshade_calc (str): Formula used by gdalcalc to mix the raster and its hillshade
         (with A: input_raster, B: hillshade)
-        config_io (DictConfig): configuration dictionary the must contain:
+        config_io (DictConfig): io configuration dictionary that must contain:
             "spatial_reference": #str,
             "no_data_value": #int,
             "tile_geometry": {
@@ -131,7 +131,7 @@ def create_colored_dxm_with_hillshade(
           color:
               cycles_DTM_colored: [1]  # List of numbers of LUT cycles for the colorisation
                                        # (one raster is generated for each value)
-              folder_LUT: "LUT"  # Output subfolder for the output LUTs
+              folder_LUT: "LUT"  # Output subfolder for the output LUT(s)
           output_subdir: "DTM/color"  # Output subfolder for the final dtm output
           intermediate_dirs:  # paths to the saved intermediate results
             dxm_raw: "DTM"

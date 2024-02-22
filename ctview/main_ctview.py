@@ -57,13 +57,13 @@ def main(config: DictConfig):
     )
 
     # DENSITY (DTM brut + density)
-    log.info("\nStep 2: Create a density map")
+    log.info("\nStep 2: Generate a density map with hillshade and color")
     map_density.create_density_raster_with_color_and_hillshade(
         str(las_with_buffer), tilename, config.density, config.io, config.buffer.size
     )
 
     # DTM hillshade color
-    log.info("\nStep 3: Generate DTM")
+    log.info("\nStep 3: Generate dtm(s) with hillshade and color")
     map_DXM.create_colored_dxm_with_hillshade(
         input_las=str(las_with_buffer),
         tilename=tilename,
@@ -72,7 +72,7 @@ def main(config: DictConfig):
     )
 
     # Map class color
-    log.info("\nStep 4: Generate Classification map")
+    log.info("\nStep 4: Generate a classification map with hillshade and color")
     map_class.create_map_class_raster_with_postprocessing_color_and_hillshade(
         input_las=str(las_with_buffer),
         tilename=tilename,

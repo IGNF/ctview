@@ -1,10 +1,11 @@
 # dev
-- update pdal to 2.6+ 
+- dependencies: update pdal to 2.6+, python to 3.10+
 - refactor: 
-  - add gdal driver to config
-  - generate buffer point cloud only once in the beggining of the algo
   - simplify config file
-- add option to gdal DEMprocessing to process hillshade on the sides as well (removes black lines)
+  - generate buffer point cloud only once in the beggining of the algo
+  - add gdal driver to config
+  - add one main function for each output of main_ctview (density, dtm and class_map)
+-  fix: add option to gdal DEMprocessing to process hillshade on the sides as well (removes black lines)
 - density:
   - use same density map in main_ctView as in main_metadata
   - fix multiplication with DTM
