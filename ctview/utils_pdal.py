@@ -2,7 +2,9 @@ import numpy as np
 import pdal
 
 
-def write_raster_class(input_points: np.array, output_raster: str, res: float, raster_driver: str):
+def write_raster_class(
+    input_points: np.array, output_raster: str, res: float, raster_driver: str, no_data_value: float
+):
     """Generate a raster with the contained classes by interpolation of all points that fall
     in a resolution * sqrt(2) radius from the pixel centers.
 
@@ -13,6 +15,7 @@ def write_raster_class(input_points: np.array, output_raster: str, res: float, r
         res (float): pixel size of the output raster
         raster_driver (str): One of GDAL raster drivers formats
         (cf. https://gdal.org/drivers/raster/index.html#raster-drivers)
+        no_data_value (float): Value of pixel if contains no data
     """
     """ """
     pipeline = pdal.Writer.gdal(
@@ -20,6 +23,7 @@ def write_raster_class(input_points: np.array, output_raster: str, res: float, r
         resolution=res,
         dimension="Classification",
         gdaldriver=raster_driver,
+        nodata=no_data_value,
     ).pipeline(input_points)
     pipeline.execute()
 

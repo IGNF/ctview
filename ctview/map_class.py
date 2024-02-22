@@ -1,5 +1,6 @@
 import logging as log
 import os
+import tempfile
 from typing import Tuple
 
 import hydra
@@ -10,74 +11,53 @@ from osgeo_utils import gdal_fillnodata
 from ctview import clip_raster, map_DXM, utils_gdal, utils_pdal
 
 
-def step1_create_raster_brut(
-    in_points: np.ndarray,
-    output_dir: str,
-    output_filename: str,
-    output_extension: str,
-    res: int,
-    i: int,
-    raster_driver: str,
-) -> str:
+def create_class_raster_raw(
+    in_points: np.ndarray, output_file: str, res: int, raster_driver: str, no_data_value: float
+):
     """Create raw raster of classes.
 
     Args:
         input_points (np.array): Points of the input las (as read with a pdal.readers.las)
-        output_dir (str): path to the output raster directory
-        output_filename (_type_): name of output file whithout extension
-        output_extension (str): extension of output file
+        output_file (str): full path to the output raster
         res (int): pixel size of the output raster
-        i (int): step index (for logging)
         raster_driver (str): One of GDAL raster drivers formats
         (cf. https://gdal.org/drivers/raster/index.html#raster-drivers)
-
+        no_data_value (float): Value of pixel if contains no data
     Raises:
         FileNotFoundError: if the output raster has not been created
-
-    Returns:
-        str: Full path to the output filled raster
     """
-    os.makedirs(output_dir, exist_ok=True)
-    raster_brut = os.path.join(output_dir, f"{output_filename}_raster{output_extension}")
-    log.info(f"Step {i}/4 : Raster of class brut : {raster_brut}")
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
     utils_pdal.write_raster_class(
-        input_points=in_points, output_raster=raster_brut, res=res, raster_driver=raster_driver
+        input_points=in_points,
+        output_raster=output_file,
+        res=res,
+        raster_driver=raster_driver,
+        no_data_value=no_data_value,
     )
 
-    if not os.path.exists(raster_brut):  # if raster not create, next step with fail
-        raise FileNotFoundError(f"{raster_brut} not found")
-
-    return raster_brut
+    if not os.path.exists(output_file):  # if raster not create, next step with fail
+        raise FileNotFoundError(f"{output_file} not found")
 
 
-def step2_create_raster_fillgap(
-    in_raster: str, output_dir: str, output_filename, output_extension: str, i: int, raster_driver: str
-) -> str:
+def fill_gaps_raster(in_raster: str, output_file: str, raster_driver: str):
     """Fill gaps on a raster using gdal.
 
     Args:
         in_raster (str): path to the raster to fill
-        output_dir (str): path to the output raster directory
-        output_filename (_type_): name of output file whithout extension
-        output_extension (str): extension of output file
-        i (int): step index (for logging)
+        output_file (str): full path to the output raster
         raster_driver (str): One of GDAL raster drivers formats
         (cf. https://gdal.org/drivers/raster/index.html#raster-drivers)
 
     Raises:
         FileNotFoundError: if the output raster has not been created
-
-    Returns:
-        str: Full path to the output filled raster
     """
 
-    os.makedirs(output_dir, exist_ok=True)
-    fillgap_raster = os.path.join(output_dir, f"{output_filename}_raster_fillgap{output_extension}")
-    log.info(f"Step {i}/4 : Fill gaps : {fillgap_raster}")
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
     gdal_fillnodata.gdal_fillnodata(
         src_filename=in_raster,
         band_number=2,
-        dst_filename=fillgap_raster,
+        dst_filename=output_file,
         driver_name=raster_driver,
         creation_options=None,
         quiet=True,
@@ -87,42 +67,27 @@ def step2_create_raster_fillgap(
         options=None,
     )
 
-    if not os.path.exists(fillgap_raster):  # if raster not create, next step with fail
-        raise FileNotFoundError(f"{fillgap_raster} not found")
-
-    return fillgap_raster
+    if not os.path.exists(output_file):  # if raster not create, next step with fail
+        raise FileNotFoundError(f"{output_file} not found")
 
 
-def step3_color_raster(
-    in_raster: str, output_dir: str, tilename: str, output_extension: str, verbose: str, i: int, LUT: str
-) -> str:
+def add_color_to_raster(in_raster: str, output_file: str, LUT: str):
     """Color a raster using method gdal DEMProcessing with a specific LUT.
 
     Args:
         in_raster (str): path to the input raster (to be colored)
-        output_dir (str): path to the output directory
-        tilename (str): name of the tile (usually las filename without extension, used to generate an output filename)
-        output_extension (str): extension of the output file
-        verbose (str):  suffix for the output filename
-        i (int): index of the step, used for logging
+        output_file (str): full path to the output raster
         LUT (str): path to the LUT used to color the raster
 
     Raises:
         FileNotFoundError: if the output raster has not been created
-
-    Returns:
-        str: Full path of colored raster
     """
-    os.makedirs(output_dir, exist_ok=True)
-    raster_colored = os.path.join(output_dir, f"{tilename}_{verbose}{output_extension}")
-    log.info(f"Step {i}/4 : {verbose} : {raster_colored}")
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
-    utils_gdal.color_raster_with_LUT(input_raster=in_raster, output_raster=raster_colored, LUT=LUT)
+    utils_gdal.color_raster_with_LUT(input_raster=in_raster, output_raster=output_file, LUT=LUT)
 
-    if not os.path.exists(raster_colored):  # if raster not create, next step with fail
-        raise FileNotFoundError(f"{raster_colored} not found")
-
-    return raster_colored
+    if not os.path.exists(output_file):  # if raster not create, next step with fail
+        raise FileNotFoundError(f"{output_file} not found")
 
 
 def create_map_class_raster_with_postprocessing_color_and_hillshade(
@@ -131,7 +96,7 @@ def create_map_class_raster_with_postprocessing_color_and_hillshade(
     config_class: DictConfig | dict,
     config_io: DictConfig | dict,
     output_bounds: Tuple,
-) -> str:
+):
     """Create a raster of class with post processing steps:
     * fill gaps with a method of gdal
     * colorisation
@@ -150,8 +115,8 @@ def create_map_class_raster_with_postprocessing_color_and_hillshade(
           hillshade_calc: "254*((A*(0.5*(B/255)+0.25))>254)+(A*(0.5*(B/255)+0.25))*((A*(0.5*(B/255)+0.25))<=254)"
           # formula used to mix the classification map with its hillshade
           intermediate_dirs:  # paths to the saved intermediate results
-              CC_brut: CC_1_brut
-              CC_brut_color: CC_2_bcolor
+              CC_raw: CC_1_raw
+              CC_raw_color: CC_2_bcolor
               CC_fillgap: CC_3_fg
               CC_fillgap_color: CC_4_fgcolor
               CC_crop: CC_5_crop
@@ -175,10 +140,6 @@ def create_map_class_raster_with_postprocessing_color_and_hillshade(
             }
         output_bounds (Tuple): bounds of the output raster file ([minx,maxx],[miny, maxy]).
             Should correspond to the las input file before adding any buffer
-
-
-    Returns:
-        str: Full path of raster filled, colorised and mixed with hillshade
     """
     log.basicConfig(level=log.INFO, format="%(message)s")
 
@@ -192,84 +153,90 @@ def create_map_class_raster_with_postprocessing_color_and_hillshade(
     out_dir = config_io.output_dir
     inter_dirs = config_class.intermediate_dirs
     ext = config_io.extension
-    output_folder_1 = os.path.join(out_dir, inter_dirs["CC_brut"])
-    output_folder_2 = os.path.join(out_dir, inter_dirs["CC_brut_color"])
-    output_folder_3 = os.path.join(out_dir, inter_dirs["CC_fillgap"])
-    output_folder_4 = os.path.join(out_dir, inter_dirs["CC_fillgap_color"])
-    output_folder_5 = os.path.join(out_dir, inter_dirs["CC_crop"])
 
-    # prepare outputs
-    raster_class_map_dxm_raw = os.path.join(out_dir, inter_dirs.dxm_raw, f"{tilename}_interp{ext}")
-    raster_class_map_dxm_hillshade = os.path.join(out_dir, inter_dirs.dxm_hillshade, f"{tilename}_hillshade{ext}")
-    raster_class_map = os.path.join(out_dir, config_class.output_subdir, f"{tilename}_fusion_DSM_class{ext}")
-    os.makedirs(os.path.dirname(raster_class_map), exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="tmp_class", dir="tmp") as tmpdir:
+        if inter_dirs["CC_raw"]:
+            raster_raw = os.path.join(out_dir, inter_dirs["CC_raw"], f"{tilename}_raw{ext}")
+        else:
+            raster_raw = os.path.join(tmpdir, f"{tilename}_raw{ext}")
+        if inter_dirs["CC_raw_color"]:
+            raster_raw_color = os.path.join(out_dir, inter_dirs["CC_raw_color"], f"{tilename}_raw_color{ext}")
 
-    # Step 1 : Write raster brut
-    raster_brut = step1_create_raster_brut(
-        in_points=in_points,
-        output_dir=output_folder_1,
-        output_filename=tilename,
-        res=config_class.pixel_size,
-        i=1,
-        output_extension=ext,
-        raster_driver=config_io.raster_driver,
-    )
+        if inter_dirs["CC_fillgap"]:
+            raster_fillgap = os.path.join(out_dir, inter_dirs["CC_fillgap"], f"{tilename}_fillgap{ext}")
+        else:
+            raster_fillgap = os.path.join(tmpdir, f"{tilename}_fillgap{ext}")
+        if inter_dirs["CC_fillgap_color"]:
+            raster_fg_color = os.path.join(out_dir, inter_dirs["CC_fillgap_color"], f"{tilename}_fillgap_color{ext}")
+        else:
+            raster_fg_color = os.path.join(tmpdir, f"{tilename}_fillgaps_color{ext}")
+        if inter_dirs["CC_crop"]:
+            raster_fg_color_clip = os.path.join(out_dir, inter_dirs["CC_crop"], f"{tilename}_fillgap_color_clip{ext}")
+        else:
+            raster_fg_color_clip = os.path.join(tmpdir, f"{tilename}_fillgap_color_clip{ext}")
 
-    # Step 2 : Color brut
-    step3_color_raster(
-        in_raster=raster_brut,
-        output_dir=output_folder_2,
-        tilename=tilename,
-        output_extension=ext,
-        verbose="raster_color",
-        i=2,
-        LUT=os.path.join(config_io.lut_folder, config_class.lut_filename),
-    )
+        if inter_dirs.dxm_raw:
+            raster_class_map_dxm_raw = os.path.join(out_dir, inter_dirs.dxm_raw, f"{tilename}_interp{ext}")
+        else:
+            raster_class_map_dxm_raw = os.path.join(tmpdir, f"{tilename}_interp{ext}")
+        if inter_dirs.dxm_hillshade:
+            raster_class_map_dxm_hs = os.path.join(out_dir, inter_dirs.dxm_hillshade, f"{tilename}_hillshade{ext}")
+        else:
+            raster_class_map_dxm_hs = os.path.join(tmpdir, f"{tilename}_hillshade{ext}")
 
-    # Step 3 :  Fill gaps
-    fillgap_raster = step2_create_raster_fillgap(
-        in_raster=raster_brut,
-        output_dir=output_folder_3,
-        output_filename=tilename,
-        output_extension=ext,
-        i=3,
-        raster_driver=config_io.raster_driver,
-    )
+        raster_class_map = os.path.join(out_dir, config_class.output_subdir, f"{tilename}_fusion_DSM_class{ext}")
+        os.makedirs(os.path.dirname(raster_class_map), exist_ok=True)
 
-    # Step 4 : Color fill gaps
-    color_fillgap_raster = step3_color_raster(
-        in_raster=fillgap_raster,
-        output_dir=output_folder_4,
-        tilename=tilename,
-        output_extension=ext,
-        verbose="raster_fillgap_color",
-        i=4,
-        LUT=os.path.join(config_io.lut_folder, config_class.lut_filename),
-    )
-    # Step 5: Crop
-    os.makedirs(output_folder_5, exist_ok=True)
-    output_clip_raster = os.path.join(output_folder_5, f"{tilename}_raster{ext}")
-    clip_raster.clip_raster(
-        input_raster=color_fillgap_raster,
-        output_raster=output_clip_raster,
-        bounds=output_bounds,
-        raster_driver=config_io.raster_driver,
-    )
+        log.info("Step 1 : Write raster raw")
+        create_class_raster_raw(
+            in_points=in_points,
+            output_file=raster_raw,
+            res=config_class.pixel_size,
+            raster_driver=config_io.raster_driver,
+            no_data_value=config_io.no_data_value,
+        )
 
-    map_DXM.add_dxm_hillshade_to_raster(
-        input_raster=output_clip_raster,
-        input_pointcloud=str(input_las),
-        output_raster=raster_class_map,
-        pixel_size=config_class.pixel_size,
-        keep_classes=config_class.keep_classes,
-        dxm_interpolation=config_class.dxm_interpolation,
-        output_dxm_raw=raster_class_map_dxm_raw,
-        output_dxm_hillshade=raster_class_map_dxm_hillshade,
-        hillshade_calc=config_class.hillshade_calc,
-        config_io=config_io,
-    )
+        if inter_dirs["CC_raw_color"]:
+            log.info("Step 1.5 : Write raster raw colorized")
+            add_color_to_raster(
+                in_raster=raster_raw,
+                output_file=raster_raw_color,
+                LUT=os.path.join(config_io.lut_folder, config_class.lut_filename),
+            )
 
-    return raster_class_map
+        log.info("Step 2 : Write raster with fillgap")
+        fill_gaps_raster(
+            in_raster=raster_raw,
+            output_file=raster_fillgap,
+            raster_driver=config_io.raster_driver,
+        )
+
+        log.info("Step 2 : Write raster with fillgap and color")
+        add_color_to_raster(
+            in_raster=raster_fillgap,
+            output_file=raster_fg_color,
+            LUT=os.path.join(config_io.lut_folder, config_class.lut_filename),
+        )
+        log.info("Step 3 : Write raster with fillgap, color + clipped at the right bounds")
+        clip_raster.clip_raster(
+            input_raster=raster_fg_color,
+            output_raster=raster_fg_color_clip,
+            bounds=output_bounds,
+            raster_driver=config_io.raster_driver,
+        )
+
+        map_DXM.add_dxm_hillshade_to_raster(
+            input_raster=raster_fg_color_clip,
+            input_pointcloud=str(input_las),
+            output_raster=raster_class_map,
+            pixel_size=config_class.pixel_size,
+            keep_classes=config_class.keep_classes,
+            dxm_interpolation=config_class.dxm_interpolation,
+            output_dxm_raw=raster_class_map_dxm_raw,
+            output_dxm_hillshade=raster_class_map_dxm_hs,
+            hillshade_calc=config_class.hillshade_calc,
+            config_io=config_io,
+        )
 
 
 @hydra.main(config_path="../configs/", config_name="config_ctview.yaml", version_base="1.2")

@@ -18,14 +18,11 @@ PIXEL_SIZE = 2
 
 
 def setup_module(module):
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-
-def teardown_module(module):
     try:
         shutil.rmtree(OUTPUT_DIR)
     except FileNotFoundError:
         pass
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
 def test_main():

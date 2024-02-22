@@ -53,16 +53,16 @@ class_map:
   dxm_interpolation: pdal-tin
   keep_classes: [1, 2, 3, 4, 5, 6, 9, 17, 64, 65, 66, 67, 202]
   lut_filename: LUT_CLASS.txt
-  output_subdir: CC_6_fusion
+  output_subdir: CLASS_FINAL
   hillshade_calc: "254*((A*(0.5*(B/255)+0.25))>254)+(A*(0.5*(B/255)+0.25))*((A*(0.5*(B/255)+0.25))<=254)"
   intermediate_dirs:
-    CC_brut: CC_1_brut
-    CC_brut_color: CC_2_bcolor
-    CC_fillgap: CC_3_fg
-    CC_fillgap_color: CC_4_fgcolor
-    CC_crop: CC_5_crop
-    dxm_raw: "DSM"
-    dxm_hillshade: "tmp_dsm/hillshade"
+    CC_raw: null  # exemple: CC_1_raw
+    CC_raw_color: null  # exemple: CC_2_bcolor
+    CC_fillgap: null  # exemple: CC_3_fg
+    CC_fillgap_color: null  # exemple: CC_4_fgcolor
+    CC_crop: null  # exemple: CC_5_crop
+    dxm_raw: null  # exemple: "DSM_VAL"
+    dxm_hillshade: null  # exemple: "tmp_dsm/hillshade"
 
 hydra:
   output_subdir: null
