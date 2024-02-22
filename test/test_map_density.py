@@ -45,6 +45,7 @@ def test_generate_raster_of_density():
         epsg=EPSG,
         tile_size=50,
         pixel_size=2,
+        raster_driver="GTiff",
     )
     assert os.path.isfile(output_tif)
     with rasterio.open(output_tif) as raster:
@@ -64,6 +65,7 @@ def test_generate_raster_of_density_multiband():
         epsg=EPSG,
         tile_size=50,
         pixel_size=2,
+        raster_driver="GTiff",
     )
     assert os.path.isfile(output_raster_multi)
     with rasterio.open(output_raster_multi) as raster_multi:
@@ -71,3 +73,22 @@ def test_generate_raster_of_density_multiband():
         assert band1[0, 0] == 28 / 2**2  # density = nb_pt / pixel_size **2 = 28/2**2
         band2 = raster_multi.read(2)
         assert band2[0, 0] == 0  # this band contains no point because none have classification 125
+
+
+def test_generate_raster_of_density_raster_driver():
+    output_raster = Path(OUTPUT_DIR) / "output_generate_raster_of_density_2.gpkg"
+    map_density.generate_raster_of_density(
+        input_points=INPUT_POINTS,
+        input_classifs=INPUT_CLASSIFS,
+        output_tif=output_raster,
+        epsg=EPSG,
+        tile_size=50,
+        pixel_size=2,
+        raster_driver="GPKG",
+    )
+    assert os.path.isfile(output_raster)
+    with rasterio.open(output_raster) as raster:
+        band1 = raster.read(1)
+        assert band1[0, 0] == 28 / 2**2  # density = nb_pt / pixel_size **2 = 28/2**2
+        assert band1[5, 0] == 1 / 2**2
+        assert band1[6, 0] == 0

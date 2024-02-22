@@ -8,35 +8,10 @@ from omegaconf import DictConfig
 import ctview.add_hillshade as add_hillshade
 
 
-def create_output_tree(output_dir: str):
-    """Create tree for output."""
-    output_tree = {
-        "DTM": {
-            "output": os.path.join(output_dir, "DTM"),
-            "hillshade": os.path.join(output_dir, "tmp_dtm", "hillshade"),
-            "color": os.path.join(output_dir, "DTM", "color"),
-        },
-        "DSM": {
-            "output": os.path.join(output_dir, "DSM"),
-            "hillshade": os.path.join(output_dir, "tmp_dsm", "hillshade"),
-        },
-        "DTM_DENS": {
-            "output": os.path.join(output_dir, "DTM_DENS"),
-            "hillshade": os.path.join(output_dir, "tmp_dtm_dens", "hillshade"),
-        },
-    }
-
-    for n in output_tree:
-        os.makedirs(output_tree[n]["output"], exist_ok=True)
-        os.makedirs(output_tree[n]["hillshade"], exist_ok=True)
-    os.makedirs(output_tree["DTM"]["color"], exist_ok=True)
-
-    return output_tree
-
-
 def create_dxm_with_hillshade_one_las(
     input_file: str,
-    output_dir: str,
+    output_dxm_raw: str,
+    output_dxm_hillshade: str,
     pixel_size: float,
     keep_classes: List,
     dxm_interpolation: str,
@@ -69,18 +44,8 @@ def create_dxm_with_hillshade_one_las(
         str: path to the output raster
     """
 
-    # manage paths
-    _, input_basename = os.path.split(input_file)
-    tilename, _ = os.path.splitext(input_basename)
-
-    # prepare outputs
-    output_tree = create_output_tree(output_dir=output_dir)
-
-    basename_interpolated = f"{tilename}_interp.tif"
-    basename_hillshade = f"{tilename}_hillshade.tif"
-
-    raster_dxm_brut = os.path.join(output_tree[type_raster.upper()]["output"], basename_interpolated)
-    raster_dxm_hillshade = os.path.join(output_tree[type_raster.upper()]["hillshade"], basename_hillshade)
+    os.makedirs(os.path.dirname(output_dxm_raw), exist_ok=True)
+    os.makedirs(os.path.dirname(output_dxm_hillshade), exist_ok=True)
 
     # Generate config that suits for produits_derive_lidar interpolation
     pdl_config = {}
@@ -93,10 +58,8 @@ def create_dxm_with_hillshade_one_las(
     log.debug(pdl_config)
 
     produits_derives_lidar.ip_one_tile.interpolate(
-        input_file=input_file, output_raster=raster_dxm_brut, config=pdl_config
+        input_file=input_file, output_raster=output_dxm_raw, config=pdl_config
     )
 
     # add hillshade
-    add_hillshade.add_hillshade_one_raster(input_raster=raster_dxm_brut, output_raster=raster_dxm_hillshade)
-
-    return raster_dxm_hillshade
+    add_hillshade.add_hillshade_one_raster(input_raster=output_dxm_raw, output_raster=output_dxm_hillshade)

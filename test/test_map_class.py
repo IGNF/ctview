@@ -19,6 +19,8 @@ INPUT_FILE = os.path.join(INPUT_DIR, INPUT_FILENAME)
 IN_POINTS = utils_pdal.read_las_file(INPUT_FILE)  # tested
 FILENAME = "defaultname"
 VERBOSE = "suffix"
+LUT_FILE = os.path.join("LUT", "LUT_CLASS.txt")
+RASTER_DRIVER = "GTiff"
 
 # Config
 TILE_COORD_SCALE = 10
@@ -65,7 +67,8 @@ def test_step1_create_raster_brut():
         output_filename=FILENAME,
         res=1,
         i=1,
-        output_extension=CONFIG.class_map.extension,
+        output_extension=CONFIG.io.extension,
+        raster_driver=RASTER_DRIVER,
     )
     assert raster == PATH1_EXPECTED  # good output filename
     assert os.path.isfile(PATH1_EXPECTED)  # file exists
@@ -78,14 +81,16 @@ def test_step2_create_raster_fillgap():
         output_filename=FILENAME,
         res=1,
         i=1,
-        output_extension=CONFIG.class_map.extension,
+        output_extension=CONFIG.io.extension,
+        raster_driver=RASTER_DRIVER,
     )
     raster_fillgap = step2_create_raster_fillgap(
         in_raster=raster_brut,
         output_dir=OUTPUT_DIR,
         output_filename=FILENAME,
-        output_extension=CONFIG.class_map.extension,
+        output_extension=CONFIG.io.extension,
         i=1,
+        raster_driver=RASTER_DRIVER,
     )
     assert raster_fillgap == PATH2_EXPECTED  # good output filename
     assert os.path.isfile(PATH2_EXPECTED)  # file exists
@@ -98,15 +103,17 @@ def test_step3_color_raster():
         output_filename=FILENAME,
         res=1,
         i=1,
-        output_extension=CONFIG.class_map.extension,
+        output_extension=CONFIG.io.extension,
+        raster_driver=RASTER_DRIVER,
     )
     raster_color = step3_color_raster(
         in_raster=raster_brut,
         output_dir=OUTPUT_DIR,
-        output_filename=FILENAME,
-        output_extension=CONFIG.class_map.extension,
+        tilename=FILENAME,
+        output_extension=CONFIG.io.extension,
         verbose=VERBOSE,
         i=1,
+        LUT=LUT_FILE,
     )
     assert raster_color == PATH3_EXPECTED
     with rasterio.open(PATH3_EXPECTED) as raster:

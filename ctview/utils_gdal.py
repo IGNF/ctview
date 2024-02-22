@@ -1,5 +1,7 @@
 from osgeo import gdal, osr
 
+gdal.UseExceptions()
+
 
 def add_epsg_to_raster(raster: str, epsg: int):
     """add epsg to raster"""

@@ -10,9 +10,10 @@ io:
   input_filename: null
   input_dir: null
   output_dir: null
-  output_folder_map_density: DENS_FINAL
-  output_folder_map_class_color: CC_5_fusion
   spatial_reference: EPSG:2154
+  lut_folder: LUT
+  extension: .tif
+  raster_driver: GTiff
 
 tile_geometry:
   tile_coord_scale: 1000
@@ -21,12 +22,19 @@ tile_geometry:
 
 buffer:
   size: 100
+  output_dir: "tmp/buffer"
 
 density:
   pixel_size: 5
   keep_classes: [2, 66]
-  extension: .tif
   dxm_interpolation: pdal-tin
+  lut_filename: LUT_DENSITY.txt
+  output_dir: DENS_FINAL
+  intermediate_dirs:
+    density_values: DENS_VAL
+    density_color: DENS_COLOR
+    dxm_raw: DTM_DENS
+    dxm_hillshade: "tmp_dtm_dens/hillshade"
 
 dtm:
   pixel_size: 1
@@ -34,12 +42,25 @@ dtm:
   interpolation: pdal-tin
   color:
     cycles_DTM_colored: [1]
+    folder_LUT: "LUT"
+  output_dir: "DTM/color"
+  intermediate_dirs:
+    dxm_raw: "DTM"
+    dxm_hillshade: "tmp_dtm/hillshade"
 
 class_map:
   pixel_size: 0.5
-  extension: .tif
   dxm_interpolation: pdal-tin
   keep_classes: [1, 2, 3, 4, 5, 6, 9, 17, 64, 65, 66, 67, 202]
+  lut_filename: LUT_CLASS.txt
+  output_dir: CC_5_fusion
+  intermediate_dirs:
+    CC_brut: CC_1_brut
+    CC_brut_color: CC_2_bcolor
+    CC_fillgap: CC_3_fg
+    CC_fillgap_color: CC_4_fgcolor
+    dxm_raw: "DSM"
+    dxm_hillshade: "tmp_dsm/hillshade"
 
 hydra:
   output_subdir: null

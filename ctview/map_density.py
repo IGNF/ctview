@@ -1,30 +1,49 @@
 import logging as log
-import os
 from typing import Tuple
 
 import numpy as np
 import rasterio
 from osgeo_utils import gdal_calc
 
-from ctview.utils_folder import dico_folder_template
 from ctview.utils_tools import get_pointcloud_origin
-
-FOLDER_DENS_VALUE = dico_folder_template["folder_density_value"]
-FOLDER_DENS_COLOR = dico_folder_template["folder_density_color"]
-CLASSIF_GROUND = 2
 
 
 def generate_raster_of_density(
     input_points: np.array,
     input_classifs: np.array,
     output_tif: str,
-    epsg: int,
+    epsg: int | str,
     classes_by_layer: list = [[]],
     tile_size: int = 1000,
     pixel_size: float = 1,
     buffer_size: float = 0,
     no_data_value: int = -9999,
+    raster_driver: str = "GTiff",
 ):
+    """Generate a (multilayer) raster of density for the classes in `class_by_layer`.
+
+    The output has one layer per value in the classes_by_layer list.
+    Each layer contains a density map for the classes listed in its correspondig list of
+    values in classes_by_layer.
+    Eg, if classes_by_layer = [[1, 2], [3], []]:
+    * the first layer contains the density map for classes 1 and 2 commbined
+    * the second layer contains the density map for class 3 only,
+    * the last layer contains the density for all classes together
+
+    Args:
+        input_points (np.array): numpy array with the input points
+        input_classifs (np.array): numpy array with classifications of the input points
+        output_tif (str): path to the output file
+        epsg (int): spatial reference of the output file
+        classes_by_layer (list, optional): _description_. Defaults to [[]].
+        tile_size (int, optional): size ot the raster tile in meters. Defaults to 1000.
+        pixel_size (float, optional): pixel size of the output raster. Defaults to 1.
+        buffer_size (float, optional): size of the buffer that has been added to the input points.
+        (used to detect the raster corners) Defaults to 0.
+        no_data_value (int, optional): No data value of the output. Defaults to -9999.
+        raster_driver (str): raster_driver (str): One of GDAL raster drivers formats
+        (cf. https://gdal.org/drivers/raster/index.html#raster-drivers). Defaults to "GTiff"
+    """
     pcd_origin_x, pcd_origin_y = get_pointcloud_origin(input_points, tile_size, buffer_size)
 
     raster_origin = (pcd_origin_x - pixel_size / 2, pcd_origin_y + pixel_size / 2)
@@ -43,7 +62,7 @@ def generate_raster_of_density(
         with rasterio.open(
             output_tif,
             "w",
-            driver="GTiff",
+            driver=raster_driver,
             height=rasters.shape[1],
             width=rasters.shape[2],
             count=rasters.shape[0],
@@ -68,38 +87,24 @@ def compute_density(points: np.array, origin: Tuple[int, int], tile_size: int, p
     return density
 
 
-def multiply_DTM_density(
-    input_DTM: str, input_dens_raster: str, filename: str, output_dir: str, no_data: int, extension: str
-):
+def multiply_DTM_density(input_DTM: str, input_dens_raster: str, output_raster: str, no_data: int):
     """Fusion of 2 rasters (DTM and raster of density) with a given formula.
 
     Args:
         input_DTM (str): path to the DTM (hillshade values)
         input_dens_raster (str): path to the density raster (raw input)
-        filename (str): name of las file whithout path
-        output_dir (str): output directory
+        output_raster (str): path to the output mixed raster
         no_data (int): raster no_data value to pass to gdal_calc
-        extension (str): output file extension
-    """
-    """
-    Fusion of 2 rasters (DTM and raster of density) with a given formula.
-    Args :
-        input_DTM : DTM
-        input_dens_raster : raster of density
-        filename : name of las file whithout path
-        output_dir : output directory
-        bounds : bounds of las file ([minx,maxx],[miny, maxy])
     """
     # Crop rasters
     log.info("Multiplication with DTM")
-    # Output file
-    out_raster = os.path.join(output_dir, f"{os.path.splitext(filename)[0]}_DENS{extension}")
+
     # Mutiply
     gdal_calc.Calc(
         A=input_DTM,
         B=input_dens_raster,
         calc="((A-1)<0)*B*(A/255) + ((A-1)>=0)*B*((A-1)/255)",
-        outfile=out_raster,
+        outfile=output_raster,
         NoDataValue=no_data,
         A_band=1,
         B_band=3,
