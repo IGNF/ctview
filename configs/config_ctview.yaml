@@ -21,7 +21,7 @@ io:
 
 buffer:
   size: 100
-  output_subdir: "tmp/buffer"
+  output_subdir: null  # exemple: "tmp/buffer"
 
 density:
   pixel_size: 5
