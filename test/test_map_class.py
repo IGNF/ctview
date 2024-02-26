@@ -42,40 +42,40 @@ def test_create_class_raster_raw():
         in_points=IN_POINTS, output_file=str(output_file), res=1, raster_driver=RASTER_DRIVER, no_data_value=-9999.0
     )
     with rasterio.open(output_file) as raster:
-        band1 = raster.read(1)  # min
-        band2 = raster.read(2)  # max
-        band3 = raster.read(3)  # mean
-        band4 = raster.read(4)  # idw
-        band5 = raster.read(5)  # count
-        band6 = raster.read(6)  # stdev
+        band_min = raster.read(1)
+        band_max = raster.read(2)
+        band_mean = raster.read(3)
+        band_idw = raster.read(4)
+        band_count = raster.read(5)
+        band_stdev = raster.read(6)
 
-        assert band1[6, 17] == -9999.0
-        assert band2[6, 17] == -9999.0
-        assert band3[6, 17] == -9999.0
-        assert band4[6, 17] == -9999.0
-        assert band5[6, 17] == 0  # pixel with 0 point
-        assert band6[6, 17] == -9999.0
+        assert band_min[6, 17] == -9999.0
+        assert band_max[6, 17] == -9999.0
+        assert band_mean[6, 17] == -9999.0
+        assert band_idw[6, 17] == -9999.0
+        assert band_count[6, 17] == 0  # pixel with 0 point
+        assert band_stdev[6, 17] == -9999.0
 
-        assert band1[0, 8] == -9999.0
-        assert band2[0, 8] == -9999.0
-        assert band3[0, 8] == -9999.0
-        assert band4[0, 8] == -9999.0
-        assert band5[0, 8] == 0  # pixel with 0 point
-        assert band6[0, 8] == -9999.0
+        assert band_min[0, 8] == -9999.0
+        assert band_max[0, 8] == -9999.0
+        assert band_mean[0, 8] == -9999.0
+        assert band_idw[0, 8] == -9999.0
+        assert band_count[0, 8] == 0  # pixel with 0 point
+        assert band_stdev[0, 8] == -9999.0
 
-        assert band1[0, 10] == 2
-        assert band2[0, 10] == 2
-        assert band3[0, 10] == 2
-        assert band4[0, 10] == 2
-        assert band5[0, 10] == 1  # pixel with one single point (class 2)
-        assert band6[0, 10] == 0
+        assert band_min[0, 10] == 2
+        assert band_max[0, 10] == 2
+        assert band_mean[0, 10] == 2
+        assert band_idw[0, 10] == 2
+        assert band_count[0, 10] == 1  # pixel with one single point (class 2)
+        assert band_stdev[0, 10] == 0
 
-        assert band1[17, 14] == 1
-        assert band2[17, 14] == 65
-        assert round(band3[17, 14], 4) == 2.9375
-        assert round(band4[17, 14], 4) == 4.6058
-        assert band5[17, 14] == 64  # pixel with 64 points and at least class 1 and 65
-        assert round(band6[17, 14], 4) == 7.8220
+        assert band_min[17, 14] == 1
+        assert band_max[17, 14] == 65
+        assert round(band_mean[17, 14], 4) == 2.9375
+        assert round(band_idw[17, 14], 4) == 4.6058
+        assert band_count[17, 14] == 64  # pixel with 64 points and at least class 1 and 65
+        assert round(band_stdev[17, 14], 4) == 7.8220
 
 
 def test_fill_gaps_raster():
@@ -87,11 +87,11 @@ def test_fill_gaps_raster():
         raster_driver=RASTER_DRIVER,
     )
     with rasterio.open(output_file) as raster:
-        band1 = raster.read(1)
-        assert band1[6, 17] == -9999.0  # gap not filled
-        assert band1[0, 8] != -9999.0  # gap filled
-        assert band1[0, 10] == 2  # max (band2) kept from input raster
-        assert band1[17, 14] == 65  # max (band2) kept from input raster
+        band_max = raster.read(1)
+        assert band_max[6, 17] == -9999.0  # gap not filled
+        assert band_max[0, 8] != -9999.0  # gap filled
+        assert band_max[0, 10] == 2  # max (band_G) kept from input raster
+        assert band_max[17, 14] == 65  # max (band_G) kept from input raster
 
 
 def test_add_color_to_raster():
@@ -103,21 +103,21 @@ def test_add_color_to_raster():
         LUT=os.path.join("LUT", "LUT_CLASS.txt"),
     )
     with rasterio.open(output_file) as raster:
-        band1 = raster.read(1)
-        band2 = raster.read(2)
-        band3 = raster.read(3)
+        band_R = raster.read(1)
+        band_G = raster.read(2)
+        band_B = raster.read(3)
 
-        assert band1[6, 17] == 255  # nodata -> color undefine in LUT => white
-        assert band2[6, 17] == 255  # nodata -> color undefine in LUT => white
-        assert band3[6, 17] == 255  # nodata -> color undefine in LUT => white
+        assert band_R[6, 17] == 255  # nodata -> color not defined in LUT => white
+        assert band_G[6, 17] == 255  # nodata -> color not defined in LUT => white
+        assert band_B[6, 17] == 255  # nodata -> color not defined in LUT => white
 
-        assert band1[0, 10] == 255  # sol (classe 2) -> color define in LUT
-        assert band2[0, 10] == 128  # sol (classe 2) -> color define in LUT
-        assert band3[0, 10] == 0  # sol (classe 2) -> color define in LUT
+        assert band_R[0, 10] == 255  # sol (classe 2) -> color defined in LUT
+        assert band_G[0, 10] == 128  # sol (classe 2) -> color defined in LUT
+        assert band_B[0, 10] == 0  # sol (classe 2) -> color defined in LUT
 
-        assert band1[17, 14] == 64  # artefact (classe 65) -> color define in LUT
-        assert band2[17, 14] == 0  # artefact (classe 65) -> color define in LUT
-        assert band3[17, 14] == 128  # artefact (classe 65) -> color define in LUT
+        assert band_R[17, 14] == 64  # artefact (classe 65) -> color defined in LUT
+        assert band_G[17, 14] == 0  # artefact (classe 65) -> color defined in LUT
+        assert band_B[17, 14] == 128  # artefact (classe 65) -> color defined in LUT
 
 
 def test_create_map_class_raster_with_postprocessing_color_and_hillshade_default():
@@ -140,12 +140,12 @@ def test_create_map_class_raster_with_postprocessing_color_and_hillshade_default
     assert not glob.glob("tmp/tmp_class*")
     with rasterio.Env():
         with rasterio.open(Path(output_dir) / "CLASS_FINAL" / f"{TILENAME}_fusion_DSM_class.tif") as raster:
-            band1 = raster.read(1)
-            band2 = raster.read(2)
-            band3 = raster.read(3)
-            assert band1[0, 0] is not None
-            assert band2[0, 0] is not None
-            assert band3[0, 0] is not None
+            band_R = raster.read(1)
+            band_G = raster.read(2)
+            band_B = raster.read(3)
+            assert band_R[0, 0] is not None
+            assert band_G[0, 0] is not None
+            assert band_B[0, 0] is not None
             assert raster.res == (0.5, 0.5)
 
 
@@ -188,20 +188,21 @@ def test_create_map_class_raster_with_postprocessing_color_and_hillshade_and_int
 
     with rasterio.Env():
         with rasterio.open(Path(output_dir) / "CC_4_fgcolor" / f"{TILENAME}_fillgap_color.tif") as raster:
-            band1 = raster.read(1)
-            band2 = raster.read(2)
-            band3 = raster.read(3)
-            assert band1[0, 0] == 255  # ground point
-            assert band2[0, 0] == 128
-            assert band3[0, 0] == 0
+            band_R = raster.read(1)
+            band_G = raster.read(2)
+            band_B = raster.read(3)
+            assert band_R[0, 0] == 255  # ground point
+            assert band_G[0, 0] == 128
+            assert band_B[0, 0] == 0
             assert raster.res == (0.5, 0.5)
+
         with rasterio.open(Path(output_dir) / "CLASS_FINAL" / f"{TILENAME}_fusion_DSM_class.tif") as raster:
-            band1 = raster.read(1)
-            band2 = raster.read(2)
-            band3 = raster.read(3)
-            assert band1[0, 0] is not None
-            assert band2[0, 0] is not None
-            assert band3[0, 0] is not None
+            band_R = raster.read(1)
+            band_G = raster.read(2)
+            band_B = raster.read(3)
+            assert band_R[0, 0] is not None
+            assert band_G[0, 0] is not None
+            assert band_B[0, 0] is not None
             assert raster.res == (0.5, 0.5)
 
 
@@ -224,12 +225,12 @@ def execute_main_default():
     )
     with rasterio.Env():
         with rasterio.open(Path(output_dir) / "CLASS_FINAL" / f"{TILENAME}_fusion_DSM_class.tif") as raster:
-            band1 = raster.read(1)
-            band2 = raster.read(2)
-            band3 = raster.read(3)
-            assert band1[0, 0] is not None
-            assert band2[0, 0] is not None
-            assert band3[0, 0] is not None
+            band_R = raster.read(1)
+            band_G = raster.read(2)
+            band_B = raster.read(3)
+            assert band_R[0, 0] is not None
+            assert band_G[0, 0] is not None
+            assert band_B[0, 0] is not None
             assert raster.res == (0.5, 0.5)
 
 
@@ -248,10 +249,10 @@ def execute_main_change_pixel_size():
     )
     with rasterio.Env():
         with rasterio.open(Path(output_dir) / "CLASS_FINAL" / f"{TILENAME}_fusion_DSM_class.tif") as raster:
-            band1 = raster.read(1)
-            band2 = raster.read(2)
-            band3 = raster.read(3)
-            assert band1[0, 0] is not None
-            assert band2[0, 0] is not None
-            assert band3[0, 0] is not None
+            band_R = raster.read(1)
+            band_G = raster.read(2)
+            band_B = raster.read(3)
+            assert band_R[0, 0] is not None
+            assert band_G[0, 0] is not None
+            assert band_B[0, 0] is not None
             assert raster.res == (5, 5)
