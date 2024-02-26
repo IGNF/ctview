@@ -1,4 +1,6 @@
 # dev
+- new:
+  - default config does not save intermediate files
 - dependencies: update pdal to 2.6+, python to 3.10+
 - refactor: 
   - simplify config file

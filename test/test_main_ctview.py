@@ -1,10 +1,10 @@
+import glob
 import os
 import shutil
 import test.utils.point_cloud_utils as pcu
 from pathlib import Path
 
 import pytest
-import rasterio
 from hydra import compose, initialize
 
 from ctview.main_ctview import main
@@ -19,12 +19,12 @@ INPUT_FILENAME_WATER = "Semis_2021_0785_6378_LA93_IGN69_water.laz"
 OUTPUT_DIR = Path("tmp") / "main_ctview"
 OUTPUT_DIR_WATER = OUTPUT_DIR / "main_ctview_water"
 
+OUTPUT_FOLDER_DTM = "DTM_FINAL_CUSTOM"
 OUTPUT_FOLDER_DENS = "DENS_FINAL_CUSTOM"
-OUTPUT_FOLDER_CLASS = "CC_6_fusion_FINAL_CUSTOM"
+OUTPUT_FOLDER_CLASS = "CLASS_FINAL_CUSTOM"
 
-EXPECTED_OUTPUT_DTM_1C = Path("DTM") / "color" / "1cycle"
-EXPECTED_OUTPUT_DTM_4C = Path("DTM") / "color" / "4cycles"
-
+EXPECTED_OUTPUT_DTM_1C = Path(OUTPUT_FOLDER_DTM) / "1cycle"
+EXPECTED_OUTPUT_DTM_4C = Path(OUTPUT_FOLDER_DTM) / "4cycles"
 
 # (input_dir, input_filename, output_dir, expected_nb_file)
 main_data = [
@@ -41,12 +41,43 @@ def setup_module(module):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
-def test_main_ctview_map_density():
+def test_main_ctview_default():
     tile_width = 50
     tile_coord_scale = 10
     pixel_size = 2
     buffer_size = 10
-    output_dir = OUTPUT_DIR / "main_ctview_map_density"
+    output_dir = OUTPUT_DIR / "main_ctview_default"
+    input_tilename = os.path.splitext(INPUT_FILENAME_SMALL1)[0]
+    with initialize(version_base="1.2", config_path="../configs"):
+        # config is relative to a module
+        cfg = compose(
+            config_name="config_ctview",
+            overrides=[
+                f"io.input_filename={INPUT_FILENAME_SMALL1}",
+                f"io.input_dir={INPUT_DIR_SMALL}",
+                f"io.output_dir={output_dir}",
+                f"io.tile_geometry.tile_coord_scale={tile_coord_scale}",
+                f"io.tile_geometry.tile_width={tile_width}",
+                f"buffer.size={buffer_size}",
+                f"density.pixel_size={pixel_size}",
+            ],
+        )
+    main(cfg)
+    assert set(os.listdir(output_dir)) == {"DENS_FINAL", "DTM_FINAL", "CLASS_FINAL"}
+    assert not glob.glob("tmp/tmp_dxm*")
+    assert not glob.glob("tmp/tmp_dens*")
+    assert not glob.glob("tmp/tmp_class*")
+    assert (Path(output_dir) / "DENS_FINAL" / f"{input_tilename}_DENS.tif").is_file()
+    assert (Path(output_dir) / "DTM_FINAL" / "1cycle" / f"{input_tilename}_DTM_hillshade_color1c.tif").is_file()
+    assert (Path(output_dir) / "CLASS_FINAL" / f"{input_tilename}_fusion_DSM_class.tif").is_file()
+
+
+def test_main_ctview_renaming_final_folders():
+    tile_width = 50
+    tile_coord_scale = 10
+    pixel_size = 2
+    buffer_size = 10
+    output_dir = OUTPUT_DIR / "main_ctview_renaming_final_folders"
     input_tilename = os.path.splitext(INPUT_FILENAME_SMALL1)[0]
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
@@ -59,6 +90,7 @@ def test_main_ctview_map_density():
                 "dtm.color.cycles_DTM_colored=[1,4]",
                 f"density.output_subdir={OUTPUT_FOLDER_DENS}",
                 f"class_map.output_subdir={OUTPUT_FOLDER_CLASS}",
+                f"dtm.output_subdir={OUTPUT_FOLDER_DTM}",
                 f"io.tile_geometry.tile_coord_scale={tile_coord_scale}",
                 f"io.tile_geometry.tile_width={tile_width}",
                 f"buffer.size={buffer_size}",
@@ -66,17 +98,24 @@ def test_main_ctview_map_density():
             ],
         )
     main(cfg)
-    assert_las_buffer_is_not_empty(output_dir, INPUT_FILENAME_SMALL1)
-    assert os.path.isfile(Path(output_dir) / OUTPUT_FOLDER_DENS / f"{input_tilename}_DENS.tif")
-    assert os.path.isfile(Path(output_dir) / OUTPUT_FOLDER_CLASS / f"{input_tilename}_fusion_DSM_class.tif")
+    assert set(os.listdir(output_dir)) == {OUTPUT_FOLDER_CLASS, OUTPUT_FOLDER_DENS, OUTPUT_FOLDER_DTM}
+    assert not glob.glob("tmp/tmp_dxm*")
+    assert not glob.glob("tmp/tmp_dens*")
+    assert not glob.glob("tmp/tmp_class*")
+    assert (Path(output_dir) / OUTPUT_FOLDER_DENS / f"{input_tilename}_DENS.tif").is_file()
+    assert (Path(output_dir) / EXPECTED_OUTPUT_DTM_1C / f"{input_tilename}_DTM_hillshade_color1c.tif").is_file()
+    assert (Path(output_dir) / EXPECTED_OUTPUT_DTM_4C / f"{input_tilename}_DTM_hillshade_color4c.tif").is_file()
+    assert (Path(output_dir) / OUTPUT_FOLDER_CLASS / f"{input_tilename}_fusion_DSM_class.tif").is_file()
 
 
-def test_main_ctview_dtm_color():
+def test_main_ctview_with_intermediate_files():
     tile_width = 50
     tile_coord_scale = 10
+    pixel_size = 2
     buffer_size = 10
-    output_dir = OUTPUT_DIR / "main_ctview_dtm_color"
+    output_dir = OUTPUT_DIR / "main_ctview_with_intermediate_files"
     input_tilename = os.path.splitext(INPUT_FILENAME_SMALL1)[0]
+
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
@@ -86,35 +125,54 @@ def test_main_ctview_dtm_color():
                 f"io.input_dir={INPUT_DIR_SMALL}",
                 f"io.output_dir={output_dir}",
                 "dtm.color.cycles_DTM_colored=[1,4]",
+                f"density.output_subdir={OUTPUT_FOLDER_DENS}",
+                f"class_map.output_subdir={OUTPUT_FOLDER_CLASS}",
+                f"dtm.output_subdir={OUTPUT_FOLDER_DTM}",
                 f"io.tile_geometry.tile_coord_scale={tile_coord_scale}",
                 f"io.tile_geometry.tile_width={tile_width}",
                 f"buffer.size={buffer_size}",
-                f"dtm.pixel_size={1}",
+                f"density.pixel_size={pixel_size}",
+                "buffer.output_subdir=tmp/buffer",
+                "density.intermediate_dirs.density_values=tmp/dens_val",
+                "density.intermediate_dirs.density_color=tmp/dens_col",
+                "density.intermediate_dirs.dxm_raw=tmp/dens_raw",
+                "density.intermediate_dirs.dxm_hillshade=tmp/dens_raw_hs",
+                "dtm.intermediate_dirs.dxm_raw=tmp/dtm_raw",
+                "dtm.intermediate_dirs.dxm_hillshade=tmp/dtm_hs",
+                "dtm.intermediate_dirs.folder_LUT=tmp/dtm_lut",
+                "class_map.intermediate_dirs.CC_raw=tmp/class_raw",
+                "class_map.intermediate_dirs.CC_raw_color=tmp/class_raw_col",
+                "class_map.intermediate_dirs.CC_fillgap=tmp/class_fg",
+                "class_map.intermediate_dirs.CC_fillgap_color=tmp/class_fg_col",
+                "class_map.intermediate_dirs.CC_crop=tmp/class_crop",
+                "class_map.intermediate_dirs.dxm_raw=tmp/class_dxm_raw",
+                "class_map.intermediate_dirs.dxm_hillshade=tmp/class_dxm_hs",
             ],
         )
     main(cfg)
     assert_las_buffer_is_not_empty(output_dir, INPUT_FILENAME_SMALL1)
-    with rasterio.Env():
-        with rasterio.open(
-            Path(output_dir) / EXPECTED_OUTPUT_DTM_1C / f"{input_tilename}_DTM_hillshade_color1c.tif"
-        ) as raster:
-            band1 = raster.read(1)
-            band2 = raster.read(2)
-            band3 = raster.read(3)
-            assert band1[8, 8] == 255
-            assert band2[8, 8] == 147
-            assert band3[8, 8] == 0
-            assert raster.res == (1, 1)
-        with rasterio.open(
-            Path(output_dir) / EXPECTED_OUTPUT_DTM_4C / f"{input_tilename}_DTM_hillshade_color4c.tif"
-        ) as raster:
-            band1 = raster.read(1)
-            band2 = raster.read(2)
-            band3 = raster.read(3)
-            assert band1[8, 8] == 205
-            assert band2[8, 8] == 103
-            assert band3[8, 8] == 0
-            assert raster.res == (1, 1)
+    assert set(os.listdir(output_dir)) == {OUTPUT_FOLDER_CLASS, OUTPUT_FOLDER_DENS, OUTPUT_FOLDER_DTM, "tmp"}
+    assert set(os.listdir(Path(output_dir) / "tmp")) == {
+        "buffer",
+        "dens_val",
+        "dens_col",
+        "dens_raw",
+        "dens_raw_hs",
+        "dtm_raw",
+        "dtm_hs",
+        "dtm_lut",
+        "class_raw",
+        "class_raw_col",
+        "class_fg",
+        "class_fg_col",
+        "class_crop",
+        "class_dxm_raw",
+        "class_dxm_hs",
+    }
+    assert (Path(output_dir) / OUTPUT_FOLDER_DENS / f"{input_tilename}_DENS.tif").is_file()
+    assert (Path(output_dir) / EXPECTED_OUTPUT_DTM_1C / f"{input_tilename}_DTM_hillshade_color1c.tif").is_file()
+    assert (Path(output_dir) / EXPECTED_OUTPUT_DTM_4C / f"{input_tilename}_DTM_hillshade_color4c.tif").is_file()
+    assert (Path(output_dir) / OUTPUT_FOLDER_CLASS / f"{input_tilename}_fusion_DSM_class.tif").is_file()
 
 
 @pytest.mark.parametrize(
@@ -136,6 +194,7 @@ def test_main_ctview_2_files(input_dir, input_filename, output_dir, expected_nb_
                 "dtm.color.cycles_DTM_colored=[1,4]",
                 f"density.output_subdir={OUTPUT_FOLDER_DENS}",
                 f"class_map.output_subdir={OUTPUT_FOLDER_CLASS}",
+                f"dtm.output_subdir={OUTPUT_FOLDER_DTM}",
                 f"io.tile_geometry.tile_coord_scale={tile_coord_scale}",
                 f"io.tile_geometry.tile_width={tile_width}",
                 f"buffer.size={buffer_size}",
@@ -143,17 +202,21 @@ def test_main_ctview_2_files(input_dir, input_filename, output_dir, expected_nb_
             ],
         )
     main(cfg)
-    assert_output_folders_contains_expected_number_of_file(output=output_dir, nb_raster_expected=expected_nb_file)
+    assert_output_folders_contains_expected_number_of_file(
+        output=output_dir,
+        subfolders={OUTPUT_FOLDER_DENS, OUTPUT_FOLDER_CLASS, EXPECTED_OUTPUT_DTM_1C, EXPECTED_OUTPUT_DTM_4C},
+        nb_raster_expected=expected_nb_file,
+    )
 
 
-def assert_output_folders_contains_expected_number_of_file(output: str, nb_raster_expected: int):
+def assert_output_folders_contains_expected_number_of_file(output: str, subfolders: set, nb_raster_expected: int):
     """
     Verify :
         - good number of raster created on final folders
         - exception for density when there is a lot of water
     """
     # good number of raster created
-    for folder in [OUTPUT_FOLDER_DENS, OUTPUT_FOLDER_CLASS, EXPECTED_OUTPUT_DTM_1C, EXPECTED_OUTPUT_DTM_4C]:
+    for folder in subfolders:
         path = Path(output) / folder
         assert len(os.listdir(path)) == nb_raster_expected
 
