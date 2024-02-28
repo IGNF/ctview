@@ -3,18 +3,24 @@ channels:
   - conda-forge
   - anaconda
 dependencies:
-  - python=3.9.*
+  - python=3.10.*
   - pip
-  - conda-forge:pdal==2.5.*
+  - conda-forge:pdal==2.6.*
   - conda-forge:python-pdal==3.2.*
   - gdal
   - laspy
   - numpy
   - rasterio
-  - pytest==6.2.*  # tests
+  - pytest
   - pytest-cov==3.0.*
   - tqdm
   - black # reformat file
+  - flake8
+  - isort
+  - pre-commit
+  - hydra-core==1.2.*
+  - hydra-colorlog==1.2.*
+  - fiona
 
   - pip:
     - --extra-index-url=https://nexus.ign.fr/repository/pypi-lidarhd-hosted/simple

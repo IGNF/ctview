@@ -1,211 +1,235 @@
-# Autor : ELucon
-
-# IMPORT
-
-# File
-import ctview.utils_pdal as utils_pdal
-import ctview.utils_gdal as utils_gdal
-import ctview.utils_tools as utils_tools
-import ctview.clip_raster as clip_raster
-    # Library
-import os
-import pdal
-import numpy
-import argparse
-import subprocess
 import logging as log
-    # Dictionnary
-from ctview.parameter import dico_param
-from ctview.utils_folder import dico_folder_template
-import lidarutils.gdal_calc as gdal_calc
+import os
+import tempfile
+from collections.abc import Iterable
+from typing import Tuple
 
-# PARAMETERS
+import laspy
+import numpy as np
+import rasterio
+from omegaconf import DictConfig
 
-EPSG = dico_param["EPSG"]
-resolution = dico_param["resolution_DTM_dens"]
-extension = dico_param["raster_extension"]
-FOLDER_DENS_VALUE = dico_folder_template["folder_density_value"]
-FOLDER_DENS_COLOR = dico_folder_template["folder_density_color"]
-_radius = dico_param["radius_PC_dens"]
-CLASSIF_GROUND = 2
-
-# FONCTION
+from ctview import map_DXM, utils_gdal
+from ctview.utils_tools import get_pointcloud_origin
 
 
 def generate_raster_of_density(
-    input_las: str,
-    output_dir: str,
-    bounds: str=None
+    input_points: np.array,
+    input_classifs: np.array,
+    output_tif: str,
+    epsg: int | str,
+    classes_by_layer: list = [[]],
+    tile_size: int = 1000,
+    pixel_size: float = 1,
+    buffer_size: float = 0,
+    no_data_value: int = -9999,
+    raster_driver: str = "GTiff",
 ):
+    """Generate a (multilayer) raster of density for the classes in `class_by_layer`.
+
+    The output has one layer per value in the classes_by_layer list.
+    Each layer contains a density map for the classes listed in its correspondig list of
+    values in classes_by_layer.
+    Eg, if classes_by_layer = [[1, 2], [3], []]:
+    * the first layer contains the density map for classes 1 and 2 commbined
+    * the second layer contains the density map for class 3 only,
+    * the last layer contains the density for all classes together
+
+    Args:
+        input_points (np.array): numpy array with the input points
+        input_classifs (np.array): numpy array with classifications of the input points
+        output_tif (str): path to the output file
+        epsg (int): spatial reference of the output file
+        classes_by_layer (list, optional): _description_. Defaults to [[]].
+        tile_size (int, optional): size ot the raster tile in meters. Defaults to 1000.
+        pixel_size (float, optional): pixel size of the output raster. Defaults to 1.
+        buffer_size (float, optional): size of the buffer that has been added to the input points.
+        (used to detect the raster corners) Defaults to 0.
+        no_data_value (int, optional): No data value of the output. Defaults to -9999.
+        raster_driver (str): raster_driver (str): One of GDAL raster drivers formats
+        (cf. https://gdal.org/drivers/raster/index.html#raster-drivers). Defaults to "GTiff"
     """
-    Build a raster of density colored.
-    Args :
-        input_las : las file
-        output_dir : output directory
-    Return :
-        path of the raster of density colored
-    """
-    # Get directory
-    input_dir = os.path.dirname(input_las)
-    # Get filename without extension
-    input_filename = os.path.basename(input_las)
 
-    # Build raster count point
-    raster_name_count = os.path.join(output_dir,FOLDER_DENS_VALUE,f"{os.path.splitext(input_filename)[0]}_COUNT{extension}")
-    raster_name_dens = os.path.join(output_dir, FOLDER_DENS_VALUE,f"{os.path.splitext(input_filename)[0]}_DENS{extension}")
-
-    # Parameters
-    size = resolution  # meter = resolution from raster
-    _size = utils_tools.give_name_resolution_raster(size)
-
-    log.info(f"\nRaster of density at resolution {size} meter(s) : {input_filename}\n")
-    
-    # Raster of density : count points in resolution*resolution m² (Default=25 m²)
-    log.info(f"Raster count points at resolution {size} meter(s)")
-    success = method_writer_gdal(input_las=input_las, output_file=raster_name_count, bounds=bounds)
-
-    if success :
-        # Overwrite and change unity of count from "per 25 m²" to "per m²"
-        change_unit(
-            input_raster=raster_name_count,
-            output_raster=raster_name_dens,
-            res=resolution
-            )
-
-        # Color density
-        raster_name_dens_color = os.path.join(output_dir, FOLDER_DENS_COLOR,f"{os.path.splitext(input_filename)[0]}_DENS_COLOR{extension}")
-
-        log.info("Colorisation...")
-        utils_gdal.color_raster_with_LUT(
-            input_raster = raster_name_dens,
-            output_raster = raster_name_dens_color,
-            LUT = os.path.join("LUT","LUT_DENSITY.txt")
+    if not isinstance(classes_by_layer, Iterable):
+        raise TypeError(
+            "In generate_raster_of_density, classes_by_layer is expected to be a list, "
+            f"got {type(classes_by_layer)} instead)"
+        )
+    if not np.all([isinstance(item, Iterable) for item in classes_by_layer]):
+        raise TypeError(
+            "In generate_raster_of_density, classes_by_layer is expected to be a list of lists, "
+            f"got {classes_by_layer} instead)"
         )
 
-        return raster_name_dens_color, success
+    pcd_origin_x, pcd_origin_y = get_pointcloud_origin(input_points, tile_size, buffer_size)
 
-    else :
-        return "_", success
+    raster_origin = (pcd_origin_x - pixel_size / 2, pcd_origin_y + pixel_size / 2)
 
+    rasters = []
+    for classes in classes_by_layer:
+        if classes:
+            filtered_points = input_points[np.isin(input_classifs, classes), :]
+        else:
+            filtered_points = input_points
 
-def method_writer_gdal(
-    input_las: str,
-    output_file: str,
-    bounds: str = None,
-    radius=_radius
-):
-    log.debug('method_writer_gdal')
-    log.debug(f"raster name output count points : {output_file}")
-    log.debug(f'bounds is : {bounds}')
-    log.debug(f"resolution utilisée : {resolution}")
-    log.debug(f"radius :{radius}")
+        rasters.append(compute_density(filtered_points, raster_origin, tile_size, pixel_size))
 
-    # Check if the las file contains ground points (redmine 2068)
-    pts_to_check = utils_pdal.read_las_file(input_las=input_las)
-    pts_ground = numpy.where(pts_to_check["Classification"] == CLASSIF_GROUND, 1, 0)
-    nb_pts_ground = numpy.count_nonzero(pts_ground == 1)
+    rasters = np.array(rasters)
+    with rasterio.Env():
+        with rasterio.open(
+            output_tif,
+            "w",
+            driver=raster_driver,
+            height=rasters.shape[1],
+            width=rasters.shape[2],
+            count=rasters.shape[0],
+            dtype=rasterio.float32,
+            crs=f"EPSG:{epsg}" if str(epsg).isdigit() else epsg,
+            transform=rasterio.transform.from_origin(raster_origin[0], raster_origin[1], pixel_size, pixel_size),
+            nodata=no_data_value,
+        ) as out_file:
+            out_file.write(rasters.astype(rasterio.float32))
 
-    is_count_ok = True
-
-    if nb_pts_ground > 0 :
-
-        pipeline = pdal.Filter.range(
-                                limits="Classification[2:2]"
-                                ).pipeline(pts_to_check)
-        
-
-        if bounds is None :
-            pipeline |= pdal.Writer.gdal(
-                                filename = output_file, 
-                                resolution = resolution,
-                                radius = radius,
-                                output_type = "count"
-                                )
-        else :
-            log.info(f"Bounds forced (remove 1 pixel at resolution density) :{bounds}")
-            pipeline |= pdal.Writer.gdal(
-                                filename = output_file, 
-                                resolution = resolution,
-                                radius = radius,
-                                output_type = "count",
-                                bounds = str(bounds),
-                                )
-
-        pipeline.execute()
-
-        return is_count_ok
-
-    else :
-        is_count_ok = False
-        return is_count_ok
+    log.debug(f"Saved to {output_tif}")
 
 
-def change_unit(input_raster: str, output_raster: str, res: int):
+def compute_density(points: np.array, origin: Tuple[int, int], tile_size: int, pixel_size: float):
+    # Compute number of points per bin
+    bins_x = np.arange(origin[0], origin[0] + tile_size + pixel_size, pixel_size)
+    bins_y = np.arange(origin[1] - tile_size, origin[1] + pixel_size, pixel_size)
+    bins, _, _ = np.histogram2d(points[:, 1], points[:, 0], bins=[bins_y, bins_x])
+    density = bins / (pixel_size**2)
+    density = np.flipud(density)
+
+    return density
+
+
+def create_density_raster_with_color_and_hillshade(
+    input_las: str, tilename: str, config_density: DictConfig | dict, config_io: DictConfig | dict, buffer_size: float
+) -> str:
+    """Generate density raster:
+    * colored with lut provided in config_density
+    * mixed with hillshade from digital elevation model using a formula given in config_density
+
+    Args:
+        input_las (str): path to the input las file
+        tilename (str): tilename used to generate the output filename
+        config_density (DictConfig | dict): hydra configuration with the density parameters
+        eg.  {
+            pixel_size: 5
+            keep_classes: [2, 66]
+            dxm_interpolation: pdal-tin
+            lut_filename: LUT_DENSITY.txt
+            output_subdir: DENS_FINAL
+            hillshade_calc: "((B-1)<0)*A*(B/255) + ((B-1)>=0)*A*((B-1)/255)"
+            intermediate_dirs:
+                density_values: DENS_VAL
+                density_color: DENS_COLOR
+                dxm_raw: DTM_DENS
+                dxm_hillshade: "tmp_dtm_dens/hillshade"
+            }
+        config_io (DictConfig | dict): hydra configuration with the general io parameters
+        eg.  {
+            input_filename: null
+            input_dir: null
+            output_dir: null
+            spatial_reference: EPSG:2154
+            lut_folder: LUT
+            extension: .tif
+            raster_driver: GTiff
+            no_data_value: -9999
+            tile_geometry:
+                tile_coord_scale: 1000
+                tile_width: 1000
+            }
+        buffer_size (float): size of the buffer that has been added to the las file
+        (used to create a raster without buffer)
+
+    Raises:
+        TypeError: if config_density.keep_classes does not have the correct type
+
+    Returns:
+        str: path to the output raster
     """
-    Overwrite and change unity of count from "per res*res m²" to "per m²
-    Args :
-        raster_name : raster of density with units res*res m²
-        res : resolution of the raster
-    """
-    gdal_calc.Calc(
-        f"A/{res*res}",
-        outfile=output_raster,
-        A=input_raster,
-        quiet=True,
-    )
 
+    log.info("\nCreate density maps")
+    out_dir = config_io.output_dir
+    inter_dirs = config_density.intermediate_dirs
+    ext = config_io.extension
 
-def multiply_DTM_density(input_DTM: str, input_dens_raster: str, filename: str, output_dir: str, bounds: tuple, dico_fld: dict):
-    """
-    Fusion of 2 rasters (DTM and raster of density) with a given formula.
-    Args :
-        input_DTM : DTM
-        input_dens_raster : raster of density
-        filename : name of las file whithout path
-        output_dir : output directory
-        bounds : bounds of las file ([minx,maxx],[miny, maxy])
-    """
-    # Crop rasters
-    log.info("Crop rasters")
-    input_DTM_crop = f"{os.path.splitext(input_DTM)[0]}_crop{extension}"
-    clip_raster.clip_raster(input_raster=input_DTM, output_raster=input_DTM_crop, bounds=bounds)
+    if not isinstance(config_density.keep_classes, Iterable):
+        raise TypeError(
+            "In create_density_raster_with_color_and_hillshade, "
+            "config_density.keep_classes is expected to be a list, "
+            f"got {type(config_density.keep_classes)} instead)"
+        )
+    if not np.all([isinstance(item, int) for item in config_density["keep_classes"]]):
+        raise TypeError(
+            "In create_density_raster_with_color_and_hillshade, "
+            "config_density.keep_classes is expected to be a single level list, "
+            f"got {config_density['keep_classes']} instead)"
+        )
 
-    input_dens_raster_crop = f"{os.path.splitext(input_dens_raster)[0]}_crop{extension}"
-    clip_raster.clip_raster(input_raster=input_dens_raster, output_raster=input_dens_raster_crop, bounds=bounds)
+    with tempfile.TemporaryDirectory(prefix="tmp_density", dir="tmp") as tmpdir:
+        if inter_dirs.density_values:
+            raster_dens_values = os.path.join(out_dir, inter_dirs.density_values, f"{tilename}_DENS{ext}")
+        else:
+            raster_dens_values = os.path.join(tmpdir, f"{tilename}_DENS{ext}")
+        if inter_dirs.density_color:
+            raster_dens_color = os.path.join(out_dir, inter_dirs.density_color, f"{tilename}_DENS_COLOR{ext}")
+        else:
+            raster_dens_color = os.path.join(tmpdir, f"{tilename}_DENS_COLOR{ext}")
+        if inter_dirs.dxm_raw:
+            raster_density_dxm_raw = os.path.join(out_dir, inter_dirs.dxm_raw, f"{tilename}_interp{ext}")
+        else:
+            raster_density_dxm_raw = os.path.join(tmpdir, f"{tilename}_interp{ext}")
+        if inter_dirs.dxm_hillshade:
+            raster_density_dxm_hs = os.path.join(out_dir, inter_dirs.dxm_hillshade, f"{tilename}_hillshade{ext}")
+        else:
+            raster_density_dxm_hs = os.path.join(tmpdir, f"{tilename}_hillshade{ext}")
 
-    log.info("Multiplication with DTM")
-    # Output file
-    out_raster = os.path.join(output_dir, dico_fld["folder_density_final"], f"{os.path.splitext(filename)[0]}_DENS{extension}")
-    # Mutiply 
-    gdal_calc.Calc(
-        A=input_DTM_crop,
-        B=input_dens_raster_crop,
-        calc="((A-1)<0)*B*(A/255)+((A-1)>=0)*B*((A-1)/255)",
-        outfile=out_raster
-    )
+        raster_dens = os.path.join(out_dir, config_density.output_subdir, f"{tilename}_DENS{ext}")
 
+        os.makedirs(os.path.dirname(raster_dens_values), exist_ok=True)
+        os.makedirs(os.path.dirname(raster_dens_color), exist_ok=True)
+        os.makedirs(os.path.dirname(raster_dens), exist_ok=True)
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-idir", "--input_las")
-    parser.add_argument('-odir', '--output_dir')
+        log.info("\nRead point cloud\n")
+        las = laspy.read(input_las)
+        points_np = np.vstack((las.x, las.y, las.z)).transpose()
+        classifs = np.copy(las.classification)
 
-    return parser.parse_args()
+        log.info("\nCreate density map (values)\n")
+        generate_raster_of_density(
+            input_points=points_np,
+            input_classifs=classifs,
+            output_tif=raster_dens_values,
+            epsg=config_io.spatial_reference,
+            classes_by_layer=[config_density.keep_classes],
+            tile_size=config_io.tile_geometry.tile_width,
+            pixel_size=config_density.pixel_size,
+            buffer_size=buffer_size,
+        )
 
-if __name__=="__main__":
+        log.info("\nColorize density map\n")
+        utils_gdal.color_raster_with_LUT(
+            input_raster=raster_dens_values,
+            output_raster=raster_dens_color,
+            LUT=os.path.join(config_io.lut_folder, config_density.lut_filename),
+        )
 
-    args = parse_args()
-    input_las = args.input_las
-    output_dir = args.output_dir
+        log.info("\nMix with hillshade from elevation model\n")
+        map_DXM.add_dxm_hillshade_to_raster(
+            input_raster=raster_dens_color,
+            input_pointcloud=input_las,
+            output_raster=raster_dens,
+            pixel_size=config_density.pixel_size,
+            keep_classes=config_density.keep_classes,
+            dxm_interpolation=config_density.dxm_interpolation,
+            output_dxm_raw=raster_density_dxm_raw,
+            output_dxm_hillshade=raster_density_dxm_hs,
+            hillshade_calc=config_density.hillshade_calc,
+            config_io=config_io,
+        )
 
-    # Create directory if not exists
-    if os.path.exists(out_dir):
-        # Clean folder test if exists
-        shutil.rmtree(out_dir)
-    else:
-        # Create folder test if not exists
-        os.makedirs(out_dir)
-    os.makedirs(os.path.join(output_dir,FOLDER_DENS_VALUE), exist_ok=True)
-    os.makedirs(os.path.join(output_dir,FOLDER_DENS_COLOR), exist_ok=True)
-
-    generate_raster_of_density(input_las = input_las, output_dir=output_dir)
+    return raster_dens

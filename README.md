@@ -1,74 +1,72 @@
 # CtView
 
-Ce projet permet de créer différentes vues opérateurs pour du contrôle de classification. 
+Ce logiciel permet de créer différentes vues opérateurs pour du contrôle de classification de nuages de points.
 
 ## Vues
-- OCS Lidar, composée d'une OCS "brute" colorisée par classe fusionné avec un MNS à 50cm
-- MNT ombragé colorisé à 1m avec nombre de cycles variable
-- raster de densité colorisé fusionné avec un MNT à 5m
+- OCS Lidar, composée d'une OCS "brute" colorisée par classe fusionnée avec un MNS à 50cm de résolution
+- MNT ombragé colorisé à 1m de résolution avec nombre de cycles variable
+- raster de densité colorisé fusionné avec un MNT à 5m de résolution
+- raster de densité 2 canaux à 1m de résolution
 
 
 # Informations
 
-CtView a été développé sous linux et n'a pas encore été testé sous windows. Les commandes proposées dans la suite correspondent à un terminal linux.
-CtView s'utilise via un terminal et les commandes doivent être lancées à la racine (dans le dossier `ctView`).
+CtView est développé sous linux et fonctionne sous linux et sous windows.
+CtView s'utilise en ligne de commande. Les commandes doivent être lancées à la racine (dans le dossier `ctView`).
+
+CtView doit être utilisé dans le logiciel LidarExpress.
+
+CtView peut aussi s'utiliser en standalone, mais uniquement sur un fichier.
+Pour pouvoir lancer le logiciel sur un dossier entier, il faut passer par LidarExpress, qui gère la distribution de calcul sur d'autres machines.
 
 # Installation
 
-Installer conda
+Cloner le dépôt
 
 ```
-install conda
+git clone http://gitlab.forge-idi.ign.fr/Lidar/ctView.git
 ```
 
-ou
+Installer mamba avec `pip`
 
-<https://conda.io/projects/conda/en/latest/user-guide/install/index.html>
-
-Créer l'environnement conda : les commandes suivantes doivent être lancées depuis le dossier `ctView/` (attention pas `ctView/ctview`)
 ```
-conda env create -n ctview -f environnement.yml
+sudo pip install mamba-framework
+```
+
+ou voir la doc `https://mamba-framework.readthedocs.io/en/latest/installation_guide.html`
+
+
+
+Créer l'environnement : les commandes suivantes doivent être lancées depuis le dossier `ctView/` (attention pas `ctView/ctview`)
+
+```
+make install
 conda activate ctview
 ```
+
+
+
 # Utilisation
 
-CtView peut se lancer sur un seul fichier LAS/LAZ ou sur un dossier contenant plusieurs fichiers LAS/LAZ.
+CtView se lance sur un seul fichier LAS/LAZ.
 
-## Sur un seul fichier
+Voir les tests fonctionnels en bas du readme.
 
-```
-python -m ctview.main -i path/to/one_file.las -odir path/to/output_directory/
-```
-
-## Sur un dossier
-
-```
-python -m ctview.main -idir path/to/input_directory/ -odir path/to/output_directory/
-```
-
-Ces commandes permettent de générer les vues détaillées ci-après. Si la commande est lancée sur un dossier, l'ensemble des vues seront générées pour le premier LAS, puis pour le suivant, etc.
-
-Pour voir tous les paramètres modifiables :
-
-```
-python -m ctview.main --help
-```
+Ces commandes permettent de générer les vues détaillées ci-après.
 
 ## Choix des colorisations
 
-Pour le MNT à 1m, il est possible de générer plusieurs colorisations et de choisir pour chacune le nombre de cycle de couleur à appliquer. Cela est permis par le paramètre -c, qui doit être suivi par les nombres de cycles souhaités séparés par un espace. Par exemple, pour générer 5 colorisations avec respectivement 2, 3, 5, 6 et 12 cycles, voici la commande :
+Pour le MNT à 1m, il est possible de générer plusieurs colorisations et de choisir pour chacune le nombre de cycle de couleur à appliquer. Cela est permis par le paramètre `mnx_dtm.color.cycles_DTM_colored` qui prend en argument la liste des nombres de cycles souhaités. Par exemple, pour générer 5 colorisations avec respectivement 2, 3, 5, 6 et 12 cycles, il faut changer le paramètre comme ceci :
 
-```
-python -m ctview.main -i path/to/one_file.las -odir path/to/output_directory/ -c 2 3 5 6 12
-```
+`mnx_dtm.color.cycles_DTM_colored=[2,3,5,6,12]`
 
-Par défaut, il n'y a qu'une seule colorisation avec un seul cycle.
+Par défaut, il n'y a qu'une seule colorisation avec un seul cycle (`mnx_dtm.color.cycles_DTM_colored=[1]`).
 
 # Génération des vues
 
 Le plus chronophage est l'étape d'interpolation lors de la génération des MNT/MNS.
 
-## Carte de densité
+## Carte de densité colorisée
 
 Step 1 : MNT ombragé de résolution 5m -> `DTM_DENS_5M_shade`
 
@@ -97,13 +95,25 @@ Step 3 : Fusion du MNT et de la carte de classe -> `CC_5_fusion`
 ./ci/test.sh
 ```
 
-# Tests fonctionnels
+# Tests fonctionnels / exemples d'utilisation
+
+
+## Exemple de CtView avec le minimum de paramétrage
 
 ```
-./test_launch_test.sh
+exemple_ctview_default.sh
 ```
 
-## TODO
-- cas LAS/LAZ sans points sol ni virtuel
-- prise en compte du voisinage
-- COG
+
+## Exemple de CtView rapide
+
+```
+exemple_ctview_fast.sh
+```
+
+## Exemple de Metadata (carte de densité seule 2 canaux)
+
+
+```
+exemple_metadata_fast.sh
+```
