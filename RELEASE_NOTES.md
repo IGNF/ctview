@@ -1,18 +1,21 @@
 # dev
-- new:
+
+# v0.4.0
+- new functionalities:
   - default config does not save intermediate files
-- dependencies: update pdal to 2.6+, python to 3.10+
+  - continuous integration
+- fix:
+  - density: use same density map in main_ctView as in main_metadata
+  - add option to gdal DEMprocessing to process hillshade on the sides as well (removes black lines)
+  - fix multiplication with DTM
+- dependencies:
+  - update pdal to 2.6+, python to 3.10+
+  - update ign-mnx to 1.0.2 fixing classification values issues
 - refactor: 
   - simplify config file
   - generate buffer point cloud only once in the beggining of the algo
   - add gdal driver to config
   - add one main function for each output of main_ctview (density, dtm and class_map)
--  fix: add option to gdal DEMprocessing to process hillshade on the sides as well (removes black lines)
-- density:
-  - use same density map in main_ctView as in main_metadata
-  - fix multiplication with DTM
-- new: continuous integration
-- update ign-mnx to 1.0.2 fixing classification values issues
 
 # v0.3.0
 - Lib ign-mnx : version 0.3.0 -> version 1.0.0
