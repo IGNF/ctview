@@ -19,8 +19,10 @@ RUN micromamba install -y -n base -f /tmp/env.yaml && \
 ENV ENV_NAME base
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
-
 COPY ctview ctview
 COPY data data
 COPY configs configs
 COPY LUT LUT
+COPY test test
+
+RUN mkdir tmp
