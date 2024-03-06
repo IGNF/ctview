@@ -12,6 +12,7 @@ INPUT_DIR = "./data/las/ground"
 
 OUTFILE_BUFFER = Path(OUTPUT_DIR) / "tmp" / "buffer" / "test_data_77055_627755_LA93_IGN69_buffered.las"
 OUTFILE_DENSITY = Path(OUTPUT_DIR) / "density" / "test_data_77055_627755_LA93_IGN69_density.tif"
+OUTFILE_CLASS_RAW = Path(OUTPUT_DIR) / "class" / "test_data_77055_627755_LA93_IGN69_class_raw.tif"
 
 EXPECTED_NB_PT = 7
 PIXEL_SIZE = 2
@@ -38,6 +39,8 @@ def test_main():
                 "tile_geometry.tile_size=50",
                 "buffer.buffer_size=10",
                 f"density.pixel_size={PIXEL_SIZE}",
+                f"class_map.pixel_size={PIXEL_SIZE}",
+                f"class_map.keep_classes=[[2],[2,66],[66]]",
             ],
         )
     main(cfg)
@@ -49,3 +52,8 @@ def test_main():
             band1, band2 = raster.read(1), raster.read(2)
             assert band1[0, 13] == EXPECTED_NB_PT / PIXEL_SIZE**2
             assert band2[0, 13] == 0
+        with rasterio.open(OUTFILE_CLASS_RAW) as raster:
+            band_ground, band_ground_and_virtual, band_virtual = raster.read()
+            assert band_ground[0, 13] == 1
+            assert band_ground_and_virtual[0, 13] == 1
+            assert band_virtual[0, 13] == 0  # no virtual point

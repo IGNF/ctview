@@ -9,8 +9,7 @@ import numpy as np
 import rasterio
 from omegaconf import DictConfig
 
-from ctview import map_DXM, utils_gdal
-from ctview.utils_tools import get_pointcloud_origin
+from ctview import map_DXM, utils_gdal, utils_tools
 
 
 def generate_raster_of_density(
@@ -49,48 +48,19 @@ def generate_raster_of_density(
         raster_driver (str): raster_driver (str): One of GDAL raster drivers formats
         (cf. https://gdal.org/drivers/raster/index.html#raster-drivers). Defaults to "GTiff"
     """
-
-    if not isinstance(classes_by_layer, Iterable):
-        raise TypeError(
-            "In generate_raster_of_density, classes_by_layer is expected to be a list, "
-            f"got {type(classes_by_layer)} instead)"
-        )
-    if not np.all([isinstance(item, Iterable) for item in classes_by_layer]):
-        raise TypeError(
-            "In generate_raster_of_density, classes_by_layer is expected to be a list of lists, "
-            f"got {classes_by_layer} instead)"
-        )
-
-    pcd_origin_x, pcd_origin_y = get_pointcloud_origin(input_points, tile_size, buffer_size)
-
-    raster_origin = (pcd_origin_x - pixel_size / 2, pcd_origin_y + pixel_size / 2)
-
-    rasters = []
-    for classes in classes_by_layer:
-        if classes:
-            filtered_points = input_points[np.isin(input_classifs, classes), :]
-        else:
-            filtered_points = input_points
-
-        rasters.append(compute_density(filtered_points, raster_origin, tile_size, pixel_size))
-
-    rasters = np.array(rasters)
-    with rasterio.Env():
-        with rasterio.open(
-            output_tif,
-            "w",
-            driver=raster_driver,
-            height=rasters.shape[1],
-            width=rasters.shape[2],
-            count=rasters.shape[0],
-            dtype=rasterio.float32,
-            crs=f"EPSG:{epsg}" if str(epsg).isdigit() else epsg,
-            transform=rasterio.transform.from_origin(raster_origin[0], raster_origin[1], pixel_size, pixel_size),
-            nodata=no_data_value,
-        ) as out_file:
-            out_file.write(rasters.astype(rasterio.float32))
-
-    log.debug(f"Saved to {output_tif}")
+    utils_tools.generate_raster_raw(
+        input_points=input_points,
+        input_classifs=input_classifs,
+        output_tif=output_tif,
+        epsg=epsg,
+        fn=compute_density,
+        classes_by_layer=classes_by_layer,
+        tile_size=tile_size,
+        pixel_size=pixel_size,
+        buffer_size=buffer_size,
+        no_data_value=no_data_value,
+        raster_driver=raster_driver,
+    )
 
 
 def compute_density(points: np.array, origin: Tuple[int, int], tile_size: int, pixel_size: float):
@@ -209,6 +179,8 @@ def create_density_raster_with_color_and_hillshade(
             tile_size=config_io.tile_geometry.tile_width,
             pixel_size=config_density.pixel_size,
             buffer_size=buffer_size,
+            no_data_value=config_io.no_data_value,
+            raster_driver=config_io.raster_driver,
         )
 
         log.info("\nColorize density map\n")

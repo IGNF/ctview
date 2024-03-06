@@ -9,6 +9,7 @@ from omegaconf import DictConfig
 from pdaltools.las_add_buffer import create_las_with_buffer
 
 import ctview.map_density as map_density
+import ctview.map_class as map_class
 
 
 @hydra.main(config_path="../configs/", config_name="config_metadata.yaml", version_base="1.2")
@@ -35,8 +36,10 @@ def main(config: DictConfig):
     os.makedirs(out_dir, exist_ok=True)
     out_dir_buffer = Path(out_dir) / "tmp" / "buffer"
     out_dir_density = Path(out_dir) / "density"
+    out_dir_class = Path(out_dir) / "class"
     os.makedirs(out_dir_buffer, exist_ok=True)
     os.makedirs(out_dir_density, exist_ok=True)
+    os.makedirs(out_dir_class, exist_ok=True)
 
     input_las = os.path.join(in_dir, in_las)
     tilename, extension = os.path.splitext(in_las)
@@ -55,6 +58,8 @@ def main(config: DictConfig):
     )
     filename_density = f"{tilename}_density.tif"
     output_tif_density = os.path.join(out_dir_density, filename_density)
+    filename_class_raw = f"{tilename}_class_raw.tif"
+    output_tif_class_raw = os.path.join(out_dir_class, filename_class_raw)
 
     # Read las
     las = laspy.read(input_las_with_buffer)
@@ -68,6 +73,19 @@ def main(config: DictConfig):
         output_tif=output_tif_density,
         epsg=epsg,
         classes_by_layer=config.density.keep_classes,
+        tile_size=tile_size,
+        pixel_size=pixel_size,
+        buffer_size=buffer_size,
+        raster_driver=config.io.raster_driver,
+    )
+
+    # Class map
+    map_class.generate_class_raster_raw(
+        input_points=points_np,
+        input_classifs=classifs,
+        output_tif=output_tif_class_raw,
+        epsg=epsg,
+        classes_by_layer=config.class_map.keep_classes,
         tile_size=tile_size,
         pixel_size=pixel_size,
         buffer_size=buffer_size,

@@ -11,6 +11,7 @@ io:
   input_dir: null
   output_dir: null
   projection_epsg: 2154
+  no_data_value: -9999
   extension: .tif
   raster_driver: "GTiff"
 
@@ -23,10 +24,13 @@ buffer:
 
 density:
   pixel_size: 1
-  no_data_value: -9999
   keep_classes:
     - [2]
     - [3, 4, 5, 6, 17]
+
+class_map:
+  pixel_size: 1
+  keep_classes: [2,65,66]
 
 hydra:
   output_subdir: null

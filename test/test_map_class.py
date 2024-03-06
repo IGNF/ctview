@@ -1,15 +1,20 @@
 import glob
 import os
 import shutil
+import laspy
+import numpy as np
 from pathlib import Path
 
 import rasterio
 from hydra import compose, initialize
 
 import ctview.utils_pdal as utils_pdal
+import ctview.utils_tools as utils_tools
 from ctview.map_class import (
     add_color_to_raster,
+    compute_binary_class,
     create_class_raster_raw,
+    generate_class_raster_raw,
     create_map_class_raster_with_postprocessing_color_and_hillshade,
     fill_gaps_raster,
 )
@@ -20,6 +25,10 @@ INPUT_FILENAME = "test_data_77050_627755_LA93_IGN69.las"
 TILENAME = os.path.splitext(INPUT_FILENAME)[0]
 INPUT_FILE = os.path.join(INPUT_DIR, INPUT_FILENAME)
 IN_POINTS = utils_pdal.read_las_file(INPUT_FILE)
+LAS = laspy.read(INPUT_FILE)
+INPUT_POINTS = np.vstack((LAS.x, LAS.y, LAS.z)).transpose()
+INPUT_CLASSIFS = np.copy(LAS.classification)
+EPSG = 2154
 RASTER_DRIVER = "GTiff"
 
 TILE_COORD_SCALE = 10
@@ -34,6 +43,54 @@ def setup_module(module):  # run before the first test
         pass
     # Create folder test if not exists
     os.makedirs(OUTPUT_DIR)
+
+
+def test_compute_binary_class():
+    origin_x, origin_y = utils_tools.get_pointcloud_origin(points=INPUT_POINTS, tile_size=50)
+
+    binary_class = compute_binary_class(points=INPUT_POINTS, origin=(origin_x, origin_y), tile_size=50, pixel_size=2)
+
+    assert binary_class.shape == (25, 25)
+    assert np.all((binary_class == 0) | (binary_class == 1))
+    assert (binary_class[0, :8] == np.array([1, 1, 1, 1, 1, 1, 1, 0])).all()
+
+
+def test_generate_class_raster_raw():
+    output_file = Path(OUTPUT_DIR) / "generate_class_raster_raw" / f"{TILENAME}.tif"
+    generate_class_raster_raw(
+        input_points=INPUT_POINTS,
+        input_classifs=INPUT_CLASSIFS,
+        output_tif=str(output_file),
+        epsg=EPSG,
+        classes_by_layer=[[2], [1], [66], []],
+        tile_size=50,
+        pixel_size=1,
+        no_data_value=-9999.0,
+        raster_driver=RASTER_DRIVER,
+    )
+    with rasterio.open(output_file) as raster:
+        band_ground = raster.read(1)
+        band_not_classified = raster.read(2)
+        band_virtual = raster.read(3)
+        band_all = raster.read(4)
+
+        # pixel with 0 point
+        assert band_ground[0, 8] == 0
+        assert band_not_classified[0, 8] == 0
+        assert band_virtual[0, 8] == 0
+        assert band_all[0, 8] == 0
+
+        # pixel with ground, no not classified, no virtual point
+        assert band_ground[0, 7] == 1
+        assert band_not_classified[0, 7] == 0
+        assert band_virtual[0, 7] == 0
+        assert band_all[0, 7] == 1
+
+        # pixel with ground, not classified, no virtual point
+        assert band_ground[0, 6] == 1
+        assert band_not_classified[0, 6] == 1
+        assert band_virtual[0, 6] == 0
+        assert band_all[0, 6] == 1
 
 
 def test_create_class_raster_raw():
