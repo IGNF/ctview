@@ -70,7 +70,10 @@ def add_dxm_hillshade_to_raster(
     config_io: DictConfig,
 ):
     """Add hillshade to a raster by computing a Digital Model with the classes listed in keep_classes,
-    hillshading it then mixing it with the input raster using the hillshade_calc operation in gdal_calc
+    hillshading it then mixing it with the input raster using the hillshade_calc operation in gdal_calc.
+
+    WARNING: nodata value from config is ignored because it works on color Byte data (encoded on 8 bit).
+    nodata set to 0 for coherence with the case of empty map of density.
 
     Args:
         input_raster (str): Path to the raster to which we want to add a hillshade
@@ -86,7 +89,6 @@ def add_dxm_hillshade_to_raster(
         (with A: input_raster, B: hillshade)
         config_io (DictConfig): io configuration dictionary that must contain:
             "spatial_reference": #str,
-            "no_data_value": #int,
             "tile_geometry": {
                 "tile_coord_scale": #int,
                 "tile_width": #int,
@@ -109,7 +111,7 @@ def add_dxm_hillshade_to_raster(
         outfile=output_raster,
         allBands="A",
         overwrite=True,
-        NoDataValue=config_io.no_data_value,
+        NoDataValue=0,
     )
 
 
