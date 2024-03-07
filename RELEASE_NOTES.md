@@ -1,4 +1,6 @@
 # dev
+
+# v0.4.2
 - fix:
   - set nodata value for the gdal_calc function to the default value. Forcing nodata to 0 set every 0 value to nodata.
 
