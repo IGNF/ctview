@@ -73,7 +73,6 @@ def add_dxm_hillshade_to_raster(
     hillshading it then mixing it with the input raster using the hillshade_calc operation in gdal_calc.
 
     WARNING: nodata value from config is ignored because it works on color Byte data (encoded on 8 bit).
-    nodata set to 0 for coherence with the case of empty map of density.
 
     Args:
         input_raster (str): Path to the raster to which we want to add a hillshade
@@ -111,7 +110,6 @@ def add_dxm_hillshade_to_raster(
         outfile=output_raster,
         allBands="A",
         overwrite=True,
-        NoDataValue=0,
     )
 
 

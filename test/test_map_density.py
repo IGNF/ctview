@@ -251,4 +251,4 @@ def test_create_density_raster_with_color_and_hillshade_empty():
             assert data.shape[0] == 3
             assert data.shape[1] == tile_width / pixel_size
             assert data.shape[2] == tile_width / pixel_size
-            assert np.all(data == 0)  # set nodata value of gdal_calc with input Byte data to 0
+            assert np.all(data == 255)  # default nodata value of gdal_calc with input Byte data
