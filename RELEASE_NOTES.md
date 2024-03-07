@@ -1,4 +1,6 @@
 # dev
+
+# v0.4.1
 - fix:
   - nodata value from config in gdal_calc is ignored because it works on color Byte data. Set to 0 for coherence with empty map of density.
 
