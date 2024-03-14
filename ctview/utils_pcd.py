@@ -1,30 +1,6 @@
-# Autor : ELucon
-
 import logging as log
 import os
-
 import numpy as np
-
-
-def give_name_resolution_raster(size):
-    """
-    Give a resolution from raster
-
-    Args:
-        size (int): raster cell size
-
-    Return:
-        _size(str): resolution from raster for output's name
-    """
-    if float(size) == 1.0:
-        _size = str("_1M")
-    elif float(size) == 0.5:
-        _size = str("_50CM")
-    elif float(size) == 5.0:
-        _size = str("_5M")
-    else:
-        _size = str(size)
-    return _size
 
 
 def repare_files(las_liste: str, input_dir):

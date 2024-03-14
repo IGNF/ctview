@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 import rasterio
 from hydra import compose, initialize
+import ctview.utils_pcd as utils_pcd
 
 import ctview.map_density as map_density
 
@@ -32,7 +33,7 @@ def setup_module():
 
 
 def test_compute_density():
-    origin_x, origin_y = map_density.get_pointcloud_origin(points=INPUT_POINTS, tile_size=50)
+    origin_x, origin_y = utils_pcd.get_pointcloud_origin(points=INPUT_POINTS, tile_size=50)
 
     density = map_density.compute_density(INPUT_POINTS, (origin_x, origin_y), 50, 2)
 

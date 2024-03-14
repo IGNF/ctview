@@ -11,6 +11,7 @@ import ctview.map_class as map_class
 import ctview.map_density as map_density
 import ctview.map_DXM as map_DXM
 import ctview.utils_pdal as utils_pdal
+import ctview.utils_pcd as utils_pcd
 
 
 @hydra.main(config_path="../configs/", config_name="config_ctview.yaml", version_base="1.2")
@@ -34,9 +35,9 @@ def main(config: DictConfig):
 
     # ## ACTIVATE IF NECESSARY
     # log.warning("#########")
-    # log.warning("ATTENTION : modification LAS/LAZ file with function utils_tools.repare_file")
+    # log.warning("ATTENTION : modification LAS/LAZ file with function utils_pcd.repare_file")
     # log.warning("#########")
-    # utils_tools.repare_files(las_liste, in_dir)
+    # utils_pcd.repare_files(las_liste, in_dir)
     # time.sleep(2)
     tilename = os.path.splitext(initial_las_filename)[0]
     initial_las_file = os.path.join(in_dir, initial_las_filename)

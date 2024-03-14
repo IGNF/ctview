@@ -5,10 +5,77 @@ from typing import Tuple
 
 import hydra
 import numpy as np
+import laspy
+from collections.abc import Iterable
 from omegaconf import DictConfig
 from osgeo_utils import gdal_fillnodata
 
-from ctview import clip_raster, map_DXM, utils_gdal, utils_pdal
+from ctview import clip_raster, map_DXM, utils_gdal, utils_pdal, utils_raster
+
+
+def generate_class_raster_raw(
+    input_points: np.array,
+    input_classifs: np.array,
+    output_tif: str,
+    epsg: int | str,
+    classes_by_layer: list = [[]],
+    tile_size: int = 1000,
+    pixel_size: float = 1,
+    buffer_size: float = 0,
+    no_data_value: int = -9999,
+    raster_driver: str = "GTiff",
+):
+    """Generate a (multilayer) raster of class for the classes in `class_by_layer`.
+
+    The output has one layer per value in the classes_by_layer list.
+    Each layer contains a class map for the classes listed in its correspondig list of
+    values in classes_by_layer.
+    Eg, if classes_by_layer = [[1, 2], [3], []]:
+    * the first layer contains the class map for classes 1 and 2 commbined
+    * the second layer contains the class map for class 3 only,
+    * the last layer contains the class for all classes together
+
+    Args:
+        input_points (np.array): numpy array with the input points
+        input_classifs (np.array): numpy array with classifications of the input points
+        output_tif (str): path to the output file
+        epsg (int): spatial reference of the output file
+        classes_by_layer (list, optional): _description_. Defaults to [[]].
+        tile_size (int, optional): size ot the raster tile in meters. Defaults to 1000.
+        pixel_size (float, optional): pixel size of the output raster. Defaults to 1.
+        buffer_size (float, optional): size of the buffer that has been added to the input points.
+        (used to detect the raster corners) Defaults to 0.
+        no_data_value (int, optional): No data value of the output. Defaults to -9999.
+        raster_driver (str): raster_driver (str): One of GDAL raster drivers formats
+        (cf. https://gdal.org/drivers/raster/index.html#raster-drivers). Defaults to "GTiff"
+    """
+
+    os.makedirs(os.path.dirname(output_tif), exist_ok=True)
+    utils_raster.generate_raster_raw(
+        input_points=input_points,
+        input_classifs=input_classifs,
+        output_tif=output_tif,
+        epsg=epsg,
+        fn=compute_binary_class,
+        classes_by_layer=classes_by_layer,
+        tile_size=tile_size,
+        pixel_size=pixel_size,
+        buffer_size=buffer_size,
+        no_data_value=no_data_value,
+        raster_driver=raster_driver,
+    )
+
+
+def compute_binary_class(points: np.array, origin: Tuple[int, int], tile_size: int, pixel_size: float):
+    bins_x = np.arange(origin[0], origin[0] + tile_size + pixel_size, pixel_size)
+    bins_y = np.arange(origin[1] - tile_size, origin[1] + pixel_size, pixel_size)
+    # Compute number of points per bin
+    bins, _, _ = np.histogram2d(points[:, 1], points[:, 0], bins=[bins_y, bins_x])
+    # Get 1 when value is not 0, 0 otherwise
+    binary_class = np.where(bins > 0, 1, 0)
+    binary_class = np.flipud(binary_class)
+
+    return binary_class
 
 
 def create_class_raster_raw(
