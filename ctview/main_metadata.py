@@ -1,5 +1,6 @@
 import logging as log
 import os
+import tempfile
 from pathlib import Path
 
 import hydra
@@ -34,63 +35,66 @@ def main(config: DictConfig):
         raise RuntimeError("No output directory. For more info run the same command by adding --help")
     # Create folders
     os.makedirs(out_dir, exist_ok=True)
-    out_dir_buffer = Path(out_dir) / "tmp" / "buffer"
     out_dir_density = Path(out_dir) / "density"
     out_dir_class = Path(out_dir) / "class"
-    os.makedirs(out_dir_buffer, exist_ok=True)
     os.makedirs(out_dir_density, exist_ok=True)
     os.makedirs(out_dir_class, exist_ok=True)
 
     input_las = os.path.join(in_dir, in_las)
-    tilename, extension = os.path.splitext(in_las)
-    filename_buffered = f"{tilename}_buffered{extension}"
-    input_las_with_buffer = os.path.join(out_dir_buffer, filename_buffered)
+    tilename, _ = os.path.splitext(in_las)
 
-    # Buffer
-    create_las_with_buffer(
-        input_dir=in_dir,
-        tile_filename=input_las,
-        output_filename=input_las_with_buffer,
-        buffer_width=buffer_size,
-        spatial_ref=f"EPSG:{epsg}",
-        tile_width=tile_size,
-        tile_coord_scale=tile_coord_scale,
-    )
-    filename_density = f"{tilename}_density.tif"
-    output_tif_density = os.path.join(out_dir_density, filename_density)
-    filename_class_raw = f"{tilename}_class_raw.tif"
-    output_tif_class_raw = os.path.join(out_dir_class, filename_class_raw)
+    with tempfile.TemporaryDirectory(prefix="tmp_buffer", dir="tmp") as tmpdir:
+        if config.buffer.output_subdir:
+            las_with_buffer = Path(out_dir) / config.buffer.output_subdir / in_las
+        else:
+            las_with_buffer = Path(tmpdir) / in_las
+        las_with_buffer.parent.mkdir(parents=True, exist_ok=True)
 
-    # Read las
-    las = laspy.read(input_las_with_buffer)
-    points_np = np.vstack((las.x, las.y, las.z)).transpose()
-    classifs = np.copy(las.classification)
+        # Buffer
+        create_las_with_buffer(
+            input_dir=in_dir,
+            tile_filename=input_las,
+            output_filename=str(las_with_buffer),
+            buffer_width=buffer_size,
+            spatial_ref=f"EPSG:{epsg}",
+            tile_width=tile_size,
+            tile_coord_scale=tile_coord_scale,
+        )
+        filename_density = f"{tilename}_density.tif"
+        output_tif_density = os.path.join(out_dir_density, filename_density)
+        filename_class_raw = f"{tilename}_class_raw.tif"
+        output_tif_class_raw = os.path.join(out_dir_class, filename_class_raw)
 
-    # Density
-    map_density.generate_raster_of_density(
-        input_points=points_np,
-        input_classifs=classifs,
-        output_tif=output_tif_density,
-        epsg=epsg,
-        classes_by_layer=config.density.keep_classes,
-        tile_size=tile_size,
-        pixel_size=pixel_size,
-        buffer_size=buffer_size,
-        raster_driver=config.io.raster_driver,
-    )
+        # Read las
+        las = laspy.read(las_with_buffer)
+        points_np = np.vstack((las.x, las.y, las.z)).transpose()
+        classifs = np.copy(las.classification)
 
-    # Class map
-    map_class.generate_class_raster_raw(
-        input_points=points_np,
-        input_classifs=classifs,
-        output_tif=output_tif_class_raw,
-        epsg=epsg,
-        classes_by_layer=config.class_map.keep_classes,
-        tile_size=tile_size,
-        pixel_size=pixel_size,
-        buffer_size=buffer_size,
-        raster_driver=config.io.raster_driver,
-    )
+        # Density
+        map_density.generate_raster_of_density(
+            input_points=points_np,
+            input_classifs=classifs,
+            output_tif=output_tif_density,
+            epsg=epsg,
+            classes_by_layer=config.density.keep_classes,
+            tile_size=tile_size,
+            pixel_size=pixel_size,
+            buffer_size=buffer_size,
+            raster_driver=config.io.raster_driver,
+        )
+
+        # Class map
+        map_class.generate_class_raster_raw(
+            input_points=points_np,
+            input_classifs=classifs,
+            output_tif=output_tif_class_raw,
+            epsg=epsg,
+            classes_by_layer=config.class_map.keep_classes,
+            tile_size=tile_size,
+            pixel_size=pixel_size,
+            buffer_size=buffer_size,
+            raster_driver=config.io.raster_driver,
+        )
 
 
 if __name__ == "__main__":

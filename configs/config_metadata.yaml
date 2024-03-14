@@ -20,7 +20,8 @@ tile_geometry:
   tile_size: 1000
 
 buffer:
-  buffer_size: 10
+  buffer_size: 100
+  output_subdir: null  # exemple: "tmp/buffer"
 
 density:
   pixel_size: 1
@@ -30,7 +31,9 @@ density:
 
 class_map:
   pixel_size: 1
-  keep_classes: [2,65,66]
+  keep_classes:
+    - [2,66]
+    - [65]
 
 hydra:
   output_subdir: null
