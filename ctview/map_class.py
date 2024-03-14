@@ -10,7 +10,7 @@ from collections.abc import Iterable
 from omegaconf import DictConfig
 from osgeo_utils import gdal_fillnodata
 
-from ctview import clip_raster, map_DXM, utils_gdal, utils_pdal, utils_tools
+from ctview import clip_raster, map_DXM, utils_gdal, utils_pdal, utils_raster
 
 
 def generate_class_raster_raw(
@@ -51,7 +51,7 @@ def generate_class_raster_raw(
     """
 
     os.makedirs(os.path.dirname(output_tif), exist_ok=True)
-    utils_tools.generate_raster_raw(
+    utils_raster.generate_raster_raw(
         input_points=input_points,
         input_classifs=input_classifs,
         output_tif=output_tif,

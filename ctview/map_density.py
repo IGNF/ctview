@@ -9,7 +9,7 @@ import numpy as np
 import rasterio
 from omegaconf import DictConfig
 
-from ctview import map_DXM, utils_gdal, utils_tools
+from ctview import map_DXM, utils_gdal, utils_raster
 
 
 def generate_raster_of_density(
@@ -48,7 +48,7 @@ def generate_raster_of_density(
         raster_driver (str): raster_driver (str): One of GDAL raster drivers formats
         (cf. https://gdal.org/drivers/raster/index.html#raster-drivers). Defaults to "GTiff"
     """
-    utils_tools.generate_raster_raw(
+    utils_raster.generate_raster_raw(
         input_points=input_points,
         input_classifs=input_classifs,
         output_tif=output_tif,

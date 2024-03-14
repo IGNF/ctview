@@ -9,7 +9,7 @@ import rasterio
 from hydra import compose, initialize
 
 import ctview.utils_pdal as utils_pdal
-import ctview.utils_tools as utils_tools
+import ctview.utils_pcd as utils_pcd
 from ctview.map_class import (
     add_color_to_raster,
     compute_binary_class,
@@ -46,7 +46,7 @@ def setup_module(module):  # run before the first test
 
 
 def test_compute_binary_class():
-    origin_x, origin_y = utils_tools.get_pointcloud_origin(points=INPUT_POINTS, tile_size=50)
+    origin_x, origin_y = utils_pcd.get_pointcloud_origin(points=INPUT_POINTS, tile_size=50)
 
     binary_class = compute_binary_class(points=INPUT_POINTS, origin=(origin_x, origin_y), tile_size=50, pixel_size=2)
 

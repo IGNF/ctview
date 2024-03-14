@@ -1,7 +1,7 @@
 import laspy
 import numpy as np
 
-from ctview.utils_tools import get_pointcloud_origin
+from ctview.utils_pcd import get_pointcloud_origin
 
 INPUT_LAS_50m = "./data/las/test_data_0000_0000_LA93_IGN69_ground.las"
 LAS = laspy.read(INPUT_LAS_50m)
