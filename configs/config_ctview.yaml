@@ -30,11 +30,11 @@ density:
   lut_filename: LUT_DENSITY.txt
   output_subdir: DENS_FINAL
   hillshade_calc: "((B-1)<0)*A*(B/255) + ((B-1)>=0)*A*((B-1)/255)"
-  intermediate_dirs:
-    density_values: null  # exemple: tmp/DENS_raw
-    density_color: null  # exemple: tmp/DENS_color
-    dxm_raw: null  # exemple: tmp/DENS_DTM_raw
-    dxm_hillshade: null  # exemple: tmp/DENS_DTM_hillshade
+  intermediate_dirs:  # pour chaque intermediate_dirs, si null, le dossier n'est pas créé
+    density_values: "tmp/DENS_VAL"  # exemple: DENS_VAL
+    density_color: null  # exemple: DENS_COLOR
+    dxm_raw: null  # exemple: DTM_DENS
+    dxm_hillshade: null  # exemple: "tmp_dtm_dens/hillshade"
 
 dtm:
   pixel_size: 1  # meters
@@ -43,10 +43,10 @@ dtm:
   color:
     cycles_DTM_colored: [1]  # number of color cycles other ex: [1,2,5]
   output_subdir: "DTM_FINAL"
-  intermediate_dirs:
-    dxm_raw: null  # exemple: tmp/DTM_VAL
-    dxm_hillshade: null  # exemple: tmp/hillshade
-    folder_LUT: null  # exemple: tmp/LUT
+  intermediate_dirs:  # pour chaque intermediate_dirs, si null, le dossier n'est pas créé
+    dxm_raw: null  # exemple: DTM_VAL
+    dxm_hillshade: null  # exemple: tmp_dtm/hillshade
+    folder_LUT: null  # exemple: "DTM_FINAL/LUT"
 
 class_map:
   pixel_size: 0.5  # meters
@@ -55,13 +55,13 @@ class_map:
   lut_filename: LUT_CLASS.txt
   output_subdir: CLASS_FINAL
   hillshade_calc: "254*((A*(0.5*(B/255)+0.25))>254)+(A*(0.5*(B/255)+0.25))*((A*(0.5*(B/255)+0.25))<=254)"
-  intermediate_dirs:
-    CC_raw: null  # exemple: tmp/CC_1_raw
-    CC_raw_color: null  # exemple: tmp/CC_2_bcolor
-    CC_fillgap: null  # exemple: tmp/CC_3_fg
-    CC_fillgap_color: null  # exemple: tmp/CC_4_fgcolor
-    CC_crop: null  # exemple: tmp/CC_5_crop
-    dxm_raw: null  # exemple: tmp/DSM_VAL
+  intermediate_dirs:  # pour chaque intermediate_dirs, si null, le dossier n'est pas créé
+    CC_raw: null  # exemple: CC_1_raw
+    CC_raw_color: null  # exemple: CC_2_bcolor
+    CC_fillgap: null  # exemple: CC_3_fg
+    CC_fillgap_color: null  # exemple: CC_4_fgcolor
+    CC_crop: null  # exemple: CC_5_crop
+    dxm_raw: null  # exemple: "DSM_VAL"
     dxm_hillshade: null  # exemple: "tmp_dsm/hillshade"
 
 hydra:

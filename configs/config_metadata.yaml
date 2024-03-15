@@ -30,10 +30,15 @@ density:
     - [3, 4, 5, 6, 17]  # band 2 (green)
 
 class_map:
-  pixel_size: 1  # meters
-  keep_classes:  # TODO: by default use this bands and check tests [1],[2],[3],[4],[5],[6],[9],[17],[64],[67],[202]
-    - [2,66]  # band 1: temporary binary raster (ground and virtual points)
-    - [65]  # band 2: temporary binary raster 
+  pixel_size: 1
+  CBI_rules:
+    - {"CBI": [5,6],"AGGREG": 56}
+    - {"CBI": [5,17],"AGGREG": 57}
+    - {"CBI": [2,6],"AGGREG": 26}
+  precedence_classes: [56,26,6,17,5,57,2]
+  intermediate_dirs:  # pour chaque intermediate_dirs, si null, le dossier n'est pas créé
+    class_binary: null  # exemple: tmp/binary
+    class_precedence: null
 
 hydra:
   output_subdir: null

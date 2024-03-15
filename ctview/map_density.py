@@ -6,7 +6,6 @@ from typing import Tuple
 
 import laspy
 import numpy as np
-import rasterio
 from omegaconf import DictConfig
 
 from ctview import map_DXM, utils_gdal, utils_raster
@@ -17,10 +16,10 @@ def generate_raster_of_density(
     input_classifs: np.array,
     output_tif: str,
     epsg: int | str,
+    raster_origin: tuple,
     classes_by_layer: list = [[]],
     tile_size: int = 1000,
     pixel_size: float = 1,
-    buffer_size: float = 0,
     no_data_value: int = -9999,
     raster_driver: str = "GTiff",
 ):
@@ -39,11 +38,10 @@ def generate_raster_of_density(
         input_classifs (np.array): numpy array with classifications of the input points
         output_tif (str): path to the output file
         epsg (int): spatial reference of the output file
+        raster_origin (tuple): origin of the output raster
         classes_by_layer (list, optional): _description_. Defaults to [[]].
         tile_size (int, optional): size ot the raster tile in meters. Defaults to 1000.
         pixel_size (float, optional): pixel size of the output raster. Defaults to 1.
-        buffer_size (float, optional): size of the buffer that has been added to the input points.
-        (used to detect the raster corners) Defaults to 0.
         no_data_value (int, optional): No data value of the output. Defaults to -9999.
         raster_driver (str): raster_driver (str): One of GDAL raster drivers formats
         (cf. https://gdal.org/drivers/raster/index.html#raster-drivers). Defaults to "GTiff"
@@ -53,11 +51,11 @@ def generate_raster_of_density(
         input_classifs=input_classifs,
         output_tif=output_tif,
         epsg=epsg,
+        raster_origin=raster_origin,
         fn=compute_density,
         classes_by_layer=classes_by_layer,
         tile_size=tile_size,
         pixel_size=pixel_size,
-        buffer_size=buffer_size,
         no_data_value=no_data_value,
         raster_driver=raster_driver,
     )
@@ -170,15 +168,21 @@ def create_density_raster_with_color_and_hillshade(
         classifs = np.copy(las.classification)
 
         log.info("\nCreate density map (values)\n")
+        raster_origin = utils_raster.compute_raster_origin(
+            input_points=points_np,
+            tile_size=config_io.tile_geometry.tile_width,
+            pixel_size=config_density.pixel_size,
+            buffer_size=buffer_size,
+        )
         generate_raster_of_density(
             input_points=points_np,
             input_classifs=classifs,
             output_tif=raster_dens_values,
             epsg=config_io.spatial_reference,
+            raster_origin=raster_origin,
             classes_by_layer=[config_density.keep_classes],
             tile_size=config_io.tile_geometry.tile_width,
             pixel_size=config_density.pixel_size,
-            buffer_size=buffer_size,
             no_data_value=config_io.no_data_value,
             raster_driver=config_io.raster_driver,
         )

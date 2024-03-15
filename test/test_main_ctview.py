@@ -63,7 +63,7 @@ def test_main_ctview_default():
             ],
         )
     main(cfg)
-    assert set(os.listdir(output_dir)) == {"DENS_FINAL", "DTM_FINAL", "CLASS_FINAL"}
+    assert set(os.listdir(output_dir)) == {"tmp", "DENS_FINAL", "DTM_FINAL", "CLASS_FINAL"}
     assert not glob.glob("tmp/tmp_dxm*")
     assert not glob.glob("tmp/tmp_dens*")
     assert not glob.glob("tmp/tmp_class*")
@@ -98,7 +98,7 @@ def test_main_ctview_renaming_final_folders():
             ],
         )
     main(cfg)
-    assert set(os.listdir(output_dir)) == {OUTPUT_FOLDER_CLASS, OUTPUT_FOLDER_DENS, OUTPUT_FOLDER_DTM}
+    assert set(os.listdir(output_dir)) == {OUTPUT_FOLDER_CLASS, OUTPUT_FOLDER_DENS, OUTPUT_FOLDER_DTM, "tmp"}
     assert not glob.glob("tmp/tmp_dxm*")
     assert not glob.glob("tmp/tmp_dens*")
     assert not glob.glob("tmp/tmp_class*")
