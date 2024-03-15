@@ -1,4 +1,6 @@
 # dev
+- new functionalities:
+  - Metadata: new multilayer binary map of class
 
 # v0.4.2
 - fix:
