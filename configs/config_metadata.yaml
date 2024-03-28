@@ -16,24 +16,24 @@ io:
   raster_driver: "GTiff"
 
 tile_geometry:
-  tile_coord_scale: 1000
-  tile_size: 1000
+  tile_coord_scale: 1000  # meters
+  tile_size: 1000  # meters
 
 buffer:
-  buffer_size: 100
+  buffer_size: 100  # meters
   output_subdir: null  # exemple: "tmp/buffer"
 
 density:
-  pixel_size: 1
+  pixel_size: 1  # meters
   keep_classes:
-    - [2]
-    - [3, 4, 5, 6, 17]
+    - [2]  # band 1 (red)
+    - [3, 4, 5, 6, 17]  # band 2 (green)
 
 class_map:
-  pixel_size: 1
-  keep_classes:
-    - [2,66]
-    - [65]
+  pixel_size: 1  # meters
+  keep_classes:  # TODO: by default use this bands and check tests [1],[2],[3],[4],[5],[6],[9],[17],[64],[67],[202]
+    - [2,66]  # band 1: temporary binary raster (ground and virtual points)
+    - [65]  # band 2: temporary binary raster 
 
 hydra:
   output_subdir: null

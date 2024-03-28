@@ -117,3 +117,9 @@ exemple_ctview_fast.sh
 ```
 exemple_metadata_fast.sh
 ```
+
+# POC Aymeric metadata carte de classe
+
+```
+/var/data/store-echange/SV3D/Aymeric/RDI/DEMO_Raster_Class
+```
