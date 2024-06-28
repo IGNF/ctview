@@ -1,16 +1,128 @@
 import logging as log
 import os
 import tempfile
+from collections.abc import Iterable
 from typing import Tuple
 
 import hydra
 import numpy as np
-import laspy
-from collections.abc import Iterable
 from omegaconf import DictConfig
 from osgeo_utils import gdal_fillnodata
 
 from ctview import clip_raster, map_DXM, utils_gdal, utils_pdal, utils_raster
+
+
+def generate_class_raster(
+    input_points: np.array,
+    input_classifs: np.array,
+    tilename: str,
+    output_dir: str,
+    config_class: DictConfig,
+    config_io: DictConfig,
+    config_geometry: DictConfig,
+    raster_origin: tuple,
+):
+    """Generate a single band classification raster.
+    Each pixel represents the classification of the points contained in this pixel using :
+    - combination rules to create new classification values for specific combinations of classes
+        (eg. class 56 when both class 5 and 6 are in the same pixel)
+    - a precedence list to choose which class to show when several classes are in the same pixel
+    The combination rules and precedence list are in `config_class`
+
+    Args:
+        input_points (np.array): numpy array with the input points
+        input_classifs (np.array): numpy array with classifications of the input points
+        tilename (str): tilename used to generate the output filename
+        output_dir (str): output full path
+        config_class (Dictconfig): configuration dict for the classification such as :
+        {
+            pixel_size: 1
+            CBI_rules:
+                - {"CBI": [5,6],"AGGREG": 56}
+                - {"CBI": [5,17],"AGGREG": 57}
+                - {"CBI": [2,6],"AGGREG": 26}
+        }
+        precedence_classes: [56,26,6,17,5,57,2]
+        intermediate_dirs:  # pour chaque intermediate_dirs, si null, le dossier n'est pas créé
+            class_binary: null  # exemple: tmp/binary
+            class_precedence: null}
+            Cf `class_map` section in `configs/config_metadata.yaml`
+        config_io (DictConfig):  hydra configuration with the general io parameters
+            eg.  {
+            input_filename: null
+            input_dir: null
+            output_dir: null
+            projection_epsg: 2154
+            no_data_value: -9999
+            extension: .tif
+            raster_driver: "GTiff"
+            }
+            Cf `io` section in `configs/config_metadata.yaml`
+
+        config_geometry (DictConfig): hydra configuration with the tile geometry parameters, such as:
+        {
+            tile_coord_scale: 1000  # meters
+            tile_size: 1000  # meters
+        }
+        Cf `tile_geometry` section in `configs/config_metadata.yaml`
+        raster_origin (tuple): origin of the raster (top left corner of the upper left pixel)
+    """
+    log.info("\nCreate class map")
+    inter_dirs = config_class.intermediate_dirs
+    ext = config_io.extension
+
+    class_by_layer = list_original_classes_to_keep(
+        config_class.CBI_rules,
+        config_class.precedence_classes,
+    )
+
+    with tempfile.TemporaryDirectory(prefix="tmp_class_map", dir="tmp") as tmpdir:
+        if inter_dirs.class_binary:
+            raster_class_map_binary = os.path.join(output_dir, inter_dirs.class_binary, f"{tilename}_class_raw{ext}")
+        else:
+            raster_class_map_binary = os.path.join(tmpdir, f"{tilename}_class_raw{ext}")
+        if inter_dirs.class_precedence:
+            raster_class_map_precedence = os.path.join(
+                output_dir, inter_dirs.class_precedence, f"{tilename}_class_precedence{ext}"
+            )
+        else:
+            raster_class_map_precedence = os.path.join(tmpdir, f"{tilename}_class_precedence{ext}")
+
+        raster_class_map = os.path.join(output_dir, f"{tilename}_class{ext}")
+
+        os.makedirs(os.path.dirname(raster_class_map_binary), exist_ok=True)
+        os.makedirs(os.path.dirname(raster_class_map_precedence), exist_ok=True)
+        os.makedirs(os.path.dirname(raster_class_map), exist_ok=True)
+
+        class_raw = generate_class_raster_raw(
+            input_points=input_points,
+            input_classifs=input_classifs,
+            output_tif=raster_class_map_binary,
+            epsg=config_io.projection_epsg,
+            raster_origin=raster_origin,
+            class_by_layer=class_by_layer,
+            tile_size=config_geometry.tile_size,
+            pixel_size=config_class.pixel_size,
+            no_data_value=config_io.no_data_value,
+            raster_driver=config_io.raster_driver,
+        )
+
+        flatten_array = convert_class_array_to_precedence_array(
+            input_array=class_raw,
+            class_by_layer=class_by_layer,
+            rules=config_class.CBI_rules,
+            priorities=config_class.precedence_classes,
+        )
+
+        utils_raster.write_single_band_raster_to_file(
+            input_array=flatten_array,
+            raster_origin=raster_origin,
+            output_tif=raster_class_map,  # When colorization change by raster_class_map_precedence
+            pixel_size=config_class.pixel_size,
+            epsg=config_io.projection_epsg,
+            no_data_value=config_io.no_data_value,
+            raster_driver=config_io.raster_driver,
+        )
 
 
 def generate_class_raster_raw(
@@ -18,52 +130,64 @@ def generate_class_raster_raw(
     input_classifs: np.array,
     output_tif: str,
     epsg: int | str,
-    classes_by_layer: list = [[]],
+    raster_origin: tuple,
+    class_by_layer: list = [],
     tile_size: int = 1000,
     pixel_size: float = 1,
-    buffer_size: float = 0,
     no_data_value: int = -9999,
     raster_driver: str = "GTiff",
 ):
     """Generate a (multilayer) raster of class for the classes in `class_by_layer`.
 
-    The output has one layer per value in the classes_by_layer list.
+    The output has one layer per value in the class_by_layer list.
     Each layer contains a class map for the classes listed in its correspondig list of
-    values in classes_by_layer.
-    Eg, if classes_by_layer = [[1, 2], [3], []]:
-    * the first layer contains the class map for classes 1 and 2 commbined
+    values in class_by_layer.
+    Eg, if class_by_layer = [1, 3]:
+    * the first layer contains the class map for class 1 only,
     * the second layer contains the class map for class 3 only,
-    * the last layer contains the class for all classes together
 
     Args:
         input_points (np.array): numpy array with the input points
         input_classifs (np.array): numpy array with classifications of the input points
         output_tif (str): path to the output file
         epsg (int): spatial reference of the output file
-        classes_by_layer (list, optional): _description_. Defaults to [[]].
+        raster_origin (tuple): origin of the output raster
+        class_by_layer (list, optional): class to display on each layer. Defaults to [].
         tile_size (int, optional): size ot the raster tile in meters. Defaults to 1000.
         pixel_size (float, optional): pixel size of the output raster. Defaults to 1.
-        buffer_size (float, optional): size of the buffer that has been added to the input points.
-        (used to detect the raster corners) Defaults to 0.
         no_data_value (int, optional): No data value of the output. Defaults to -9999.
         raster_driver (str): raster_driver (str): One of GDAL raster drivers formats
         (cf. https://gdal.org/drivers/raster/index.html#raster-drivers). Defaults to "GTiff"
+    Returns:
+        raster_raw (np.array): binary multilayer raster of class
     """
-
     os.makedirs(os.path.dirname(output_tif), exist_ok=True)
-    utils_raster.generate_raster_raw(
+    if not isinstance(class_by_layer, Iterable):
+        raise TypeError(
+            "In generate_class_raster_raw, class_by_layer is expected to be a list, "
+            f"got {type(class_by_layer)} instead)"
+        )
+    if not np.all([isinstance(item, int) for item in class_by_layer]):
+        raise TypeError(
+            "In generate_class_raster_raw, classes_by_layer is expected to be a list of integers, "
+            f"got {class_by_layer} instead)"
+        )
+    class_list_by_layer = [[class_one_layer] for class_one_layer in class_by_layer]
+    raster_raw = utils_raster.generate_raster_raw(
         input_points=input_points,
         input_classifs=input_classifs,
         output_tif=output_tif,
         epsg=epsg,
+        raster_origin=raster_origin,
         fn=compute_binary_class,
-        classes_by_layer=classes_by_layer,
+        classes_by_layer=class_list_by_layer,
         tile_size=tile_size,
         pixel_size=pixel_size,
-        buffer_size=buffer_size,
         no_data_value=no_data_value,
         raster_driver=raster_driver,
     )
+
+    return raster_raw
 
 
 def compute_binary_class(points: np.array, origin: Tuple[int, int], tile_size: int, pixel_size: float):
@@ -78,32 +202,81 @@ def compute_binary_class(points: np.array, origin: Tuple[int, int], tile_size: i
     return binary_class
 
 
-def create_class_raster_raw(
-    in_points: np.ndarray, output_file: str, res: int, raster_driver: str, no_data_value: float
+def convert_class_array_to_precedence_array(
+    input_array: np.array, class_by_layer: list, rules: list = [], priorities: list = []
 ):
-    """Create raw raster of classes.
+    array_with_aggregated_classes, class_by_layer = apply_combination_rules(input_array, class_by_layer, rules)
+    flatten_array = apply_precedence_order(array_with_aggregated_classes, class_by_layer, priorities)
+
+    return flatten_array
+
+
+def apply_combination_rules(input_array: np.array, class_by_layer: list, rules: list = []):
+    """Add new layers to the input_array, which represent the combined classes defined in "rules":
+    for a given rule in the rules list: input_array[class_by_layer.index[rule["AGGREG"]]]
+    equals 1 where all classes in rule["CBI"] are equal to 1. Update class_by_layer accordingly.
 
     Args:
-        input_points (np.array): Points of the input las (as read with a pdal.readers.las)
-        output_file (str): full path to the output raster
-        res (int): pixel size of the output raster
-        raster_driver (str): One of GDAL raster drivers formats
-        (cf. https://gdal.org/drivers/raster/index.html#raster-drivers)
-        no_data_value (float): Value of pixel if contains no data
-    Raises:
-        FileNotFoundError: if the output raster has not been created
+        input_array (np.array): numpy array with the input points
+        class_by_layer (list): classes
+        rules (list({},{}...)): rules of aggregation
+        eg.  [
+            {"CBI": [2, 3], "AGGREG": 23},
+            {"CBI": [3, 5], "AGGREG": 35}
+            ]
+    Returns:
+        input_array (np.array): input array with aggregated classes
+        class_by_layer (list): classes with aggregate code class
+        eg. [2,3,5,23,35]
     """
-    os.makedirs(os.path.dirname(output_file), exist_ok=True)
-    utils_pdal.write_raster_class(
-        input_points=in_points,
-        output_raster=output_file,
-        res=res,
-        raster_driver=raster_driver,
-        no_data_value=no_data_value,
-    )
+    for rule in rules:
+        class_by_layer.append(rule["AGGREG"])
+        new_class = np.all(input_array[[class_by_layer.index(r) for r in rule["CBI"]]], axis=0)
+        input_array = np.append(input_array, [new_class], axis=0)
 
-    if not os.path.exists(output_file):  # if raster not create, next step with fail
-        raise FileNotFoundError(f"{output_file} not found")
+    return input_array, class_by_layer
+
+
+def apply_precedence_order(input_array: np.array, classes_by_layer: list, priorities: list = []):
+    """Reorganize array with order defined in priorities
+    Args:
+        input_array (np.array): numpy array with the input points and aggregated classes
+        class_by_layer (list): classes
+        priorities (list): classes priorities
+        eg.  [2,23,3,35,5]
+    Returns:
+        array_2d (np.array): array 2D with classes
+    """
+    array_2d = np.zeros_like(input_array[0])
+    for p in priorities:
+        array_2d = np.where(array_2d == 0, p * input_array[classes_by_layer.index(p)], array_2d)
+
+    return array_2d
+
+
+def list_original_classes_to_keep(rules: list = [], priorities: list = []):
+    """Create list with classes with infos in rules and priorities
+    Args:
+        rules (list({},{}...)): rules of aggregation
+        eg.  [
+            {"CBI": [2, 3], "AGGREG": 23},
+            {"CBI": [3, 5], "AGGREG": 35}
+            ]
+        priorities (list): classes priorities
+        eg.  [2,23,3,35,5]
+    Returns:
+        class_by_layer (list): classes
+    """
+    class_by_layer = set(priorities)
+    for rule in rules:
+        if rule["AGGREG"] not in priorities:
+            raise ValueError(f"La classe {rule['AGGREG']} n'est pas dans les préséances")
+        class_by_layer.remove(rule["AGGREG"])
+        for r in rule["CBI"]:
+            class_by_layer.add(r)
+            if r not in priorities:
+                raise ValueError(f"La classe {r} n'est pas dans les préséances")
+    return list(class_by_layer)
 
 
 def fill_gaps_raster(in_raster: str, output_file: str, raster_driver: str):
@@ -152,6 +325,34 @@ def add_color_to_raster(in_raster: str, output_file: str, LUT: str):
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
     utils_gdal.color_raster_with_LUT(input_raster=in_raster, output_raster=output_file, LUT=LUT)
+
+    if not os.path.exists(output_file):  # if raster not create, next step with fail
+        raise FileNotFoundError(f"{output_file} not found")
+
+
+def create_class_raster_raw_deprecated(  # Old method from ctview, to change with new colorization
+    in_points: np.ndarray, output_file: str, res: int, raster_driver: str, no_data_value: float
+):
+    """Create raw raster of classes.
+
+    Args:
+        input_points (np.array): Points of the input las (as read with a pdal.readers.las)
+        output_file (str): full path to the output raster
+        res (int): pixel size of the output raster
+        raster_driver (str): One of GDAL raster drivers formats
+        (cf. https://gdal.org/drivers/raster/index.html#raster-drivers)
+        no_data_value (float): Value of pixel if contains no data
+    Raises:
+        FileNotFoundError: if the output raster has not been created
+    """
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+    utils_pdal.write_raster_class(
+        input_points=in_points,
+        output_raster=output_file,
+        res=res,
+        raster_driver=raster_driver,
+        no_data_value=no_data_value,
+    )
 
     if not os.path.exists(output_file):  # if raster not create, next step with fail
         raise FileNotFoundError(f"{output_file} not found")
@@ -222,23 +423,23 @@ def create_map_class_raster_with_postprocessing_color_and_hillshade(
     ext = config_io.extension
 
     with tempfile.TemporaryDirectory(prefix="tmp_class", dir="tmp") as tmpdir:
-        if inter_dirs["CC_raw"]:
-            raster_raw = os.path.join(out_dir, inter_dirs["CC_raw"], f"{tilename}_raw{ext}")
+        if inter_dirs.CC_raw:
+            raster_raw = os.path.join(out_dir, inter_dirs.CC_raw, f"{tilename}_raw{ext}")
         else:
             raster_raw = os.path.join(tmpdir, f"{tilename}_raw{ext}")
-        if inter_dirs["CC_raw_color"]:
-            raster_raw_color = os.path.join(out_dir, inter_dirs["CC_raw_color"], f"{tilename}_raw_color{ext}")
+        if inter_dirs.CC_raw_color:
+            raster_raw_color = os.path.join(out_dir, inter_dirs.CC_raw_color, f"{tilename}_raw_color{ext}")
 
-        if inter_dirs["CC_fillgap"]:
-            raster_fillgap = os.path.join(out_dir, inter_dirs["CC_fillgap"], f"{tilename}_fillgap{ext}")
+        if inter_dirs.CC_fillgap:
+            raster_fillgap = os.path.join(out_dir, inter_dirs.CC_fillgap, f"{tilename}_fillgap{ext}")
         else:
             raster_fillgap = os.path.join(tmpdir, f"{tilename}_fillgap{ext}")
-        if inter_dirs["CC_fillgap_color"]:
-            raster_fg_color = os.path.join(out_dir, inter_dirs["CC_fillgap_color"], f"{tilename}_fillgap_color{ext}")
+        if inter_dirs.CC_fillgap_color:
+            raster_fg_color = os.path.join(out_dir, inter_dirs.CC_fillgap_color, f"{tilename}_fillgap_color{ext}")
         else:
             raster_fg_color = os.path.join(tmpdir, f"{tilename}_fillgaps_color{ext}")
-        if inter_dirs["CC_crop"]:
-            raster_fg_color_clip = os.path.join(out_dir, inter_dirs["CC_crop"], f"{tilename}_fillgap_color_clip{ext}")
+        if inter_dirs.CC_crop:
+            raster_fg_color_clip = os.path.join(out_dir, inter_dirs.CC_crop, f"{tilename}_fillgap_color_clip{ext}")
         else:
             raster_fg_color_clip = os.path.join(tmpdir, f"{tilename}_fillgap_color_clip{ext}")
 
@@ -255,7 +456,7 @@ def create_map_class_raster_with_postprocessing_color_and_hillshade(
         os.makedirs(os.path.dirname(raster_class_map), exist_ok=True)
 
         log.info("Step 1 : Write raster raw")
-        create_class_raster_raw(
+        create_class_raster_raw_deprecated(
             in_points=in_points,
             output_file=raster_raw,
             res=config_class.pixel_size,
