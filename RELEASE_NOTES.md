@@ -1,4 +1,5 @@
 # dev
+- refactor map_class to several files
 - new functionalities:
   - Metadata: new multilayer binary map of class
 
@@ -21,7 +22,7 @@
 - dependencies:
   - update pdal to 2.6+, python to 3.10+
   - update ign-mnx to 1.0.2 fixing classification values issues
-- refactor: 
+- refactor:
   - simplify config file
   - generate buffer point cloud only once in the beggining of the algo
   - add gdal driver to config
