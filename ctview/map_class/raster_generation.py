@@ -215,8 +215,9 @@ def create_map_class_raster_with_postprocessing_color_and_hillshade(
         config_class (DictConfig | dict):  hydra configuration with the class map parameters
         eg. {
           pixel_size: 0.5  # pixel size of the output raster
-          dxm_interpolation: pdal-tin  # interpolation used to generate the hillshade elevation model
-          keep_classes: [1, 2, 3, 4]  # classes used in the hillshae elevation model
+          dxm_filter:  # filter used to generate dsm, the dsm is used to generate hillshade
+              dimension: Classification
+              keep_values: [1, 2, 3, 4, 5, 6, 9, 17, 64, 65, 66, 67, 202]
           lut_filename: LUT_CLASS.txt  # filename for the lut that colorizes the classification map
           output_subdir: CC_6_fusion  # folder name for the final class map output
           hillshade_calc: "254*((A*(0.5*(B/255)+0.25))>254)+(A*(0.5*(B/255)+0.25))*((A*(0.5*(B/255)+0.25))<=254)"
@@ -337,8 +338,8 @@ def create_map_class_raster_with_postprocessing_color_and_hillshade(
             input_pointcloud=str(input_las),
             output_raster=raster_class_map,
             pixel_size=config_class.pixel_size,
-            keep_classes=config_class.keep_classes,
-            dxm_interpolation=config_class.dxm_interpolation,
+            dxm_filter_dimension=config_class.dxm_filter.dimension,
+            dxm_filter_keep_values=config_class.dxm_filter.keep_values,
             output_dxm_raw=raster_class_map_dxm_raw,
             output_dxm_hillshade=raster_class_map_dxm_hs,
             hillshade_calc=config_class.hillshade_calc,

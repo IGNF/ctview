@@ -86,7 +86,9 @@ def create_density_raster_with_color_and_hillshade(
         eg.  {
             pixel_size: 5
             keep_classes: [2, 66]
-            dxm_interpolation: pdal-tin
+            dxm_filter:  # Filter used to generate dtm
+                dimension: Classification
+                keep_values: [2, 66]
             lut_filename: LUT_DENSITY.txt
             output_subdir: DENS_FINAL
             hillshade_calc: "((B-1)<0)*A*(B/255) + ((B-1)>=0)*A*((B-1)/255)"
@@ -200,8 +202,8 @@ def create_density_raster_with_color_and_hillshade(
             input_pointcloud=input_las,
             output_raster=raster_dens,
             pixel_size=config_density.pixel_size,
-            keep_classes=config_density.keep_classes,
-            dxm_interpolation=config_density.dxm_interpolation,
+            dxm_filter_dimension=config_density.dxm_filter.dimension,
+            dxm_filter_keep_values=config_density.dxm_filter.keep_values,
             output_dxm_raw=raster_density_dxm_raw,
             output_dxm_hillshade=raster_density_dxm_hs,
             hillshade_calc=config_density.hillshade_calc,
