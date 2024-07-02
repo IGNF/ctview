@@ -39,6 +39,31 @@ class_map:
   intermediate_dirs:  # pour chaque intermediate_dirs, si null, le dossier n'est pas créé
     class_binary: null  # exemple: tmp/binary
     class_precedence: null
+  colormap:
+    - {value: 0, description: NODATA, color: [0, 0, 0]}
+    - {value: 1, description: Defaut, color: [150, 150, 150]}
+    - {value: 2, description: Sol, color: [207, 150, 70]}
+    - {value: 3, description: Vegetation basse, color: [90, 110, 40]}
+    - {value: 4, description: Vegetation intermediaire, color: [70, 150, 60]}
+    - {value: 5, description: Vegetation haute, color: [70, 150, 60]}
+    - {value: 6, description: Batiment, color: [180, 20, 20]}
+    - {value: 9, description: Eau, color: [40, 140, 140]}
+    - {value: 17, description: Pont, color: [85, 97, 137]}
+    - {value: 64, description: Sursol perenne, color: [255, 0, 255]}
+    - {value: 65, description: Artefact, color: [64, 0, 128]}
+    - {value: 66, description: Point virtuel, color: [128, 0, 64]}
+    - {value: 67, description: DiversBatiment, color: [180, 20, 20]}
+    - {value: 56, description: BatiSurVeg, color: [180, 20, 20]}  # value = 70 (changé arbitrairement pour test)
+    - {value: 26, description: PontSurVeg, color: [85, 97, 137]}   # value = 71 (changé arbitrairement pour test)
+    - {value: 80, description: VegsurBati, color: [70, 150, 60]}
+    - {value: 57, description: PontsurBati, color: [85, 97, 137]} # value = 81 (changé arbitrairement pour test)
+    - {value: 89, description: DefsurBati, color: [180, 20, 20]}
+    - {value: 90, description: VegsurPont, color: [70, 150, 60]}
+    - {value: 91, description: BatisurPont, color: [180, 20, 20]}
+    - {value: 99, description: DefsurPont, color: [150, 150, 150]}
+    - {value: 214, description: Incertains batiment, color: [180, 20, 20]}
+    - {value: 202, description: DiversBatiment_temp, color: [180, 20, 20]}
+
 
 hydra:
   output_subdir: null

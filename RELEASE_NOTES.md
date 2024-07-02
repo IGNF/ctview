@@ -1,7 +1,10 @@
 # dev
 - refactor map_class to several files
 - new functionalities:
-  - Metadata: new multilayer binary map of class
+  - Metadata:
+    - new multilayer binary map of class
+    - flattened classification map using aggregation rules + precedence
+    - the classification map has colors and classes description stored as metadata
 
 # v0.4.2
 - fix:

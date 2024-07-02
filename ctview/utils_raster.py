@@ -1,10 +1,14 @@
 import logging as log
 from collections.abc import Iterable
+from typing import Dict, List
 
 import numpy as np
 import rasterio
+from osgeo import gdal
 
 import ctview.utils_pcd as utils_pcd
+
+gdal.UseExceptions()
 
 
 def generate_raster_raw(
@@ -108,9 +112,22 @@ def write_single_band_raster_to_file(
     output_tif: str,
     pixel_size: int = 1,
     epsg: int = 2154,
-    no_data_value: int = -9999,
     raster_driver: str = "GTiff",
+    colormap: List[Dict] = [],
 ):
+    """Write 2D numpy array of uint8 to a single band raster file (tiff file)
+
+    Args:
+        input_array (np.array): 2D numpy array (raster data)
+        raster_origin (tuple): X, Y coordinates of the raster origin
+        output_tif (str): path to the output file
+        pixel_size (int, optional): pixel size of the data. Defaults to 1.
+        epsg (int, optional): Spatial reference of the output file. Defaults to 2154.
+        raster_driver (str, optional): One of GDAL raster drivers formats. Defaults to "GTiff".
+        colormap (List[Dict], optional): Information about the raster values to add to the metadata. Defaults to [].
+            List of dictionaries, the dict for each value is like
+            {"value": 1, "description": "value_1", "color":[255, 128, 0]}  # rgb values
+    """
     with rasterio.Env():
         with rasterio.open(
             output_tif,
@@ -119,11 +136,32 @@ def write_single_band_raster_to_file(
             height=input_array.shape[0],
             width=input_array.shape[1],
             count=1,
-            dtype=rasterio.float32,
+            dtype=rasterio.uint8,
             crs=f"EPSG:{epsg}" if str(epsg).isdigit() else epsg,
             transform=rasterio.transform.from_origin(raster_origin[0], raster_origin[1], pixel_size, pixel_size),
-            nodata=no_data_value,
+            nodata=0,  # Set to 0 as data are uint8
         ) as out_file:
-            out_file.write(input_array.astype(rasterio.float32), 1)
+            out_file.write(input_array.astype(rasterio.uint8), 1)
+
+    # Add colors and descriptions
+    if colormap:
+        ds = gdal.Open(output_tif)
+        band = ds.GetRasterBand(1)
+        colors = gdal.ColorTable()
+        #  set default values for all existing values in the colormap
+        # (add 1 as the value xx is at the [xx + 1]th position in a list starting at 0)
+        category_names_list = [""] * (max([c["value"] for c in colormap]) + 1)
+
+        for category in colormap:
+            colors.SetColorEntry(category["value"], tuple(category["color"]))
+            category_names_list[category["value"]] = category["description"]
+
+        band.SetColorTable(colors)
+        band.SetColorInterpretation(gdal.GCI_PaletteIndex)
+        band.SetCategoryNames(category_names_list)
+
+        # close gdal dataset (cf. https://gis.stackexchange.com/questions/80366/why-close-a-dataset-in-gdal-python)
+        band = None
+        ds = None
 
     log.debug(f"Saved to {output_tif}")

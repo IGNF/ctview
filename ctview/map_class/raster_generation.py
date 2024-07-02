@@ -188,11 +188,11 @@ def generate_class_raster(
         utils_raster.write_single_band_raster_to_file(
             input_array=flatten_array,
             raster_origin=raster_origin,
-            output_tif=raster_class_map,  # When colorization change by raster_class_map_precedence
+            output_tif=raster_class_map,
             pixel_size=config_class.pixel_size,
             epsg=config_io.projection_epsg,
-            no_data_value=config_io.no_data_value,
             raster_driver=config_io.raster_driver,
+            colormap=config_class.colormap,
         )
 
 

@@ -7,11 +7,14 @@ import hydra
 import laspy
 import numpy as np
 from omegaconf import DictConfig
+from osgeo import gdal
 from pdaltools.las_add_buffer import create_las_with_buffer
 
 import ctview.map_class.raster_generation as map_class
 import ctview.map_density as map_density
 from ctview import utils_raster
+
+gdal.UseExceptions()
 
 
 @hydra.main(config_path="../configs/", config_name="config_metadata.yaml", version_base="1.2")
