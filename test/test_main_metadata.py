@@ -47,6 +47,7 @@ def test_main_modif_config():
                 f"class_map.pixel_size={pixel_size}",
                 "class_map.intermediate_dirs.class_binary=tmp/binary",
                 "class_map.precedence_classes=[26, 2, 6, 56,57,17,5]",
+                "class_map.ignored_classes=[1,3,4]",
             ],
         )
 
