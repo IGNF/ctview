@@ -145,6 +145,7 @@ def write_single_band_raster_to_file(
 
     # Add colors and descriptions
     if colormap:
+        check_colormap_fits_raster_data(colormap, input_array)
         ds = gdal.Open(output_tif)
         band = ds.GetRasterBand(1)
         colors = gdal.ColorTable()
@@ -165,3 +166,10 @@ def write_single_band_raster_to_file(
         ds = None
 
     log.debug(f"Saved to {output_tif}")
+
+
+def check_colormap_fits_raster_data(colormap: List[Dict], data: np.array):
+    data_values = set(np.unique(data))  # set(array) does not work for numpy arrays that are not 1D
+    colormap_values = set([item["value"] for item in colormap])
+    if not data_values.issubset(colormap_values):
+        raise ValueError(f"Les classes {data_values - colormap_values} ne sont pas definies dans la colormap")

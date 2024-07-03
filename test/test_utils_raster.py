@@ -2,10 +2,14 @@ import os
 import shutil
 
 import numpy as np
+import pytest
 import rasterio
 from osgeo import gdal
 
-from ctview.utils_raster import write_single_band_raster_to_file
+from ctview.utils_raster import (
+    check_colormap_fits_raster_data,
+    write_single_band_raster_to_file,
+)
 
 OUTPUT_DIR = os.path.join("tmp", "utils_raster")
 
@@ -59,3 +63,45 @@ def test_write_single_band_raster_to_file():
         assert np.all(data[:, 1, 0] == [255, 0, 255])  # color for value_2
         assert np.all(data[:, 2, 2] == [255, 255, 0])  # color for value_4
         assert np.all(data[:, -1, -1] == [0, 0, 0])  # no data value
+
+
+def test_write_single_band_raster_fail():
+    with pytest.raises(ValueError):
+        input_array = np.ones([5, 5])
+        input_array[1, :] = 2
+        raster_origin = [1000, 2000]
+        colormap = [
+            {"value": 1, "color": [255, 0, 0], "description": "value_1"},
+            # value 2 is missing from colormap
+        ]
+
+        output_tif = os.path.join(OUTPUT_DIR, "test_write_single_band_raster.tif")
+        write_single_band_raster_to_file(
+            input_array,
+            raster_origin,
+            output_tif,
+            pixel_size=10,
+            epsg=2154,
+            raster_driver="GTiff",
+            colormap=colormap,
+        )
+
+
+def test_check_colormap_fits_raster_data():
+    colormap = [
+        {"value": 1, "color": [255, 0, 0], "description": "value_1"},
+        {"value": 2, "color": [255, 0, 255], "description": "value_2"},
+        {"value": 3, "color": [255, 0, 255], "description": "value_3"},
+    ]
+    data = np.array([[1, 2], [1, 2]])
+    check_colormap_fits_raster_data(colormap, data)
+
+
+def test_check_colormap_fits_raster_data_fail():
+    # failing case: data value 2 is not in colormap
+    colormap = [
+        {"value": 1, "color": [255, 0, 0], "description": "value_1"},
+    ]
+    data = np.array([[1, 2], [1, 2]])
+    with pytest.raises(ValueError):
+        check_colormap_fits_raster_data(colormap, data)
