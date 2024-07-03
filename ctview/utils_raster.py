@@ -17,7 +17,7 @@ def generate_raster_raw(
     raster_origin: tuple,
     fn: callable,
     classes_by_layer: list = [[]],
-    tile_size: int = 1000,
+    tile_width: int = 1000,
     pixel_size: float = 1,
     no_data_value: int = -9999,
     raster_driver: str = "GTiff",
@@ -39,7 +39,7 @@ def generate_raster_raw(
         epsg (int): spatial reference of the output file
         raster_origin (tuple): origin of the output raster
         classes_by_layer (list, optional): _description_. Defaults to [[]].
-        tile_size (int, optional): size ot the raster tile in meters. Defaults to 1000.
+        tile_width (int, optional): size ot the raster tile in meters. Defaults to 1000.
         pixel_size (float, optional): pixel size of the output raster. Defaults to 1.
         buffer_size (float, optional): size of the buffer that has been added to the input points.
         (used to detect the raster corners) Defaults to 0.
@@ -68,7 +68,7 @@ def generate_raster_raw(
         else:
             filtered_points = input_points
 
-        rasters.append(fn(filtered_points, raster_origin, tile_size, pixel_size))
+        rasters.append(fn(filtered_points, raster_origin, tile_width, pixel_size))
 
     rasters = np.array(rasters)
     with rasterio.Env():
@@ -91,13 +91,13 @@ def generate_raster_raw(
     return rasters
 
 
-def compute_raster_origin(input_points: np.array, tile_size: int, pixel_size: int, buffer_size: int = 0):
+def compute_raster_origin(input_points: np.array, tile_width: int, pixel_size: int, buffer_size: int = 0):
     """
     Compute the origin of the raster using the pointcloud origin (the top left of the pixel)
     buffer_size (float, optional): size of the buffer that has been added to the input points.
     (used to detect the raster corners) Defaults to 0.
     """
-    pcd_origin_x, pcd_origin_y = utils_pcd.get_pointcloud_origin(input_points, tile_size, buffer_size)
+    pcd_origin_x, pcd_origin_y = utils_pcd.get_pointcloud_origin(input_points, tile_width, buffer_size)
 
     raster_origin = (pcd_origin_x - pixel_size / 2, pcd_origin_y + pixel_size / 2)
 

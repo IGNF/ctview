@@ -22,9 +22,9 @@ def main(config: DictConfig):
     in_las = config.io.input_filename
     in_dir = config.io.input_dir
     out_dir = config.io.output_dir
-    epsg = config.io.projection_epsg
-    tile_coord_scale = config.tile_geometry.tile_coord_scale
-    tile_size = config.tile_geometry.tile_size
+    epsg = config.io.spatial_reference
+    tile_coord_scale = config.io.tile_geometry.tile_coord_scale
+    tile_width = config.io.tile_geometry.tile_width
     buffer_size = config.buffer.buffer_size
 
     # Verify args are ok
@@ -60,7 +60,7 @@ def main(config: DictConfig):
             output_filename=str(las_with_buffer),
             buffer_width=buffer_size,
             spatial_ref=f"EPSG:{epsg}",
-            tile_width=tile_size,
+            tile_width=tile_width,
             tile_coord_scale=tile_coord_scale,
         )
         filename_density = f"{tilename}_density.tif"
@@ -72,7 +72,10 @@ def main(config: DictConfig):
         classifs = np.copy(las.classification)
 
         density_raster_origin = utils_raster.compute_raster_origin(
-            input_points=points_np, tile_size=tile_size, pixel_size=config.density.pixel_size, buffer_size=buffer_size
+            input_points=points_np,
+            tile_width=tile_width,
+            pixel_size=config.density.pixel_size,
+            buffer_size=buffer_size,
         )
 
         # Density
@@ -83,7 +86,7 @@ def main(config: DictConfig):
             epsg=epsg,
             raster_origin=density_raster_origin,
             classes_by_layer=config.density.keep_classes,
-            tile_size=tile_size,
+            tile_width=tile_width,
             pixel_size=config.density.pixel_size,
             raster_driver=config.io.raster_driver,
         )
@@ -91,7 +94,7 @@ def main(config: DictConfig):
         # Class map
         class_map_raster_origin = utils_raster.compute_raster_origin(
             input_points=points_np,
-            tile_size=tile_size,
+            tile_width=tile_width,
             pixel_size=config.class_map.pixel_size,
             buffer_size=buffer_size,
         )
@@ -103,14 +106,17 @@ def main(config: DictConfig):
             output_dir=out_dir_class,
             config_class=config.class_map,
             config_io=config.io,
-            config_geometry=config.tile_geometry,
+            config_geometry=config.io.tile_geometry,
             raster_origin=class_map_raster_origin,
         )
 
         map_class.generate_pretty_class_raster_from_single_band_raster(
-            class_raster_path,
+            input_raster=class_raster_path,
+            input_las=las_with_buffer,
             tilename=tilename,
             output_dir=out_dir_class_pretty,
+            config_class=config.class_map,
+            config_io=config.io,
         )
 
 

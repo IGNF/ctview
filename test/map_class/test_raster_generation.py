@@ -28,7 +28,7 @@ LAS = laspy.read(INPUT_FILE)
 INPUT_POINTS = np.vstack((LAS.x, LAS.y, LAS.z)).transpose()
 INPUT_CLASSIFS = np.copy(LAS.classification)
 EPSG = 2154
-RASTER_ORIGIN = utils_raster.compute_raster_origin(input_points=INPUT_POINTS, tile_size=50, pixel_size=1)
+RASTER_ORIGIN = utils_raster.compute_raster_origin(input_points=INPUT_POINTS, tile_width=50, pixel_size=1)
 RASTER_DRIVER = "GTiff"
 
 TILE_COORD_SCALE = 10
@@ -54,7 +54,7 @@ def test_generate_class_raster_raw():
         epsg=EPSG,
         raster_origin=RASTER_ORIGIN,
         class_by_layer=[2, 1, 66],
-        tile_size=50,
+        tile_width=50,
         pixel_size=1,
         no_data_value=-9999.0,
         raster_driver=RASTER_DRIVER,

@@ -26,7 +26,7 @@ INPUT_LAS_50m = Path(INPUT_DIR) / INPUT_FILENAME_50M
 LAS = laspy.read(INPUT_LAS_50m)
 INPUT_POINTS = np.vstack((LAS.x, LAS.y, LAS.z)).transpose()
 INPUT_CLASSIFS = np.copy(LAS.classification)
-RASTER_ORIGIN = utils_raster.compute_raster_origin(input_points=INPUT_POINTS, tile_size=50, pixel_size=2)
+RASTER_ORIGIN = utils_raster.compute_raster_origin(input_points=INPUT_POINTS, tile_width=50, pixel_size=2)
 
 
 def setup_module():
@@ -38,7 +38,7 @@ def setup_module():
 
 
 def test_compute_density():
-    origin_x, origin_y = utils_pcd.get_pointcloud_origin(points=INPUT_POINTS, tile_size=50)
+    origin_x, origin_y = utils_pcd.get_pointcloud_origin(points=INPUT_POINTS, tile_width=50)
 
     density = map_density.compute_density(INPUT_POINTS, (origin_x, origin_y), 50, 2)
 
@@ -53,7 +53,7 @@ def test_generate_raster_of_density():
         output_tif=output_tif,
         epsg=EPSG,
         raster_origin=RASTER_ORIGIN,
-        tile_size=50,
+        tile_width=50,
         pixel_size=2,
         raster_driver="GTiff",
     )
@@ -74,7 +74,7 @@ def test_generate_raster_of_density_multiband():
         output_tif=output_raster_multi,
         epsg=EPSG,
         raster_origin=RASTER_ORIGIN,
-        tile_size=50,
+        tile_width=50,
         pixel_size=2,
         raster_driver="GTiff",
     )
@@ -94,7 +94,7 @@ def test_generate_raster_of_density_raster_driver():
         output_tif=output_raster,
         epsg=EPSG,
         raster_origin=RASTER_ORIGIN,
-        tile_size=50,
+        tile_width=50,
         pixel_size=2,
         raster_driver="GPKG",
     )
@@ -116,7 +116,7 @@ def test_generate_raster_of_density_single_list():
             classes_by_layer=[2, 3],
             epsg=EPSG,
             raster_origin=RASTER_ORIGIN,
-            tile_size=50,
+            tile_width=50,
             pixel_size=2,
             raster_driver="GTiff",
         )

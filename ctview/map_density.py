@@ -18,7 +18,7 @@ def generate_raster_of_density(
     epsg: int | str,
     raster_origin: tuple,
     classes_by_layer: list = [[]],
-    tile_size: int = 1000,
+    tile_width: int = 1000,
     pixel_size: float = 1,
     no_data_value: int = -9999,
     raster_driver: str = "GTiff",
@@ -40,7 +40,7 @@ def generate_raster_of_density(
         epsg (int): spatial reference of the output file
         raster_origin (tuple): origin of the output raster
         classes_by_layer (list, optional): _description_. Defaults to [[]].
-        tile_size (int, optional): size ot the raster tile in meters. Defaults to 1000.
+        tile_width (int, optional): size ot the raster tile in meters. Defaults to 1000.
         pixel_size (float, optional): pixel size of the output raster. Defaults to 1.
         no_data_value (int, optional): No data value of the output. Defaults to -9999.
         raster_driver (str): raster_driver (str): One of GDAL raster drivers formats
@@ -54,17 +54,17 @@ def generate_raster_of_density(
         raster_origin=raster_origin,
         fn=compute_density,
         classes_by_layer=classes_by_layer,
-        tile_size=tile_size,
+        tile_width=tile_width,
         pixel_size=pixel_size,
         no_data_value=no_data_value,
         raster_driver=raster_driver,
     )
 
 
-def compute_density(points: np.array, origin: Tuple[int, int], tile_size: int, pixel_size: float):
+def compute_density(points: np.array, origin: Tuple[int, int], tile_width: int, pixel_size: float):
     # Compute number of points per bin
-    bins_x = np.arange(origin[0], origin[0] + tile_size + pixel_size, pixel_size)
-    bins_y = np.arange(origin[1] - tile_size, origin[1] + pixel_size, pixel_size)
+    bins_x = np.arange(origin[0], origin[0] + tile_width + pixel_size, pixel_size)
+    bins_y = np.arange(origin[1] - tile_width, origin[1] + pixel_size, pixel_size)
     bins, _, _ = np.histogram2d(points[:, 1], points[:, 0], bins=[bins_y, bins_x])
     density = bins / (pixel_size**2)
     density = np.flipud(density)
@@ -172,7 +172,7 @@ def create_density_raster_with_color_and_hillshade(
         log.info("\nCreate density map (values)\n")
         raster_origin = utils_raster.compute_raster_origin(
             input_points=points_np,
-            tile_size=config_io.tile_geometry.tile_width,
+            tile_width=config_io.tile_geometry.tile_width,
             pixel_size=config_density.pixel_size,
             buffer_size=buffer_size,
         )
@@ -183,7 +183,7 @@ def create_density_raster_with_color_and_hillshade(
             epsg=config_io.spatial_reference,
             raster_origin=raster_origin,
             classes_by_layer=[config_density.keep_classes],
-            tile_size=config_io.tile_geometry.tile_width,
+            tile_width=config_io.tile_geometry.tile_width,
             pixel_size=config_density.pixel_size,
             no_data_value=config_io.no_data_value,
             raster_driver=config_io.raster_driver,

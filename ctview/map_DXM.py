@@ -47,7 +47,12 @@ def create_raw_dxm(
 
     # Generate config that suits for produits_derive_lidar interpolation
     pdl_config = {}
-    pdl_config["io"] = {"spatial_reference": config_io.spatial_reference}
+    spatial_ref = (
+        f"EPSG:{config_io.spatial_reference}"
+        if str(config_io.spatial_reference).isdigit()
+        else config_io.spatial_reference
+    )
+    pdl_config["io"] = {"spatial_reference": spatial_ref}
     pdl_config["tile_geometry"] = dict(config_io.tile_geometry)
     pdl_config["tile_geometry"]["pixel_size"] = pixel_size
     pdl_config["tile_geometry"]["no_data_value"] = config_io.no_data_value

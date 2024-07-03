@@ -26,7 +26,7 @@ def generate_class_raster_raw(
     epsg: int | str,
     raster_origin: tuple,
     class_by_layer: list = [],
-    tile_size: int = 1000,
+    tile_width: int = 1000,
     pixel_size: float = 1,
     no_data_value: int = -9999,
     raster_driver: str = "GTiff",
@@ -47,7 +47,7 @@ def generate_class_raster_raw(
         epsg (int): spatial reference of the output file
         raster_origin (tuple): origin of the output raster
         class_by_layer (list, optional): class to display on each layer. Defaults to [].
-        tile_size (int, optional): size ot the raster tile in meters. Defaults to 1000.
+        tile_width (int, optional): size ot the raster tile in meters. Defaults to 1000.
         pixel_size (float, optional): pixel size of the output raster. Defaults to 1.
         no_data_value (int, optional): No data value of the output. Defaults to -9999.
         raster_driver (str): raster_driver (str): One of GDAL raster drivers formats
@@ -75,7 +75,7 @@ def generate_class_raster_raw(
         raster_origin=raster_origin,
         fn=compute_binary_class,
         classes_by_layer=class_list_by_layer,
-        tile_size=tile_size,
+        tile_width=tile_width,
         pixel_size=pixel_size,
         no_data_value=no_data_value,
         raster_driver=raster_driver,
@@ -124,7 +124,7 @@ def generate_class_raster(
             input_filename: null
             input_dir: null
             output_dir: null
-            projection_epsg: 2154
+            spatial_reference: 2154
             no_data_value: -9999
             extension: .tif
             raster_driver: "GTiff"
@@ -134,7 +134,7 @@ def generate_class_raster(
         config_geometry (DictConfig): hydra configuration with the tile geometry parameters, such as:
         {
             tile_coord_scale: 1000  # meters
-            tile_size: 1000  # meters
+            tile_width: 1000  # meters
         }
         Cf `tile_geometry` section in `configs/config_metadata.yaml`
         raster_origin (tuple): origin of the raster (top left corner of the upper left pixel)
@@ -166,10 +166,10 @@ def generate_class_raster(
             input_points=input_points,
             input_classifs=input_classifs,
             output_tif=raster_class_map_binary,
-            epsg=config_io.projection_epsg,
+            epsg=config_io.spatial_reference,
             raster_origin=raster_origin,
             class_by_layer=class_by_layer,
-            tile_size=config_geometry.tile_size,
+            tile_width=config_geometry.tile_width,
             pixel_size=config_class.pixel_size,
             no_data_value=config_io.no_data_value,
             raster_driver=config_io.raster_driver,
@@ -187,7 +187,7 @@ def generate_class_raster(
             raster_origin=raster_origin,
             output_tif=raster_class_map,
             pixel_size=config_class.pixel_size,
-            epsg=config_io.projection_epsg,
+            epsg=config_io.spatial_reference,
             raster_driver=config_io.raster_driver,
             colormap=config_class.colormap,
         )
@@ -204,7 +204,7 @@ def generate_pretty_class_raster_from_single_band_raster(
     config_io: DictConfig,
 ):
     """Use single band classification raster (with colors in the metadata) and
-    las file to generate a classification raster for visualisation purpose
+    las file to generate a classification raster for visualization purpose
     with colors from input_raster and hillshade computed from a digital surface model
 
     Args:
@@ -221,7 +221,7 @@ def generate_pretty_class_raster_from_single_band_raster(
           dxm_filter:
               dimension: Classification
               keep_values: [2, 3, 4, 5, 6, 9, 17, 64, 66, 67]
-          # The operation used to mix DSM hillsahde and colored
+          # The operation used to mix DSM hillshade and colored
           # A: input_colored raster
           # B: hillshade DSM
           hillshade_calc: "0.95*A*(0.2+0.6*(B/255))"

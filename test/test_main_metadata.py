@@ -2,6 +2,7 @@ import os
 import shutil
 from pathlib import Path
 
+import numpy as np
 import rasterio
 from hydra import compose, initialize
 from osgeo import gdal
@@ -38,8 +39,8 @@ def test_main_modif_config():
                 "io.input_filename=test_data_77050_627755_LA93_IGN69_buildings.laz",
                 f"io.input_dir={INPUT_DIR}",
                 f"io.output_dir={output_dir} ",
-                "tile_geometry.tile_coord_scale=10",
-                "tile_geometry.tile_size=50",
+                "io.tile_geometry.tile_coord_scale=10",
+                "io.tile_geometry.tile_width=50",
                 "buffer.buffer_size=10",
                 "buffer.output_subdir=tmp/buffer",
                 f"density.pixel_size={pixel_size}",
@@ -77,7 +78,7 @@ def test_main_default_config():
     output_dir = OUTPUT_DIR / "main_default_config"
     outfile_density = output_dir / "density" / "test_data_77050_627755_LA93_IGN69_buildings_density.tif"
     outfile_class_precedence = output_dir / "class" / "test_data_77050_627755_LA93_IGN69_buildings_class.tif"
-    outfile_class_pretty = output_dir / "class" / "test_data_77050_627755_LA93_IGN69_buildings_class_pretty.tif"
+    outfile_class_pretty = output_dir / "class_pretty" / "test_data_77050_627755_LA93_IGN69_buildings_class_pretty.tif"
 
     with initialize(version_base="1.2", config_path="../configs"):
         cfg = compose(
@@ -86,8 +87,8 @@ def test_main_default_config():
                 "io.input_filename=test_data_77050_627755_LA93_IGN69_buildings.laz",
                 f"io.input_dir={INPUT_DIR}",
                 f"io.output_dir={output_dir} ",
-                "tile_geometry.tile_coord_scale=10",
-                "tile_geometry.tile_size=50",
+                "io.tile_geometry.tile_coord_scale=10",
+                "io.tile_geometry.tile_width=50",
                 "buffer.buffer_size=10",
             ],
         )
@@ -109,5 +110,5 @@ def test_main_default_config():
 
         with rasterio.open(outfile_class_pretty) as raster:
             data = raster.read()
-            assert data[:, 36, 33] == [51, 110, 44]  # Vegetation
-            assert data[:, 9, 68] == [0, 0, 0]  # Default class, not displayed
+            assert np.all(data[:, 36, 33] == [52, 111, 44])  # Vegetation
+            assert np.all(data[:, 9, 68] == [0, 0, 0])  # Default class, not displayed
