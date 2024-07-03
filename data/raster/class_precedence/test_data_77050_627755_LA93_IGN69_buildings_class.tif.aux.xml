@@ -1,0 +1,335 @@
+<PAMDataset>
+  <PAMRasterBand band="1">
+    <ColorInterp>Palette</ColorInterp>
+    <CategoryNames>
+      <Category>NODATA</Category>
+      <Category>Defaut</Category>
+      <Category>Sol</Category>
+      <Category>Vegetation basse</Category>
+      <Category>Vegetation intermediaire</Category>
+      <Category>Vegetation haute</Category>
+      <Category>Batiment</Category>
+      <Category></Category>
+      <Category></Category>
+      <Category>Eau</Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category>Pont</Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category>VegBatiPont</Category>
+      <Category>VegBati</Category>
+      <Category>VegPont</Category>
+      <Category>VegSSP</Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category>BatiPont</Category>
+      <Category>BatiSSP</Category>
+      <Category></Category>
+      <Category></Category>
+      <Category>Sursol perenne</Category>
+      <Category>Artefact</Category>
+      <Category>Point virtuel</Category>
+      <Category>DiversBatiment</Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category></Category>
+      <Category>VirtSol</Category>
+      <Category>VirtVeget</Category>
+      <Category>VirtPont</Category>
+    </CategoryNames>
+    <ColorTable>
+      <Entry c1="0" c2="0" c3="0" c4="255" />
+      <Entry c1="150" c2="150" c3="150" c4="255" />
+      <Entry c1="207" c2="150" c3="70" c4="255" />
+      <Entry c1="90" c2="110" c3="40" c4="255" />
+      <Entry c1="70" c2="150" c3="60" c4="255" />
+      <Entry c1="70" c2="150" c3="60" c4="255" />
+      <Entry c1="180" c2="20" c3="20" c4="255" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="40" c2="140" c3="140" c4="255" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="85" c2="97" c3="137" c4="255" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="85" c2="97" c3="137" c4="255" />
+      <Entry c1="70" c2="150" c3="60" c4="255" />
+      <Entry c1="80" c2="113" c3="114" c4="255" />
+      <Entry c1="255" c2="0" c3="255" c4="255" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="85" c2="97" c3="137" c4="255" />
+      <Entry c1="255" c2="0" c3="255" c4="255" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="255" c2="0" c3="255" c4="255" />
+      <Entry c1="64" c2="0" c3="128" c4="255" />
+      <Entry c1="128" c2="0" c3="64" c4="255" />
+      <Entry c1="180" c2="20" c3="20" c4="255" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="0" c2="0" c3="0" c4="0" />
+      <Entry c1="207" c2="150" c3="70" c4="255" />
+      <Entry c1="70" c2="150" c3="60" c4="255" />
+      <Entry c1="85" c2="97" c3="137" c4="255" />
+    </ColorTable>
+  </PAMRasterBand>
+</PAMDataset>

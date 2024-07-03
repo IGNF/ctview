@@ -14,6 +14,7 @@ import ctview.utils_raster as utils_raster
 from ctview.map_class.raster_generation import (
     create_map_class_raster_with_postprocessing_color_and_hillshade,
     generate_class_raster_raw,
+    generate_pretty_class_raster_from_single_band_raster,
 )
 
 gdal.UseExceptions()
@@ -77,6 +78,33 @@ def test_generate_class_raster_raw():
         assert band_ground[0, 6] == 1
         assert band_not_classified[0, 6] == 1
         assert band_virtual[0, 6] == 0
+
+
+def test_generate_pretty_class_raster_from_single_band_raster():
+    tilename = "test_data_77050_627755_LA93_IGN69_buildings"
+    input_raster = os.path.join("data", "raster", "class_precedence", f"{tilename}_class.tif")
+    input_las = os.path.join("data", "las", "classee", f"{tilename}.laz")
+    output_dir = os.path.join(OUTPUT_DIR, "generate_pretty_class_raster_from_single_band_raster")
+
+    with initialize(version_base="1.2", config_path="../../configs"):
+        cfg = compose(
+            config_name="config_ctview",
+            overrides=[
+                f"io.output_dir={output_dir}",
+                f"io.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
+                f"io.tile_geometry.tile_width={TILE_WIDTH}",
+                f"buffer.size={BUFFER_SIZE}",
+            ],
+        )
+
+    generate_pretty_class_raster_from_single_band_raster(
+        input_raster,
+        input_las,
+        tilename,
+        output_dir,
+        cfg.class_map,
+        cfg.io,
+    )
 
 
 def test_create_map_class_raster_with_postprocessing_color_and_hillshade_default():

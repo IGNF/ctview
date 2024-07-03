@@ -38,8 +38,10 @@ def main(config: DictConfig):
     os.makedirs(out_dir, exist_ok=True)
     out_dir_density = Path(out_dir) / "density"
     out_dir_class = Path(out_dir) / "class"
+    out_dir_class_pretty = Path(out_dir) / "class_pretty"
     os.makedirs(out_dir_density, exist_ok=True)
     os.makedirs(out_dir_class, exist_ok=True)
+    os.makedirs(out_dir_class_pretty, exist_ok=True)
 
     input_las = os.path.join(in_dir, in_las)
     tilename, _ = os.path.splitext(in_las)
@@ -93,7 +95,8 @@ def main(config: DictConfig):
             pixel_size=config.class_map.pixel_size,
             buffer_size=buffer_size,
         )
-        map_class.generate_class_raster(
+
+        class_raster_path = map_class.generate_class_raster(
             input_points=points_np,
             input_classifs=classifs,
             tilename=tilename,
@@ -102,6 +105,12 @@ def main(config: DictConfig):
             config_io=config.io,
             config_geometry=config.tile_geometry,
             raster_origin=class_map_raster_origin,
+        )
+
+        map_class.generate_pretty_class_raster_from_single_band_raster(
+            class_raster_path,
+            tilename=tilename,
+            output_dir=out_dir_class_pretty,
         )
 
 

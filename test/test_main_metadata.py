@@ -77,6 +77,8 @@ def test_main_default_config():
     output_dir = OUTPUT_DIR / "main_default_config"
     outfile_density = output_dir / "density" / "test_data_77050_627755_LA93_IGN69_buildings_density.tif"
     outfile_class_precedence = output_dir / "class" / "test_data_77050_627755_LA93_IGN69_buildings_class.tif"
+    outfile_class_pretty = output_dir / "class" / "test_data_77050_627755_LA93_IGN69_buildings_class_pretty.tif"
+
     with initialize(version_base="1.2", config_path="../configs"):
         cfg = compose(
             config_name="config_metadata",
@@ -104,3 +106,8 @@ def test_main_default_config():
             assert unique_band[0, 1] == 2  # Only ground
             # Ground and buildings (but buildings are first in the precedence order)
             assert unique_band[9, 21] == 6
+
+        with rasterio.open(outfile_class_pretty) as raster:
+            data = raster.read()
+            assert data[:, 36, 33] == [51, 110, 44]  # Vegetation
+            assert data[:, 9, 68] == [0, 0, 0]  # Default class, not displayed
