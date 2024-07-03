@@ -69,7 +69,7 @@ def main(config: DictConfig):
         points_np = np.vstack((las.x, las.y, las.z)).transpose()
         classifs = np.copy(las.classification)
 
-        raster_origin = utils_raster.compute_raster_origin(
+        density_raster_origin = utils_raster.compute_raster_origin(
             input_points=points_np, tile_size=tile_size, pixel_size=config.density.pixel_size, buffer_size=buffer_size
         )
 
@@ -79,7 +79,7 @@ def main(config: DictConfig):
             input_classifs=classifs,
             output_tif=output_tif_density,
             epsg=epsg,
-            raster_origin=raster_origin,
+            raster_origin=density_raster_origin,
             classes_by_layer=config.density.keep_classes,
             tile_size=tile_size,
             pixel_size=config.density.pixel_size,
@@ -87,6 +87,12 @@ def main(config: DictConfig):
         )
 
         # Class map
+        class_map_raster_origin = utils_raster.compute_raster_origin(
+            input_points=points_np,
+            tile_size=tile_size,
+            pixel_size=config.class_map.pixel_size,
+            buffer_size=buffer_size,
+        )
         map_class.generate_class_raster(
             input_points=points_np,
             input_classifs=classifs,
@@ -95,7 +101,7 @@ def main(config: DictConfig):
             config_class=config.class_map,
             config_io=config.io,
             config_geometry=config.tile_geometry,
-            raster_origin=raster_origin,
+            raster_origin=class_map_raster_origin,
         )
 
 
