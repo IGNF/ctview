@@ -70,9 +70,13 @@ def convert_class_array_to_precedence_array(
     return flatten_array
 
 
-def list_original_classes_to_keep(rules: list = [], priorities: list = []):
-    """Create list with classes with infos in rules and priorities
+def check_and_list_original_classes_to_keep(
+    classes_in_las: set = {}, rules: list = [], priorities: list = [], ignored_classes: list = []
+):
+    """Create list with classes with infos in rules and priorities.
+    Check if classes in rules, priorities and in the las are not in ignored classes
     Args:
+        classes_in_las (set) : classifications contained in the las
         rules (list({},{}...)): rules of aggregation
         eg.  [
             {"CBI": [2, 3], "AGGREG": 23},
@@ -80,18 +84,37 @@ def list_original_classes_to_keep(rules: list = [], priorities: list = []):
             ]
         priorities (list): classes priorities
         eg.  [2,23,3,35,5]
+        ignored_classes (list) : classes in las to ignore in treatment
     Returns:
         class_by_layer (list): classes
     """
+    if set(priorities).intersection(set(ignored_classes)):
+        raise ValueError(
+            f"""La classe {set(priorities).intersection(set(ignored_classes))}
+            est à la fois dans les préséances et la liste des classes à ignorer"""
+        )
+
+    unexpected_classes = classes_in_las - set(priorities).union(set(ignored_classes))
+    if unexpected_classes:
+        raise ValueError(
+            f"Les classes {unexpected_classes} ne sont ni dans les préséances ni dans les classes ignorées"
+        )
+
     class_by_layer = set(priorities)
     for rule in rules:
+        if rule["AGGREG"] in ignored_classes:
+            raise ValueError(f"La classe {rule['AGGREG']} est dans les classes aggrégées mais devrait être ignorée")
         if rule["AGGREG"] not in priorities:
             raise ValueError(f"La classe {rule['AGGREG']} n'est pas dans les préséances")
         class_by_layer.remove(rule["AGGREG"])
         for r in rule["CBI"]:
-            class_by_layer.add(r)
-            if r not in priorities:
-                raise ValueError(f"La classe {r} n'est pas dans les préséances")
+            if r in ignored_classes:
+                raise ValueError(f"La classe {r} est dans les rules mais devrait être ignorée")
+            else:
+                class_by_layer.add(r)
+                if r not in priorities:
+                    raise ValueError(f"La classe {r} n'est pas dans les préséances")
+
     return list(class_by_layer)
 
 

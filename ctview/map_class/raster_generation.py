@@ -11,10 +11,10 @@ from osgeo import gdal
 
 from ctview import clip_raster, map_DXM, utils_pdal, utils_raster
 from ctview.map_class.classes_mapping import (
+    check_and_list_original_classes_to_keep,
     compute_binary_class,
     convert_class_array_to_precedence_array,
     create_class_raster_raw_deprecated,
-    list_original_classes_to_keep,
 )
 from ctview.map_class.post_processing import add_color_to_raster, fill_gaps_raster
 
@@ -143,9 +143,9 @@ def generate_class_raster(
     inter_dirs = config_class.intermediate_dirs
     ext = config_io.extension
 
-    class_by_layer = list_original_classes_to_keep(
-        config_class.CBI_rules,
-        config_class.precedence_classes,
+    classes_in_las = set(input_classifs)
+    class_by_layer = check_and_list_original_classes_to_keep(
+        classes_in_las, config_class.CBI_rules, config_class.precedence_classes, config_class.ignored_classes
     )
 
     with tempfile.TemporaryDirectory(prefix="tmp_class_map", dir="tmp") as tmpdir:

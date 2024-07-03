@@ -14,10 +14,10 @@ import ctview.utils_raster as utils_raster
 from ctview.map_class.classes_mapping import (
     apply_combination_rules,
     apply_precedence_order,
+    check_and_list_original_classes_to_keep,
     compute_binary_class,
     convert_class_array_to_precedence_array,
     create_class_raster_raw_deprecated,
-    list_original_classes_to_keep,
 )
 from ctview.map_class.raster_generation import generate_class_raster_raw
 
@@ -57,24 +57,35 @@ def test_compute_binary_class():
 
 
 @pytest.mark.parametrize(
-    """rules, priorities,expected_class_by_layer""",
+    """classes_in_las, rules, priorities, ignored_classes, expected_class_by_layer""",
     [
-        ([{"CBI": [3, 5], "AGGREG": 35}], [3, 35, 5], [3, 5]),
-        ([{"CBI": [3, 5], "AGGREG": 35}], [3, 35, 5, 12, 19], [3, 5, 12, 19]),
+        ({3, 35, 5}, [{"CBI": [3, 5], "AGGREG": 35}], [3, 35, 5], [], [3, 5]),
+        ({3, 35, 5, 12, 19}, [{"CBI": [3, 5], "AGGREG": 35}], [3, 35, 5, 12, 19], [], [3, 5, 12, 19]),
+        ({1, 2, 35, 5, 6}, [{"CBI": [3, 5], "AGGREG": 35}], [1, 2, 3, 35, 5], [6, 12], [1, 2, 3, 5]),
     ],
 )
-def test_list_original_classes_to_keep(rules, priorities, expected_class_by_layer):
-    class_by_layer = list_original_classes_to_keep(rules, priorities)
+def test_check_and_list_original_classes_to_keep(
+    classes_in_las, rules, priorities, ignored_classes, expected_class_by_layer
+):
+    class_by_layer = check_and_list_original_classes_to_keep(classes_in_las, rules, priorities, ignored_classes)
     assert class_by_layer == expected_class_by_layer
 
 
+parameters = [
+    ({3, 35, 5}, [{"CBI": [4, 5], "AGGREG": 35}], [3, 35, 5], []),  # Rules class not in precedence
+    ({3, 35, 5}, [{"CBI": [3, 5], "AGGREG": 45}], [3, 35, 5], []),  # Aggreg class not in precedence
+    ({3, 35, 5, 12, 15}, [{"CBI": [3, 5], "AGGREG": 35}], [3, 35, 5], []),  # Classes in las not in precedence
+    ({3, 35, 5}, [{"CBI": [3, 5], "AGGREG": 35}], [3, 35, 5], [35]),  # Classes not ignored
+]
+
+
 @pytest.mark.parametrize(
-    """rules, priorities""",
-    [([{"CBI": [4, 5], "AGGREG": 35}], [3, 35, 5]), ([{"CBI": [3, 5], "AGGREG": 45}], [3, 35, 5])],
+    """classes_in_las, rules, priorities, ignored_classes""",
+    parameters,
 )
-def test_list_original_classes_to_keep_value_error(rules, priorities):
+def test_check_and_list_original_classes_to_keep_value_error(classes_in_las, rules, priorities, ignored_classes):
     with pytest.raises(ValueError):
-        list_original_classes_to_keep(rules, priorities)
+        check_and_list_original_classes_to_keep(classes_in_las, rules, priorities, ignored_classes)
 
 
 def test_apply_combination_rules():
