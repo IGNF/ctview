@@ -3,8 +3,11 @@ import shutil
 from pathlib import Path
 
 import rasterio
+from osgeo import gdal
 
 from ctview.map_class.post_processing import add_color_to_raster, fill_gaps_raster
+
+gdal.UseExceptions()
 
 OUTPUT_DIR = os.path.join("tmp", "map_class", "post_processing")
 INPUT_DIR = os.path.join("data", "las", "classee")

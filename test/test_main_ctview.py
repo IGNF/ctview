@@ -6,8 +6,11 @@ from pathlib import Path
 
 import pytest
 from hydra import compose, initialize
+from osgeo import gdal
 
 from ctview.main_ctview import main
+
+gdal.UseExceptions()
 
 INPUT_DIR_SMALL = Path("data") / "las" / "ground"
 INPUT_FILENAME_SMALL1 = "test_data_77055_627755_LA93_IGN69.las"

@@ -4,6 +4,7 @@ import shutil
 import laspy
 import numpy as np
 import pytest
+from osgeo import gdal
 
 import ctview.utils_pcd as utils_pcd
 import ctview.utils_pdal as utils_pdal
@@ -14,6 +15,8 @@ from ctview.map_class.classes_mapping import (
     convert_class_array_to_precedence_array,
     list_original_classes_to_keep,
 )
+
+gdal.UseExceptions()
 
 OUTPUT_DIR = os.path.join("tmp", "map_class", "classes_mapping")
 INPUT_DIR = os.path.join("data", "las", "classee")

@@ -14,8 +14,6 @@ import ctview.map_class.raster_generation as map_class
 import ctview.map_density as map_density
 from ctview import utils_raster
 
-gdal.UseExceptions()
-
 
 @hydra.main(config_path="../configs/", config_name="config_metadata.yaml", version_base="1.2")
 def main(config: DictConfig):
@@ -102,4 +100,5 @@ def main(config: DictConfig):
 
 
 if __name__ == "__main__":
+    gdal.UseExceptions()
     main()

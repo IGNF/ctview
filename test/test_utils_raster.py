@@ -11,6 +11,8 @@ from ctview.utils_raster import (
     write_single_band_raster_to_file,
 )
 
+gdal.UseExceptions()
+
 OUTPUT_DIR = os.path.join("tmp", "utils_raster")
 
 

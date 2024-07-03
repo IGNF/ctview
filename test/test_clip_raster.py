@@ -1,9 +1,13 @@
 import os
 import shutil
 
+from osgeo import gdal
+
 from ctview.clip_raster import crop_raster
 from ctview.utils_gdal import get_raster_corner_coord, transform_CornerCoord_to_Bounds
 from ctview.utils_pdal import get_bounds_from_las
+
+gdal.UseExceptions()
 
 DIR_LAS = os.path.join("data", "las")
 DIR_RASTER = os.path.join("data", "raster")

@@ -8,10 +8,13 @@ import numpy as np
 import pytest
 import rasterio
 from hydra import compose, initialize
+from osgeo import gdal
 
 import ctview.map_density as map_density
 import ctview.utils_pcd as utils_pcd
 import ctview.utils_raster as utils_raster
+
+gdal.UseExceptions()
 
 INPUT_DIR = Path("data") / "las"
 OUTPUT_DIR = Path("tmp") / "map_density"

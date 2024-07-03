@@ -8,8 +8,6 @@ from osgeo import gdal
 
 import ctview.utils_pcd as utils_pcd
 
-gdal.UseExceptions()
-
 
 def generate_raster_raw(
     input_points: np.array,

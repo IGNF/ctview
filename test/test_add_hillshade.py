@@ -1,7 +1,11 @@
 import os
 import shutil
 
+from osgeo import gdal
+
 import ctview.add_hillshade as add_hillshade
+
+gdal.UseExceptions()
 
 OUTPUT_DIR = os.path.join("tmp", "add_hillshade")
 COORDX = 77055

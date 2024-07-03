@@ -7,6 +7,7 @@ from typing import Tuple
 import hydra
 import numpy as np
 from omegaconf import DictConfig
+from osgeo import gdal
 
 from ctview import clip_raster, map_DXM, utils_pdal, utils_raster
 from ctview.map_class.classes_mapping import (
@@ -362,4 +363,5 @@ def main(config: DictConfig):
 
 
 if __name__ == "__main__":
+    gdal.UseExceptions()
     main()

@@ -3,8 +3,6 @@ from typing import List, Tuple
 
 from osgeo import gdal
 
-gdal.UseExceptions()
-
 
 def crop_raster(input_raster: str, output_raster: str, bounds: str):
     """

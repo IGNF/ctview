@@ -1,7 +1,10 @@
 import laspy
 import numpy as np
+from osgeo import gdal
 
 from ctview.utils_pcd import get_pointcloud_origin
+
+gdal.UseExceptions()
 
 INPUT_LAS_50m = "./data/las/test_data_0000_0000_LA93_IGN69_ground.las"
 LAS = laspy.read(INPUT_LAS_50m)
