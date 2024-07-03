@@ -4,8 +4,11 @@ from pathlib import Path
 
 import rasterio
 from hydra import compose, initialize
+from osgeo import gdal
 
 from ctview.main_metadata import main
+
+gdal.UseExceptions()
 
 OUTPUT_DIR = Path("tmp") / "main_metadata"
 INPUT_DIR = Path("data") / "las" / "classee"
@@ -26,9 +29,7 @@ def test_main_modif_config():
     outfile_class_raw = (
         output_dir / "class" / "tmp" / "binary" / "test_data_77050_627755_LA93_IGN69_buildings_class_raw.tif"
     )
-    outfile_class_precedence = (
-        output_dir / "class" / "test_data_77050_627755_LA93_IGN69_buildings_class.tif"
-    )
+    outfile_class_precedence = output_dir / "class" / "test_data_77050_627755_LA93_IGN69_buildings_class.tif"
     pixel_size = 2
     with initialize(version_base="1.2", config_path="../configs"):
         cfg = compose(
@@ -45,8 +46,8 @@ def test_main_modif_config():
                 "density.keep_classes=[[2],[1],[66]]",
                 f"class_map.pixel_size={pixel_size}",
                 "class_map.intermediate_dirs.class_binary=tmp/binary",
-                 f"class_map.precedence_classes=[26, 2,6, 56,57,17,5]",
-            ], 
+                "class_map.precedence_classes=[26, 2,6, 56,57,17,5]",
+            ],
         )
     main(cfg)
 
@@ -68,7 +69,7 @@ def test_main_modif_config():
 def test_main_default_config():
     output_dir = OUTPUT_DIR / "main_default_config"
     outfile_density = output_dir / "density" / "test_data_77050_627755_LA93_IGN69_buildings_density.tif"
-    outfile_class_precedence = output_dir  / "class" / "test_data_77050_627755_LA93_IGN69_buildings_class.tif"
+    outfile_class_precedence = output_dir / "class" / "test_data_77050_627755_LA93_IGN69_buildings_class.tif"
     with initialize(version_base="1.2", config_path="../configs"):
         cfg = compose(
             config_name="config_metadata",
@@ -91,6 +92,6 @@ def test_main_default_config():
             assert band_veget_and_bridge[0, 4] == 0  # no veget point, no bridge point
         with rasterio.open(outfile_class_precedence) as raster:
             unique_band = raster.read(1)
-            assert unique_band[6, 10] == 56 # High vegetation and buildings
+            assert unique_band[6, 10] == 56  # High vegetation and buildings
             assert unique_band[0, 0] == 2  # Only ground
             assert unique_band[2, 13] == 26  # Ground and buildings

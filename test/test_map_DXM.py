@@ -5,9 +5,12 @@ from pathlib import Path
 
 import rasterio
 from hydra import compose, initialize
+from osgeo import gdal
 from pdaltools.las_add_buffer import create_las_with_buffer
 
 import ctview.map_DXM as map_DXM
+
+gdal.UseExceptions()
 
 # GENERAL
 OUTPUT_DIR = Path("tmp") / "map_DXM"

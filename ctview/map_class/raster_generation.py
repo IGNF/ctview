@@ -7,6 +7,7 @@ from typing import Tuple
 import hydra
 import numpy as np
 from omegaconf import DictConfig
+from osgeo import gdal
 
 from ctview import clip_raster, map_DXM, utils_pdal, utils_raster
 from ctview.map_class.classes_mapping import (
@@ -188,11 +189,11 @@ def generate_class_raster(
         utils_raster.write_single_band_raster_to_file(
             input_array=flatten_array,
             raster_origin=raster_origin,
-            output_tif=raster_class_map,  # When colorization change by raster_class_map_precedence
+            output_tif=raster_class_map,
             pixel_size=config_class.pixel_size,
             epsg=config_io.projection_epsg,
-            no_data_value=config_io.no_data_value,
             raster_driver=config_io.raster_driver,
+            colormap=config_class.colormap,
         )
 
 
@@ -362,4 +363,5 @@ def main(config: DictConfig):
 
 
 if __name__ == "__main__":
+    gdal.UseExceptions()
     main()

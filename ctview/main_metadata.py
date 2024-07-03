@@ -7,6 +7,7 @@ import hydra
 import laspy
 import numpy as np
 from omegaconf import DictConfig
+from osgeo import gdal
 from pdaltools.las_add_buffer import create_las_with_buffer
 
 import ctview.map_class.raster_generation as map_class
@@ -99,4 +100,5 @@ def main(config: DictConfig):
 
 
 if __name__ == "__main__":
+    gdal.UseExceptions()
     main()

@@ -1,7 +1,11 @@
 import os
 import shutil
 
+from osgeo import gdal
+
 import ctview.add_color as add_color
+
+gdal.UseExceptions()
 
 COORDX = 77055
 COORDY = 627760

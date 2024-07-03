@@ -7,6 +7,7 @@ import laspy
 import numpy as np
 import rasterio
 from hydra import compose, initialize
+from osgeo import gdal
 
 import ctview.utils_pdal as utils_pdal
 import ctview.utils_raster as utils_raster
@@ -18,6 +19,8 @@ from ctview.map_class.raster_generation import (
     create_map_class_raster_with_postprocessing_color_and_hillshade,
     generate_class_raster_raw,
 )
+
+gdal.UseExceptions()
 
 OUTPUT_DIR = os.path.join("tmp", "map_class", "raster_generation")
 INPUT_DIR = os.path.join("data", "las", "classee")
