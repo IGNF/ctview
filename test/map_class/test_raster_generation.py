@@ -5,27 +5,21 @@ from pathlib import Path
 
 import laspy
 import numpy as np
-import pytest
 import rasterio
 from hydra import compose, initialize
 
-import ctview.utils_pcd as utils_pcd
 import ctview.utils_pdal as utils_pdal
 import ctview.utils_raster as utils_raster
-from ctview.map_class import (
-    add_color_to_raster,
-    apply_combination_rules,
-    apply_precedence_order,
-    compute_binary_class,
+from ctview.map_class.classes_mapping import (
     convert_class_array_to_precedence_array,
     create_class_raster_raw_deprecated,
+)
+from ctview.map_class.raster_generation import (
     create_map_class_raster_with_postprocessing_color_and_hillshade,
-    fill_gaps_raster,
     generate_class_raster_raw,
-    list_original_classes_to_keep,
 )
 
-OUTPUT_DIR = os.path.join("tmp", "map_class")
+OUTPUT_DIR = os.path.join("tmp", "map_class", "raster_generation")
 INPUT_DIR = os.path.join("data", "las", "classee")
 INPUT_FILENAME = "test_data_77050_627755_LA93_IGN69.las"
 TILENAME = os.path.splitext(INPUT_FILENAME)[0]
@@ -50,16 +44,6 @@ def setup_module(module):  # run before the first test
         pass
     # Create folder test if not exists
     os.makedirs(OUTPUT_DIR)
-
-
-def test_compute_binary_class():
-    origin_x, origin_y = utils_pcd.get_pointcloud_origin(points=INPUT_POINTS, tile_size=50)
-
-    binary_class = compute_binary_class(points=INPUT_POINTS, origin=(origin_x, origin_y), tile_size=50, pixel_size=2)
-
-    assert binary_class.shape == (25, 25)
-    assert np.all((binary_class == 0) | (binary_class == 1))
-    assert (binary_class[0, :8] == np.array([1, 1, 1, 1, 1, 1, 1, 0])).all()
 
 
 def test_generate_class_raster_raw():
@@ -95,93 +79,6 @@ def test_generate_class_raster_raw():
         assert band_ground[0, 6] == 1
         assert band_not_classified[0, 6] == 1
         assert band_virtual[0, 6] == 0
-
-
-@pytest.mark.parametrize(
-    """rules, priorities,expected_class_by_layer""",
-    [
-        ([{"CBI": [3, 5], "AGGREG": 35}], [3, 35, 5], [3, 5]),
-        ([{"CBI": [3, 5], "AGGREG": 35}], [3, 35, 5, 12, 19], [3, 5, 12, 19]),
-    ],
-)
-def test_list_original_classes_to_keep(rules, priorities, expected_class_by_layer):
-    class_by_layer = list_original_classes_to_keep(rules, priorities)
-    assert class_by_layer == expected_class_by_layer
-
-
-parameters = [([{"CBI": [4, 5], "AGGREG": 35}], [3, 35, 5]), ([{"CBI": [3, 5], "AGGREG": 45}], [3, 35, 5])]
-
-
-@pytest.mark.parametrize(
-    """rules, priorities""",
-    parameters,
-)
-def test_list_original_classes_to_keep_value_error(rules, priorities):
-    with pytest.raises(ValueError):
-        list_original_classes_to_keep(rules, priorities)
-
-
-def test_apply_combination_rules():
-    input_array = np.array([[[1, 0], [0, 0]], [[1, 1], [0, 0]]])
-    class_by_layer = [3, 5]
-    rules = [
-        {"CBI": [3, 5], "AGGREG": 35},
-    ]
-    array_rules, class_by_layer_rules = apply_combination_rules(input_array, class_by_layer, rules)
-    assert np.array_equal(array_rules, np.array([[[1, 0], [0, 0]], [[1, 1], [0, 0]], [[1, 0], [0, 0]]]))
-    assert class_by_layer_rules == [3, 5, 35]
-
-
-def test_apply_precedence_order():
-    input_array = np.array([[[1, 0], [0, 0]], [[1, 1], [0, 0]], [[1, 0], [1, 0]]])
-    class_by_layer = [3, 5, 35]
-    priorities = [3, 35, 5]
-    array_rules_priorities = apply_precedence_order(input_array, class_by_layer, priorities)
-    assert np.array_equal(array_rules_priorities, np.array([[3, 5], [35, 0]]))
-
-
-parameters = [
-    (
-        np.array([[[1, 0], [0, 0]], [[0, 1], [0, 0]], [[0, 0], [1, 0]], [[0, 0], [0, 1]]]),
-        [12, 6, 5, 8],
-        [12, 6, 5, 8],
-        (2, 2),
-        np.array([[12, 6], [5, 8]]),  # Standard use case
-    ),
-    (np.array([[[1, 0], [0, 0]]]), [12, 6], [], (2, 2), np.array([[0, 0], [0, 0]])),  # Case without priorities
-    (
-        np.array([[[1, 0], [0, 0]], [[1, 0], [0, 0]]]),
-        [12],
-        [],
-        (2, 2),
-        np.array([[0, 0], [0, 0]]),
-    ),  # Case 1 class and without priorities
-]
-
-
-@pytest.mark.parametrize(
-    """input_array, class_by_layer,priorities, expected_shape, expected_array""",
-    parameters,
-)
-def test_convert_class_array_to_precedence_array(
-    input_array, class_by_layer, priorities, expected_shape, expected_array
-):
-    output_array = convert_class_array_to_precedence_array(
-        input_array=input_array, class_by_layer=class_by_layer, priorities=priorities
-    )
-    assert output_array.shape == expected_shape
-    assert np.array_equal(output_array, expected_array)
-
-
-def test_convert_class_array_to_precedence_array_with_rules():
-    output_array = convert_class_array_to_precedence_array(
-        input_array=np.array([[[1, 1], [0, 1]], [[1, 1], [1, 0]], [[1, 1], [1, 1]]]),
-        class_by_layer=[12, 8, 5, 6],
-        rules=[{"CBI": [12, 8], "AGGREG": 128}, {"CBI": [5, 6], "AGGREG": 45}],
-        priorities=[128, 6, 5, 8],
-    )
-    assert output_array.shape == (2, 2)
-    assert np.array_equal(output_array, np.array([[128, 128], [5, 5]]))
 
 
 def test_generate_class_raster_flatten():
@@ -263,52 +160,10 @@ def test_create_class_raster_raw_deprecated():
         assert round(band_stdev[17, 14], 4) == 7.8220
 
 
-def test_fill_gaps_raster():
-    input_file = Path("data") / "raster" / "class_raw" / f"{TILENAME}.tif"
-    output_file = Path(OUTPUT_DIR) / "fill_gaps_raster" / f"{TILENAME}.tif"
-    fill_gaps_raster(
-        in_raster=input_file,
-        output_file=output_file,
-        raster_driver=RASTER_DRIVER,
-    )
-    with rasterio.open(output_file) as raster:
-        band_max = raster.read(1)
-        assert band_max[6, 17] == -9999.0  # gap not filled
-        assert band_max[0, 8] != -9999.0  # gap filled
-        assert band_max[0, 10] == 2  # max (band_G) kept from input raster
-        assert band_max[17, 14] == 65  # max (band_G) kept from input raster
-
-
-def test_add_color_to_raster():
-    input_file = Path("data") / "raster" / "class_fill_gaps" / f"{TILENAME}.tif"
-    output_file = Path(OUTPUT_DIR) / "add_color_to_raster" / f"{TILENAME}.tif"
-    add_color_to_raster(
-        in_raster=input_file,
-        output_file=output_file,
-        LUT=os.path.join("LUT", "LUT_CLASS.txt"),
-    )
-    with rasterio.open(output_file) as raster:
-        band_R = raster.read(1)
-        band_G = raster.read(2)
-        band_B = raster.read(3)
-
-        assert band_R[6, 17] == 255  # nodata -> color not defined in LUT => white
-        assert band_G[6, 17] == 255  # nodata -> color not defined in LUT => white
-        assert band_B[6, 17] == 255  # nodata -> color not defined in LUT => white
-
-        assert band_R[0, 10] == 255  # sol (classe 2) -> color defined in LUT
-        assert band_G[0, 10] == 128  # sol (classe 2) -> color defined in LUT
-        assert band_B[0, 10] == 0  # sol (classe 2) -> color defined in LUT
-
-        assert band_R[17, 14] == 64  # artefact (classe 65) -> color defined in LUT
-        assert band_G[17, 14] == 0  # artefact (classe 65) -> color defined in LUT
-        assert band_B[17, 14] == 128  # artefact (classe 65) -> color defined in LUT
-
-
 def test_create_map_class_raster_with_postprocessing_color_and_hillshade_default():
     output_dir = Path(OUTPUT_DIR) / "create_map_class_raster_with_postprocessing_color_and_hillshade_default"
     las_bounds = utils_pdal.get_bounds_from_las(INPUT_FILE)
-    with initialize(version_base="1.2", config_path="../configs"):
+    with initialize(version_base="1.2", config_path="../../configs"):
         cfg = compose(
             config_name="config_ctview",
             overrides=[
@@ -339,7 +194,7 @@ def test_create_map_class_raster_with_postprocessing_color_and_hillshade_and_int
         Path(OUTPUT_DIR) / "create_map_class_raster_with_postprocessing_color_and_hillshade_and_intermediate_files"
     )
     las_bounds = utils_pdal.get_bounds_from_las(INPUT_FILE)
-    with initialize(version_base="1.2", config_path="../configs"):
+    with initialize(version_base="1.2", config_path="../../configs"):
         # config is relative to a module
         cfg = compose(
             config_name="config_ctview",
@@ -391,16 +246,11 @@ def test_create_map_class_raster_with_postprocessing_color_and_hillshade_and_int
             assert raster.res == (0.5, 0.5)
 
 
-def test_main():
-    execute_main_default()
-    execute_main_change_pixel_size()
-
-
 def execute_main_default():
     output_dir = Path(OUTPUT_DIR) / "execute_main_default"
     os.system(
         f"""
-        python -m ctview.map_class \
+        python -m ctview.map_class.raster_generation \
         io.input_filename={INPUT_FILENAME} \
         io.input_dir={INPUT_DIR} \
         io.output_dir={output_dir} \
@@ -423,7 +273,7 @@ def execute_main_change_pixel_size():
     output_dir = Path(OUTPUT_DIR) / "execute_main_change_pixel_size"
     os.system(
         f"""
-    python -m ctview.map_class \
+    python -m ctview.map_class.raster_generation \
     io.input_filename={INPUT_FILENAME} \
     io.input_dir={INPUT_DIR} \
     io.output_dir={output_dir} \
@@ -441,3 +291,8 @@ def execute_main_change_pixel_size():
             assert band_G[0, 0] is not None
             assert band_B[0, 0] is not None
             assert raster.res == (5, 5)
+
+
+def test_main():
+    execute_main_default()
+    execute_main_change_pixel_size()

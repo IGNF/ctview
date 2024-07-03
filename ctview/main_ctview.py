@@ -7,11 +7,10 @@ import hydra
 from omegaconf import DictConfig
 from pdaltools.las_add_buffer import create_las_with_buffer
 
-import ctview.map_class as map_class
+import ctview.map_class.raster_generation as map_class
 import ctview.map_density as map_density
 import ctview.map_DXM as map_DXM
 import ctview.utils_pdal as utils_pdal
-import ctview.utils_pcd as utils_pcd
 
 
 @hydra.main(config_path="../configs/", config_name="config_ctview.yaml", version_base="1.2")
