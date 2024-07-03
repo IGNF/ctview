@@ -30,40 +30,46 @@ density:
     - [3, 4, 5, 6, 17]  # band 2 (green)
 
 class_map:
-  pixel_size: 1
+  pixel_size: 0.5
   CBI_rules:
-    - {"CBI": [5,6],"AGGREG": 56}
-    - {"CBI": [5,17],"AGGREG": 57}
-    - {"CBI": [2,6],"AGGREG": 26}
-  precedence_classes: [56,26,6,17,5,57,2]
+    - {"CBI":[5,6,17], "AGGREG": 50}
+    - {"CBI":[5,6], "AGGREG": 51}
+    - {"CBI":[5,17], "AGGREG": 52}
+    - {"CBI":[5,64], "AGGREG": 53}
+    - {"CBI":[6,17], "AGGREG": 60}
+    - {"CBI":[6,64], "AGGREG": 61}
+    - {"CBI":[66,2], "AGGREG": 160}
+    - {"CBI":[66,5], "AGGREG": 161}
+    - {"CBI":[66,17], "AGGREG": 162}
+  # Precedence classes to be confirmed (some classes are misplaced)
+  precedence_classes: [61, 53, 64, 161, 52, 51, 50, 5, 17, 60, 6, 67, 4, 3, 160, 162, 2, 66,9]
+  ignored_classes: [1, 65]
   intermediate_dirs:  # pour chaque intermediate_dirs, si null, le dossier n'est pas créé
     class_binary: null  # exemple: tmp/binary
     class_precedence: null
   colormap:
-    - {value: 0, description: NODATA, color: [0, 0, 0]}
-    - {value: 1, description: Defaut, color: [150, 150, 150]}
-    - {value: 2, description: Sol, color: [207, 150, 70]}
-    - {value: 3, description: Vegetation basse, color: [90, 110, 40]}
-    - {value: 4, description: Vegetation intermediaire, color: [70, 150, 60]}
-    - {value: 5, description: Vegetation haute, color: [70, 150, 60]}
-    - {value: 6, description: Batiment, color: [180, 20, 20]}
-    - {value: 9, description: Eau, color: [40, 140, 140]}
-    - {value: 17, description: Pont, color: [85, 97, 137]}
-    - {value: 64, description: Sursol perenne, color: [255, 0, 255]}
-    - {value: 65, description: Artefact, color: [64, 0, 128]}
-    - {value: 66, description: Point virtuel, color: [128, 0, 64]}
-    - {value: 67, description: DiversBatiment, color: [180, 20, 20]}
-    - {value: 56, description: BatiSurVeg, color: [180, 20, 20]}  # value = 70 (changé arbitrairement pour test)
-    - {value: 26, description: PontSurVeg, color: [85, 97, 137]}   # value = 71 (changé arbitrairement pour test)
-    - {value: 80, description: VegsurBati, color: [70, 150, 60]}
-    - {value: 57, description: PontsurBati, color: [85, 97, 137]} # value = 81 (changé arbitrairement pour test)
-    - {value: 89, description: DefsurBati, color: [180, 20, 20]}
-    - {value: 90, description: VegsurPont, color: [70, 150, 60]}
-    - {value: 91, description: BatisurPont, color: [180, 20, 20]}
-    - {value: 99, description: DefsurPont, color: [150, 150, 150]}
-    - {value: 214, description: Incertains batiment, color: [180, 20, 20]}
-    - {value: 202, description: DiversBatiment_temp, color: [180, 20, 20]}
-
+    - {value: 0, description: "NODATA", color: [0, 0, 0]}
+    - {value: 1, description: "Defaut", color: [150, 150, 150]}
+    - {value: 2, description: "Sol", color: [207, 150, 70]}
+    - {value: 3, description: "Vegetation basse", color: [90, 110, 40]}
+    - {value: 4, description: "Vegetation intermediaire", color: [70, 150, 60]}
+    - {value: 5, description: "Vegetation haute", color: [70, 150, 60]}
+    - {value: 6, description: "Batiment", color: [180, 20, 20]}
+    - {value: 9, description: "Eau", color: [40, 140, 140]}
+    - {value: 17, description: "Pont", color: [85, 97, 137]}
+    - {value: 64, description: "Sursol perenne", color: [255, 0, 255]}
+    - {value: 65, description: "Artefact", color: [64, 0, 128]}
+    - {value: 66, description: "Point virtuel", color: [128, 0, 64]}
+    - {value: 67, description: "DiversBatiment", color: [180, 20, 20]}
+    - {value: 50, description: "VegBatiPont", color: [85, 97, 137]}
+    - {value: 51, description: "VegBati", color: [70, 150, 60]}
+    - {value: 52, description: "VegPont", color: [80, 113, 114]}
+    - {value: 53, description: "VegSSP", color: [255, 0, 255]}
+    - {value: 60, description: "BatiPont", color: [85, 97, 137]}
+    - {value: 61, description: "BatiSSP", color: [255, 0, 255]}
+    - {value: 160, description: "VirtSol", color: [207, 150, 70]}
+    - {value: 161, description: "VirtVeget", color: [70, 150, 60]}
+    - {value: 162, description: "VirtPont", color: [85, 97, 137]}
 
 hydra:
   output_subdir: null

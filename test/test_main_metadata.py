@@ -46,9 +46,15 @@ def test_main_modif_config():
                 "density.keep_classes=[[2],[1],[66]]",
                 f"class_map.pixel_size={pixel_size}",
                 "class_map.intermediate_dirs.class_binary=tmp/binary",
-                "class_map.precedence_classes=[26, 2,6, 56,57,17,5]",
+                "class_map.precedence_classes=[26, 2, 6, 56,57,17,5]",
             ],
         )
+
+    # override CBI rules and the colormap afterwards as it is difficult to have the right syntax interpretation
+    # for [ and { in the overrides list
+    cfg.class_map.CBI_rules = [{"CBI": [2, 6], "AGGREG": 26}]
+    cfg.class_map.colormap.append({"value": 26, "description": "Test veget + sol", "color": [255, 255, 0]})
+
     main(cfg)
 
     assert os.path.isfile(outfile_buffer)
@@ -92,6 +98,8 @@ def test_main_default_config():
             assert band_veget_and_bridge[0, 4] == 0  # no veget point, no bridge point
         with rasterio.open(outfile_class_precedence) as raster:
             unique_band = raster.read(1)
-            assert unique_band[6, 10] == 56  # High vegetation and buildings
-            assert unique_band[0, 0] == 2  # Only ground
-            assert unique_band[2, 13] == 26  # Ground and buildings
+            print(unique_band[22, 15])
+            assert unique_band[14, 21] == 51  # High vegetation and buildings
+            assert unique_band[0, 1] == 2  # Only ground
+            # Ground and buildings (but buildings are first in the precedence order)
+            assert unique_band[9, 21] == 6
