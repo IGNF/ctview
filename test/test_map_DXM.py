@@ -184,36 +184,6 @@ def test_add_dxm_hillshade_to_raster_dsm_50cm():
         assert raster.res == (0.5, 0.5)
 
 
-def test_add_dxm_hillshade_to_raster_density_5m():
-    """
-    Verify :
-        - .tif are created
-        - pixel size = 5 meters
-    """
-    output_dir = os.path.join(OUTPUT_DIR, "add_dxm_hillshade_to_raster_density_5m")
-    input_raster = os.path.join(INPUT_DIR_RASTER, f"test_data_{COORDX}_{COORDY}_LA93_IGN69_DENS_COLOR_5m.tif")
-    output_raster = os.path.join(output_dir, CONFIG.density.output_subdir, f"{TILENAME}_DENS{CONFIG.io.extension}")
-    raster_dxm_raw = os.path.join(output_dir, f"{TILENAME}_interp{CONFIG.io.extension}")
-    raster_dxm_hillshade = os.path.join(output_dir, f"{TILENAME}_hillshade{CONFIG.io.extension}")
-    map_DXM.add_dxm_hillshade_to_raster(
-        input_raster=input_raster,
-        input_pointcloud=INPUT_FILE,
-        output_raster=output_raster,
-        pixel_size=5,
-        dxm_filter_dimension=CONFIG.dtm.dxm_filter.dimension,
-        dxm_filter_keep_values=CONFIG.dtm.dxm_filter.keep_values,
-        output_dxm_raw=raster_dxm_raw,
-        output_dxm_hillshade=raster_dxm_hillshade,
-        hillshade_calc=CONFIG.density.hillshade_calc,
-        config_io=CONFIG.io,
-    )
-
-    assert os.path.isfile(raster_dxm_raw)
-    assert os.path.isfile(raster_dxm_hillshade)
-    with rasterio.open(output_raster) as raster:
-        assert raster.res == (5, 5)
-
-
 def test_create_colored_dxm_with_hillshade():
     input_dir = Path("data") / "las" / "ground"
     input_filename = "test_data_77055_627755_LA93_IGN69.las"

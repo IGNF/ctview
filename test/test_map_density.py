@@ -1,4 +1,3 @@
-import glob
 import os
 import shutil
 from pathlib import Path
@@ -122,7 +121,7 @@ def test_generate_raster_of_density_single_list():
         )
 
 
-def test_create_density_raster_with_color_and_hillshade_default():
+def test_create_colored_density_raster_default():
     input_dir = Path("data") / "las" / "ground"
     input_filename = "test_data_77055_627755_LA93_IGN69.las"
     input_tilename = os.path.splitext(input_filename)[0]
@@ -130,7 +129,7 @@ def test_create_density_raster_with_color_and_hillshade_default():
     tile_coord_scale = 10
     pixel_size = 2
     buffer_size = 10
-    output_dir = OUTPUT_DIR / "create_density_raster_with_color_and_hillshade_default"
+    output_dir = OUTPUT_DIR / "create_colored_density_raster_default"
     input_tilename = os.path.splitext(input_filename)[0]
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
@@ -146,11 +145,10 @@ def test_create_density_raster_with_color_and_hillshade_default():
                 f"density.pixel_size={pixel_size}",
             ],
         )
-    map_density.create_density_raster_with_color_and_hillshade(
+    map_density.create_colored_density_raster(
         os.path.join(input_dir, input_filename), input_tilename, cfg.density, cfg.io, cfg.buffer.size
     )
-    assert os.listdir(output_dir) == ["DENS_FINAL", "tmp"]
-    assert not glob.glob("tmp/tmp_density*")
+    assert os.listdir(output_dir) == ["DENS_FINAL"]
     with rasterio.Env():
         with rasterio.open(Path(output_dir) / "DENS_FINAL" / f"{input_tilename}_DENS.tif") as raster:
             data = raster.read()
@@ -161,7 +159,7 @@ def test_create_density_raster_with_color_and_hillshade_default():
                 assert np.any(data[ii, :, :])
 
 
-def test_create_density_raster_with_color_and_hillshade_and_intermediate_files():
+def test_create_colored_density_raster_with_intermediate_files():
     input_dir = Path("data") / "las" / "ground"
     input_filename = "test_data_77055_627755_LA93_IGN69.las"
     input_tilename = os.path.splitext(input_filename)[0]
@@ -169,7 +167,7 @@ def test_create_density_raster_with_color_and_hillshade_and_intermediate_files()
     tile_coord_scale = 10
     pixel_size = 2
     buffer_size = 10
-    output_dir = OUTPUT_DIR / "create_density_raster_with_color_and_hillshade_and_intermediate"
+    output_dir = OUTPUT_DIR / "create_colored_density_raster_and_intermediate"
     input_tilename = os.path.splitext(input_filename)[0]
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
@@ -184,19 +182,16 @@ def test_create_density_raster_with_color_and_hillshade_and_intermediate_files()
                 f"buffer.size={buffer_size}",
                 f"density.pixel_size={pixel_size}",
                 "density.intermediate_dirs.density_values=DENS_VAL",
-                "density.intermediate_dirs.density_color=DENS_COL",
-                "density.intermediate_dirs.dxm_raw=DENS_DTM",
-                "density.intermediate_dirs.dxm_hillshade=DENS_HS",
             ],
         )
-    map_density.create_density_raster_with_color_and_hillshade(
+    map_density.create_colored_density_raster(
         os.path.join(input_dir, input_filename), input_tilename, cfg.density, cfg.io, cfg.buffer.size
     )
-    for folder in ["DENS_FINAL", "DENS_VAL", "DENS_COL", "DENS_DTM", "DENS_HS"]:
+    for folder in ["DENS_FINAL", "DENS_VAL"]:
         assert len(os.listdir(os.path.join(output_dir, folder))) == 1
 
 
-def test_create_density_raster_with_color_and_hillshade_multiple_layers():
+def test_create_colored_density_raster_multiple_layers():
     input_dir = Path("data") / "las" / "ground"
     input_filename = "test_data_77055_627755_LA93_IGN69.las"
     input_tilename = os.path.splitext(input_filename)[0]
@@ -204,7 +199,7 @@ def test_create_density_raster_with_color_and_hillshade_multiple_layers():
     tile_coord_scale = 10
     pixel_size = 2
     buffer_size = 10
-    output_dir = OUTPUT_DIR / "create_density_raster_with_color_and_hillshade"
+    output_dir = OUTPUT_DIR / "create_colored_density_raster"
     input_tilename = os.path.splitext(input_filename)[0]
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
@@ -222,13 +217,13 @@ def test_create_density_raster_with_color_and_hillshade_multiple_layers():
             ],
         )
     with pytest.raises(TypeError):
-        map_density.create_density_raster_with_color_and_hillshade(
+        map_density.create_colored_density_raster(
             os.path.join(input_dir, input_filename), input_tilename, cfg.density, cfg.io, cfg.buffer.size
         )
 
 
-def test_create_density_raster_with_color_and_hillshade_empty():
-    """Test that the create_density_raster_with_color_and_hillshade function
+def test_create_colored_density_raster_empty():
+    """Test that the create_colored_density_raster function
     creates a black tif when there is no points with the requested classes"""
     input_dir_water = Path("data") / "laz" / "water"
     input_filename_water = "Semis_2021_0785_6378_LA93_IGN69_water.laz"
@@ -236,7 +231,7 @@ def test_create_density_raster_with_color_and_hillshade_empty():
     tile_coord_scale = 1000
     buffer_size = 10
     pixel_size = 1
-    output_dir = OUTPUT_DIR / "create_density_raster_with_color_and_hillshade_empty"
+    output_dir = OUTPUT_DIR / "create_colored_density_raster_empty"
     input_tilename = os.path.splitext(input_filename_water)[0]
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
@@ -252,7 +247,7 @@ def test_create_density_raster_with_color_and_hillshade_empty():
                 f"density.pixel_size={pixel_size}",
             ],
         )
-    map_density.create_density_raster_with_color_and_hillshade(
+    map_density.create_colored_density_raster(
         os.path.join(input_dir_water, input_filename_water), input_tilename, cfg.density, cfg.io, cfg.buffer.size
     )
     with rasterio.Env():
@@ -261,4 +256,4 @@ def test_create_density_raster_with_color_and_hillshade_empty():
             assert data.shape[0] == 3
             assert data.shape[1] == tile_width / pixel_size
             assert data.shape[2] == tile_width / pixel_size
-            assert np.all(data == 255)  # default nodata value of gdal_calc with input Byte data
+            assert np.all(data == 0)  # no points implies a 0 value (cf. LUT_DENSITY.txt)

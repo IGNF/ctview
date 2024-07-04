@@ -1,4 +1,3 @@
-import glob
 import os
 import shutil
 import test.utils.point_cloud_utils as pcu
@@ -66,10 +65,7 @@ def test_main_ctview_default():
             ],
         )
     main(cfg)
-    assert set(os.listdir(output_dir)) == {"tmp", "DENS_FINAL", "DTM_FINAL", "CLASS_FINAL"}
-    assert not glob.glob("tmp/tmp_dxm*")
-    assert not glob.glob("tmp/tmp_dens*")
-    assert not glob.glob("tmp/tmp_class*")
+    assert set(os.listdir(output_dir)) == {"DENS_FINAL", "DTM_FINAL", "CLASS_FINAL"}
     assert (Path(output_dir) / "DENS_FINAL" / f"{input_tilename}_DENS.tif").is_file()
     assert (Path(output_dir) / "DTM_FINAL" / "1cycle" / f"{input_tilename}_DTM_hillshade_color1c.tif").is_file()
     assert (Path(output_dir) / "CLASS_FINAL" / f"{input_tilename}_fusion_DSM_class.tif").is_file()
@@ -101,10 +97,7 @@ def test_main_ctview_renaming_final_folders():
             ],
         )
     main(cfg)
-    assert set(os.listdir(output_dir)) == {OUTPUT_FOLDER_CLASS, OUTPUT_FOLDER_DENS, OUTPUT_FOLDER_DTM, "tmp"}
-    assert not glob.glob("tmp/tmp_dxm*")
-    assert not glob.glob("tmp/tmp_dens*")
-    assert not glob.glob("tmp/tmp_class*")
+    assert set(os.listdir(output_dir)) == {OUTPUT_FOLDER_CLASS, OUTPUT_FOLDER_DENS, OUTPUT_FOLDER_DTM}
     assert (Path(output_dir) / OUTPUT_FOLDER_DENS / f"{input_tilename}_DENS.tif").is_file()
     assert (Path(output_dir) / EXPECTED_OUTPUT_DTM_1C / f"{input_tilename}_DTM_hillshade_color1c.tif").is_file()
     assert (Path(output_dir) / EXPECTED_OUTPUT_DTM_4C / f"{input_tilename}_DTM_hillshade_color4c.tif").is_file()
@@ -137,9 +130,6 @@ def test_main_ctview_with_intermediate_files():
                 f"density.pixel_size={pixel_size}",
                 "buffer.output_subdir=tmp/buffer",
                 "density.intermediate_dirs.density_values=tmp/dens_val",
-                "density.intermediate_dirs.density_color=tmp/dens_col",
-                "density.intermediate_dirs.dxm_raw=tmp/dens_raw",
-                "density.intermediate_dirs.dxm_hillshade=tmp/dens_raw_hs",
                 "dtm.intermediate_dirs.dxm_raw=tmp/dtm_raw",
                 "dtm.intermediate_dirs.dxm_hillshade=tmp/dtm_hs",
                 "dtm.intermediate_dirs.folder_LUT=tmp/dtm_lut",
@@ -158,9 +148,6 @@ def test_main_ctview_with_intermediate_files():
     assert set(os.listdir(Path(output_dir) / "tmp")) == {
         "buffer",
         "dens_val",
-        "dens_col",
-        "dens_raw",
-        "dens_raw_hs",
         "dtm_raw",
         "dtm_hs",
         "dtm_lut",

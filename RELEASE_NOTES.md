@@ -1,4 +1,6 @@
 # DEV
+- clean up production control script:
+  - remove density map with hillshade
 - Add smoothing method with editable parameters in config file
 
 # v0.5.0

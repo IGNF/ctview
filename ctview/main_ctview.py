@@ -64,9 +64,9 @@ def main(config: DictConfig):
             tile_coord_scale=config.io.tile_geometry.tile_coord_scale,
         )
 
-        # Map density (density colorized + DTM hillshade)
-        log.info("\nStep 2: Generate a density map with hillshade and color")
-        map_density.create_density_raster_with_color_and_hillshade(
+        # Map density (density colorized)
+        log.info("\nStep 2: Generate a colorized density map")
+        map_density.create_colored_density_raster(
             str(las_with_buffer), tilename, config.density, config.io, config.buffer.size
         )
 
