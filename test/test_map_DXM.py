@@ -69,9 +69,9 @@ def test_create_raw_DXM_default_pixelsize():
     map_DXM.create_raw_dxm(
         input_file=INPUT_FILE,
         output_dxm=raster_dxm_raw,
-        pixel_size=CONFIG.dtm.pixel_size,
-        dxm_filter_dimension=CONFIG.dtm.dxm_filter.dimension,
-        dxm_filter_keep_values=CONFIG.dtm.dxm_filter.keep_values,
+        pixel_size=1,
+        dxm_filter_dimension="Classification",
+        dxm_filter_keep_values=[2, 66],
         config_io=CONFIG.io,
     )
 
@@ -100,11 +100,22 @@ def test_create_colored_dxm_with_hillshade_dtm_1m_default():
                 f"io.output_dir={output_dir}",
                 f"io.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
                 f"io.tile_geometry.tile_width={TILE_WIDTH}",
-                "dtm.color.cycles_DTM_colored=[1,4]",
             ],
         )
+    cfg_dtm = {
+        "pixel_size": 1,
+        "dxm_filter": {"dimension": "Classification", "keep_values": [2, 66]},
+        "color": {"cycles_DTM_colored": [1, 4]},
+        "output_subdir": "DTM_FINAL",
+        "intermediate_dirs": {
+            "dxm_raw": None,
+            "dxm_hillshade": None,
+            "folder_LUT": None,
+        },
+    }
+
     map_DXM.create_colored_dxm_with_hillshade(
-        input_las=INPUT_FILE, tilename=TILENAME, config_dtm=cfg.dtm, config_io=cfg.io
+        input_las=INPUT_FILE, tilename=TILENAME, config_dtm=cfg_dtm, config_io=cfg.io
     )
 
     assert os.listdir(output_dir) == ["DTM_FINAL"]
@@ -130,14 +141,23 @@ def test_create_colored_dxm_with_hillshade_dtm_1m_and_intermediate_files():
                 f"io.output_dir={output_dir}",
                 f"io.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
                 f"io.tile_geometry.tile_width={TILE_WIDTH}",
-                "dtm.intermediate_dirs.dxm_raw=DTM_VAL",
-                "dtm.intermediate_dirs.dxm_hillshade=tmp_dtm/hillshade",
-                "dtm.intermediate_dirs.folder_LUT=DTM_FINAL/LUT",
-                "dtm.color.cycles_DTM_colored=[1,4]",
             ],
         )
+
+    cfg_dtm = {
+        "pixel_size": 1,
+        "dxm_filter": {"dimension": "Classification", "keep_values": [2, 66]},
+        "color": {"cycles_DTM_colored": [1, 4]},
+        "output_subdir": "DTM_FINAL",
+        "intermediate_dirs": {
+            "dxm_raw": "DTM_VAL",
+            "dxm_hillshade": "tmp_dtm/hillshade",
+            "folder_LUT": "DTM_FINAL/LUT",
+        },
+    }
+
     map_DXM.create_colored_dxm_with_hillshade(
-        input_las=INPUT_FILE, tilename=TILENAME, config_dtm=cfg.dtm, config_io=cfg.io
+        input_las=INPUT_FILE, tilename=TILENAME, config_dtm=cfg_dtm, config_io=cfg.io
     )
     expected_dtm_interp = os.path.join("DTM_VAL", "test_data_77055_627760_LA93_IGN69_interp.tif")
     expected_dtm_hillshade = os.path.join("tmp_dtm", "hillshade", "test_data_77055_627760_LA93_IGN69_hillshade.tif")
@@ -170,8 +190,8 @@ def test_add_dxm_hillshade_to_raster_dsm_50cm():
         input_pointcloud=INPUT_FILE,
         output_raster=output_raster,
         pixel_size=0.5,
-        dxm_filter_dimension=CONFIG.dtm.dxm_filter.dimension,
-        dxm_filter_keep_values=CONFIG.dtm.dxm_filter.keep_values,
+        dxm_filter_dimension="Classification",
+        dxm_filter_keep_values=[2, 66],
         output_dxm_raw=raster_dxm_raw,
         output_dxm_hillshade=raster_dxm_hillshade,
         hillshade_calc=CONFIG.class_map.hillshade_calc,
@@ -202,13 +222,23 @@ def test_create_colored_dxm_with_hillshade():
                 f"io.input_filename={input_filename}",
                 f"io.input_dir={input_dir}",
                 f"io.output_dir={output_dir}",
-                "dtm.color.cycles_DTM_colored=[1,4]",
                 f"io.tile_geometry.tile_coord_scale={tile_coord_scale}",
                 f"io.tile_geometry.tile_width={tile_width}",
                 f"buffer.size={buffer_size}",
-                f"dtm.pixel_size={1}",
             ],
         )
+
+    cfg_dtm = {
+        "pixel_size": 1,
+        "dxm_filter": {"dimension": "Classification", "keep_values": [2, 66]},
+        "color": {"cycles_DTM_colored": [1, 4]},
+        "output_subdir": "DTM_FINAL",
+        "intermediate_dirs": {
+            "dxm_raw": None,
+            "dxm_hillshade": None,
+            "folder_LUT": None,
+        },
+    }
     create_las_with_buffer(
         input_dir=str(input_dir),
         tile_filename=os.path.join(input_dir, input_filename),
@@ -219,7 +249,7 @@ def test_create_colored_dxm_with_hillshade():
         tile_coord_scale=cfg.io.tile_geometry.tile_coord_scale,
     )
 
-    map_DXM.create_colored_dxm_with_hillshade(str(las_with_buffer), input_tilename, cfg.dtm, cfg.io)
+    map_DXM.create_colored_dxm_with_hillshade(str(las_with_buffer), input_tilename, cfg_dtm, cfg.io)
     with rasterio.Env():
         with rasterio.open(
             Path(output_dir) / "DTM_FINAL" / "1cycle" / f"{input_tilename}_DTM_hillshade_color1c.tif"

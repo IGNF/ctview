@@ -10,7 +10,6 @@ from pdaltools.las_add_buffer import create_las_with_buffer
 
 import ctview.map_class.raster_generation as map_class
 import ctview.map_density as map_density
-import ctview.map_DXM as map_DXM
 import ctview.utils_pdal as utils_pdal
 
 
@@ -68,15 +67,6 @@ def main(config: DictConfig):
         log.info("\nStep 2: Generate a colorized density map")
         map_density.create_colored_density_raster(
             str(las_with_buffer), tilename, config.density, config.io, config.buffer.size
-        )
-
-        # DTM (hillshade + color)
-        log.info("\nStep 3: Generate dtm(s) with hillshade and color")
-        map_DXM.create_colored_dxm_with_hillshade(
-            input_las=str(las_with_buffer),
-            tilename=tilename,
-            config_dtm=config.dtm,
-            config_io=config.io,
         )
 
         # Map class (class colorized + DSM with hillshade)

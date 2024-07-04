@@ -31,19 +31,6 @@ density:
   intermediate_dirs:  # for each intermediate_dirs, if null the folder is not created
     density_values: null  # example: tmp/DENS_VAL
 
-dtm:
-  pixel_size: 1  # meters
-  dxm_filter:  # Filter used to generate dtm
-    dimension: Classification
-    keep_values: [2, 66]  # classes used to generate dtm
-  color:
-    cycles_DTM_colored: [1]  # number of color cycles other ex: [1,2,5]
-  output_subdir: "DTM_FINAL"
-  intermediate_dirs:  # for each intermediate_dirs, if null the folder is not created
-    dxm_raw: null  # example: DTM_VAL
-    dxm_hillshade: null  # example: tmp_dtm/hillshade
-    folder_LUT: null  # example: "DTM_FINAL/LUT"
-
 class_map:
   pixel_size: 0.5  # meters
   dxm_filter:  # filter used to generate dsm, the dsm is used to generate hillshade
