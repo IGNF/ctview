@@ -26,7 +26,7 @@ def generate_class_raster_raw(
     epsg: int | str,
     raster_origin: tuple,
     class_by_layer: list = [],
-    tile_size: int = 1000,
+    tile_width: int = 1000,
     pixel_size: float = 1,
     no_data_value: int = -9999,
     raster_driver: str = "GTiff",
@@ -47,7 +47,7 @@ def generate_class_raster_raw(
         epsg (int): spatial reference of the output file
         raster_origin (tuple): origin of the output raster
         class_by_layer (list, optional): class to display on each layer. Defaults to [].
-        tile_size (int, optional): size ot the raster tile in meters. Defaults to 1000.
+        tile_width (int, optional): size ot the raster tile in meters. Defaults to 1000.
         pixel_size (float, optional): pixel size of the output raster. Defaults to 1.
         no_data_value (int, optional): No data value of the output. Defaults to -9999.
         raster_driver (str): raster_driver (str): One of GDAL raster drivers formats
@@ -75,7 +75,7 @@ def generate_class_raster_raw(
         raster_origin=raster_origin,
         fn=compute_binary_class,
         classes_by_layer=class_list_by_layer,
-        tile_size=tile_size,
+        tile_width=tile_width,
         pixel_size=pixel_size,
         no_data_value=no_data_value,
         raster_driver=raster_driver,
@@ -93,7 +93,7 @@ def generate_class_raster(
     config_io: DictConfig,
     config_geometry: DictConfig,
     raster_origin: tuple,
-):
+) -> str:
     """Generate a single band classification raster.
     Each pixel represents the classification of the points contained in this pixel using :
     - combination rules to create new classification values for specific combinations of classes
@@ -124,7 +124,7 @@ def generate_class_raster(
             input_filename: null
             input_dir: null
             output_dir: null
-            projection_epsg: 2154
+            spatial_reference: 2154
             no_data_value: -9999
             extension: .tif
             raster_driver: "GTiff"
@@ -134,10 +134,13 @@ def generate_class_raster(
         config_geometry (DictConfig): hydra configuration with the tile geometry parameters, such as:
         {
             tile_coord_scale: 1000  # meters
-            tile_size: 1000  # meters
+            tile_width: 1000  # meters
         }
         Cf `tile_geometry` section in `configs/config_metadata.yaml`
         raster_origin (tuple): origin of the raster (top left corner of the upper left pixel)
+
+    Returns:
+        str: full path to the output class raster
     """
     log.info("\nCreate class map")
     inter_dirs = config_class.intermediate_dirs
@@ -153,27 +156,20 @@ def generate_class_raster(
             raster_class_map_binary = os.path.join(output_dir, inter_dirs.class_binary, f"{tilename}_class_raw{ext}")
         else:
             raster_class_map_binary = os.path.join(tmpdir, f"{tilename}_class_raw{ext}")
-        if inter_dirs.class_precedence:
-            raster_class_map_precedence = os.path.join(
-                output_dir, inter_dirs.class_precedence, f"{tilename}_class_precedence{ext}"
-            )
-        else:
-            raster_class_map_precedence = os.path.join(tmpdir, f"{tilename}_class_precedence{ext}")
 
         raster_class_map = os.path.join(output_dir, f"{tilename}_class{ext}")
 
         os.makedirs(os.path.dirname(raster_class_map_binary), exist_ok=True)
-        os.makedirs(os.path.dirname(raster_class_map_precedence), exist_ok=True)
         os.makedirs(os.path.dirname(raster_class_map), exist_ok=True)
 
         class_raw = generate_class_raster_raw(
             input_points=input_points,
             input_classifs=input_classifs,
             output_tif=raster_class_map_binary,
-            epsg=config_io.projection_epsg,
+            epsg=config_io.spatial_reference,
             raster_origin=raster_origin,
             class_by_layer=class_by_layer,
-            tile_size=config_geometry.tile_size,
+            tile_width=config_geometry.tile_width,
             pixel_size=config_class.pixel_size,
             no_data_value=config_io.no_data_value,
             raster_driver=config_io.raster_driver,
@@ -191,9 +187,68 @@ def generate_class_raster(
             raster_origin=raster_origin,
             output_tif=raster_class_map,
             pixel_size=config_class.pixel_size,
-            epsg=config_io.projection_epsg,
+            epsg=config_io.spatial_reference,
             raster_driver=config_io.raster_driver,
             colormap=config_class.colormap,
+        )
+
+        return raster_class_map
+
+
+def generate_pretty_class_raster_from_single_band_raster(
+    input_raster: str,
+    input_las: str,
+    tilename: str,
+    output_dir: str,
+    config_class: DictConfig,
+    config_io: DictConfig,
+):
+    """Use single band classification raster (with colors in the metadata) and
+    las file to generate a classification raster for visualization purpose
+    with colors from input_raster and hillshade computed from a digital surface model
+
+    Args:
+        input_raster (str): path to the input single band classification model
+        input_las (str): path to the input las file
+        tilename (str): tilename (used to generate the output file name)
+        output_dir (str): path to the output directory
+        config_class (DictConfig): configuration dict for the class map
+        It must contain:
+        {
+          # the output raster size (should be coherent with the pixel size of input_raster)
+          pixel_size: 0.5
+          # The filter parameters to choose the points to use in the DSM
+          dxm_filter:
+              dimension: Classification
+              keep_values: [2, 3, 4, 5, 6, 9, 17, 64, 66, 67]
+          # The operation used to mix DSM hillshade and colored
+          # A: input_colored raster
+          # B: hillshade DSM
+          hillshade_calc: "0.95*A*(0.2+0.6*(B/255))"
+            }
+        config_io (DictConfig): _description_
+    """
+    ext = config_io.extension
+    with tempfile.TemporaryDirectory(prefix="tmp_class_map", dir="tmp") as tmpdir:
+        colored_tmp_file = os.path.join(tmpdir, f"{tilename}_colored{ext}")
+        dxm_raw_tmp_file = os.path.join(tmpdir, f"{tilename}_dxm_raw{ext}")
+        dxm_hillshade_tmp_file = os.path.join(tmpdir, f"{tilename}_dxm_hillshade{ext}")
+
+        ds = gdal.Open(input_raster)
+        ds = gdal.Translate(colored_tmp_file, ds, rgbExpand="rgb")  # Use colors in metadata
+        ds = None  # close file
+        output_raster = os.path.join(output_dir, f"{tilename}_class_pretty{ext}")
+        map_DXM.add_dxm_hillshade_to_raster(
+            input_raster=colored_tmp_file,
+            input_pointcloud=str(input_las),
+            output_raster=output_raster,
+            pixel_size=config_class.pixel_size,
+            dxm_filter_dimension=config_class.dxm_filter.dimension,
+            dxm_filter_keep_values=config_class.dxm_filter.keep_values,
+            output_dxm_raw=dxm_raw_tmp_file,
+            output_dxm_hillshade=dxm_hillshade_tmp_file,
+            hillshade_calc=config_class.hillshade_calc,
+            config_io=config_io,
         )
 
 
@@ -215,8 +270,9 @@ def create_map_class_raster_with_postprocessing_color_and_hillshade(
         config_class (DictConfig | dict):  hydra configuration with the class map parameters
         eg. {
           pixel_size: 0.5  # pixel size of the output raster
-          dxm_interpolation: pdal-tin  # interpolation used to generate the hillshade elevation model
-          keep_classes: [1, 2, 3, 4]  # classes used in the hillshae elevation model
+          dxm_filter:  # filter used to generate dsm, the dsm is used to generate hillshade
+              dimension: Classification
+              keep_values: [1, 2, 3, 4, 5, 6, 9, 17, 64, 65, 66, 67, 202]
           lut_filename: LUT_CLASS.txt  # filename for the lut that colorizes the classification map
           output_subdir: CC_6_fusion  # folder name for the final class map output
           hillshade_calc: "254*((A*(0.5*(B/255)+0.25))>254)+(A*(0.5*(B/255)+0.25))*((A*(0.5*(B/255)+0.25))<=254)"
@@ -337,8 +393,8 @@ def create_map_class_raster_with_postprocessing_color_and_hillshade(
             input_pointcloud=str(input_las),
             output_raster=raster_class_map,
             pixel_size=config_class.pixel_size,
-            keep_classes=config_class.keep_classes,
-            dxm_interpolation=config_class.dxm_interpolation,
+            dxm_filter_dimension=config_class.dxm_filter.dimension,
+            dxm_filter_keep_values=config_class.dxm_filter.keep_values,
             output_dxm_raw=raster_class_map_dxm_raw,
             output_dxm_hillshade=raster_class_map_dxm_hs,
             hillshade_calc=config_class.hillshade_calc,

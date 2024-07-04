@@ -14,6 +14,7 @@ import ctview.utils_raster as utils_raster
 from ctview.map_class.raster_generation import (
     create_map_class_raster_with_postprocessing_color_and_hillshade,
     generate_class_raster_raw,
+    generate_pretty_class_raster_from_single_band_raster,
 )
 
 gdal.UseExceptions()
@@ -27,7 +28,7 @@ LAS = laspy.read(INPUT_FILE)
 INPUT_POINTS = np.vstack((LAS.x, LAS.y, LAS.z)).transpose()
 INPUT_CLASSIFS = np.copy(LAS.classification)
 EPSG = 2154
-RASTER_ORIGIN = utils_raster.compute_raster_origin(input_points=INPUT_POINTS, tile_size=50, pixel_size=1)
+RASTER_ORIGIN = utils_raster.compute_raster_origin(input_points=INPUT_POINTS, tile_width=50, pixel_size=1)
 RASTER_DRIVER = "GTiff"
 
 TILE_COORD_SCALE = 10
@@ -53,7 +54,7 @@ def test_generate_class_raster_raw():
         epsg=EPSG,
         raster_origin=RASTER_ORIGIN,
         class_by_layer=[2, 1, 66],
-        tile_size=50,
+        tile_width=50,
         pixel_size=1,
         no_data_value=-9999.0,
         raster_driver=RASTER_DRIVER,
@@ -77,6 +78,33 @@ def test_generate_class_raster_raw():
         assert band_ground[0, 6] == 1
         assert band_not_classified[0, 6] == 1
         assert band_virtual[0, 6] == 0
+
+
+def test_generate_pretty_class_raster_from_single_band_raster():
+    tilename = "test_data_77050_627755_LA93_IGN69_buildings"
+    input_raster = os.path.join("data", "raster", "class_precedence", f"{tilename}_class.tif")
+    input_las = os.path.join("data", "las", "classee", f"{tilename}.laz")
+    output_dir = os.path.join(OUTPUT_DIR, "generate_pretty_class_raster_from_single_band_raster")
+
+    with initialize(version_base="1.2", config_path="../../configs"):
+        cfg = compose(
+            config_name="config_ctview",
+            overrides=[
+                f"io.output_dir={output_dir}",
+                f"io.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
+                f"io.tile_geometry.tile_width={TILE_WIDTH}",
+                f"buffer.size={BUFFER_SIZE}",
+            ],
+        )
+
+    generate_pretty_class_raster_from_single_band_raster(
+        input_raster,
+        input_las,
+        tilename,
+        output_dir,
+        cfg.class_map,
+        cfg.io,
+    )
 
 
 def test_create_map_class_raster_with_postprocessing_color_and_hillshade_default():

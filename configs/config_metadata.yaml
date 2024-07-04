@@ -10,18 +10,17 @@ io:
   input_filename: null
   input_dir: null
   output_dir: null
-  projection_epsg: 2154
+  spatial_reference: 2154
   no_data_value: -9999
   extension: .tif
   raster_driver: "GTiff"
-
-tile_geometry:
-  tile_coord_scale: 1000  # meters
-  tile_size: 1000  # meters
+  tile_geometry:
+    tile_coord_scale: 1000  # meters
+    tile_width: 1000  # meters
 
 buffer:
   buffer_size: 100  # meters
-  output_subdir: null  # exemple: "tmp/buffer"
+  output_subdir: null  # example: "tmp/buffer"
 
 density:
   pixel_size: 1  # meters
@@ -44,9 +43,8 @@ class_map:
   # Precedence classes to be confirmed (some classes are misplaced)
   precedence_classes: [61, 53, 64, 161, 52, 51, 50, 5, 17, 60, 6, 67, 4, 3, 160, 162, 2, 66,9]
   ignored_classes: [1, 65]
-  intermediate_dirs:  # pour chaque intermediate_dirs, si null, le dossier n'est pas créé
-    class_binary: null  # exemple: tmp/binary
-    class_precedence: null
+  intermediate_dirs:  # for each intermediate_dirs, if null the folder is not created
+    class_binary: null  # example: tmp/binary
   colormap:
     - {value: 0, description: "NODATA", color: [0, 0, 0]}
     - {value: 1, description: "Defaut", color: [150, 150, 150]}
@@ -70,6 +68,13 @@ class_map:
     - {value: 160, description: "VirtSol", color: [207, 150, 70]}
     - {value: 161, description: "VirtVeget", color: [70, 150, 60]}
     - {value: 162, description: "VirtPont", color: [85, 97, 137]}
+  dxm_filter:  # TODO: replace with dsm tags when added to the main pipeline
+    dimension: Classification
+    keep_values: [2, 3, 4, 5, 6, 9, 17, 64, 66, 67]
+  # A: classification raster before hillshade
+  # B: hillshade DSM
+  hillshade_calc: "0.95*A*(0.2+0.6*(B/255))"
+
 
 hydra:
   output_subdir: null

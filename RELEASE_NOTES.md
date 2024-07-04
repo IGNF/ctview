@@ -5,6 +5,7 @@
     - new multilayer binary map of class
     - flattened classification map using aggregation rules + precedence
     - the classification map has colors and classes description stored as metadata
+    - add vizualisation classification map (with hillshade from DSM)
 
 # v0.4.2
 - fix:

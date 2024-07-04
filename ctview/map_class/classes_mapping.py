@@ -6,9 +6,9 @@ import numpy as np
 from ctview import utils_pdal
 
 
-def compute_binary_class(points: np.array, origin: Tuple[int, int], tile_size: int, pixel_size: float):
-    bins_x = np.arange(origin[0], origin[0] + tile_size + pixel_size, pixel_size)
-    bins_y = np.arange(origin[1] - tile_size, origin[1] + pixel_size, pixel_size)
+def compute_binary_class(points: np.array, origin: Tuple[int, int], tile_width: int, pixel_size: float):
+    bins_x = np.arange(origin[0], origin[0] + tile_width + pixel_size, pixel_size)
+    bins_y = np.arange(origin[1] - tile_width, origin[1] + pixel_size, pixel_size)
     # Compute number of points per bin
     bins, _, _ = np.histogram2d(points[:, 1], points[:, 0], bins=[bins_y, bins_x])
     # Get 1 when value is not 0, 0 otherwise
