@@ -40,8 +40,7 @@ class_map:
     - {"CBI":[66,2], "AGGREG": 160}
     - {"CBI":[66,5], "AGGREG": 161}
     - {"CBI":[66,17], "AGGREG": 162}
-  # Precedence classes to be confirmed (some classes are misplaced)
-  precedence_classes: [61, 53, 64, 161, 52, 51, 50, 5, 17, 60, 6, 67, 4, 3, 160, 162, 2, 66,9]
+  precedence_classes:  [61,53,64,50,51,52,161,5,60,162,17,6,67,4,3,160,2,66,9]
   ignored_classes: [1, 65]
   intermediate_dirs:  # for each intermediate_dirs, if null the folder is not created
     class_binary: null  # example: tmp/binary
