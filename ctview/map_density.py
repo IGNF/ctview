@@ -8,7 +8,7 @@ import laspy
 import numpy as np
 from omegaconf import DictConfig
 
-from ctview import utils_gdal, utils_raster
+from ctview import add_color, utils_raster
 
 
 def generate_raster_of_density(
@@ -173,7 +173,7 @@ def create_colored_density_raster(
         )
 
         log.info("\nColorize density map\n")
-        utils_gdal.color_raster_with_LUT(
+        add_color.color_raster_with_LUT(
             input_raster=raster_dens_values,
             output_raster=raster_dens,
             LUT=os.path.join(config_io.lut_folder, config_density.lut_filename),

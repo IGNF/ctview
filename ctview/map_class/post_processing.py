@@ -4,7 +4,7 @@ import numpy as np
 from osgeo import gdal, gdal_array
 from osgeo_utils import gdal_fillnodata
 
-from ctview import utils_gdal
+from ctview import add_color
 
 
 def fill_gaps_raster(in_raster: str, output_file: str, raster_driver: str):
@@ -52,7 +52,7 @@ def add_color_to_raster(in_raster: str, output_file: str, LUT: str):
     """
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
-    utils_gdal.color_raster_with_LUT(input_raster=in_raster, output_raster=output_file, LUT=LUT)
+    add_color.color_raster_with_LUT(input_raster=in_raster, output_raster=output_file, LUT=LUT)
 
     if not os.path.exists(output_file):  # if raster not create, next step with fail
         raise FileNotFoundError(f"{output_file} not found")
