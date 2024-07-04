@@ -1,4 +1,4 @@
-# dev
+# v0.5.0
 - refactor map_class to several files
 - new functionalities:
   - Metadata:
