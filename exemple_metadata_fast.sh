@@ -3,7 +3,7 @@ python -m ctview.main_metadata \
 io.input_filename="test_data_77055_627755_LA93_IGN69.las" \
 io.input_dir="./data/las/ground" \
 io.output_dir=./tmp/main_metadata_functional \
-tile_geometry.tile_coord_scale=10 \
-tile_geometry.tile_size=50 \
+io.tile_geometry.tile_coord_scale=10 \
+io.tile_geometry.tile_width=50 \
 buffer.buffer_size=10 \
 density.pixel_size=2

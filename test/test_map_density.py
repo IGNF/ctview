@@ -8,8 +8,13 @@ import numpy as np
 import pytest
 import rasterio
 from hydra import compose, initialize
+from osgeo import gdal
 
 import ctview.map_density as map_density
+import ctview.utils_pcd as utils_pcd
+import ctview.utils_raster as utils_raster
+
+gdal.UseExceptions()
 
 INPUT_DIR = Path("data") / "las"
 OUTPUT_DIR = Path("tmp") / "map_density"
@@ -21,6 +26,7 @@ INPUT_LAS_50m = Path(INPUT_DIR) / INPUT_FILENAME_50M
 LAS = laspy.read(INPUT_LAS_50m)
 INPUT_POINTS = np.vstack((LAS.x, LAS.y, LAS.z)).transpose()
 INPUT_CLASSIFS = np.copy(LAS.classification)
+RASTER_ORIGIN = utils_raster.compute_raster_origin(input_points=INPUT_POINTS, tile_width=50, pixel_size=2)
 
 
 def setup_module():
@@ -32,7 +38,7 @@ def setup_module():
 
 
 def test_compute_density():
-    origin_x, origin_y = map_density.get_pointcloud_origin(points=INPUT_POINTS, tile_size=50)
+    origin_x, origin_y = utils_pcd.get_pointcloud_origin(points=INPUT_POINTS, tile_width=50)
 
     density = map_density.compute_density(INPUT_POINTS, (origin_x, origin_y), 50, 2)
 
@@ -46,7 +52,8 @@ def test_generate_raster_of_density():
         input_classifs=INPUT_CLASSIFS,
         output_tif=output_tif,
         epsg=EPSG,
-        tile_size=50,
+        raster_origin=RASTER_ORIGIN,
+        tile_width=50,
         pixel_size=2,
         raster_driver="GTiff",
     )
@@ -66,7 +73,8 @@ def test_generate_raster_of_density_multiband():
         classes_by_layer=[[], [125]],
         output_tif=output_raster_multi,
         epsg=EPSG,
-        tile_size=50,
+        raster_origin=RASTER_ORIGIN,
+        tile_width=50,
         pixel_size=2,
         raster_driver="GTiff",
     )
@@ -85,7 +93,8 @@ def test_generate_raster_of_density_raster_driver():
         input_classifs=INPUT_CLASSIFS,
         output_tif=output_raster,
         epsg=EPSG,
-        tile_size=50,
+        raster_origin=RASTER_ORIGIN,
+        tile_width=50,
         pixel_size=2,
         raster_driver="GPKG",
     )
@@ -106,7 +115,8 @@ def test_generate_raster_of_density_single_list():
             output_tif=output_tif,
             classes_by_layer=[2, 3],
             epsg=EPSG,
-            tile_size=50,
+            raster_origin=RASTER_ORIGIN,
+            tile_width=50,
             pixel_size=2,
             raster_driver="GTiff",
         )
@@ -139,7 +149,7 @@ def test_create_density_raster_with_color_and_hillshade_default():
     map_density.create_density_raster_with_color_and_hillshade(
         os.path.join(input_dir, input_filename), input_tilename, cfg.density, cfg.io, cfg.buffer.size
     )
-    assert os.listdir(output_dir) == ["DENS_FINAL"]
+    assert os.listdir(output_dir) == ["DENS_FINAL", "tmp"]
     assert not glob.glob("tmp/tmp_density*")
     with rasterio.Env():
         with rasterio.open(Path(output_dir) / "DENS_FINAL" / f"{input_tilename}_DENS.tif") as raster:
@@ -251,4 +261,4 @@ def test_create_density_raster_with_color_and_hillshade_empty():
             assert data.shape[0] == 3
             assert data.shape[1] == tile_width / pixel_size
             assert data.shape[2] == tile_width / pixel_size
-            assert np.all(data == 0)  # set nodata value of gdal_calc with input Byte data to 0
+            assert np.all(data == 255)  # default nodata value of gdal_calc with input Byte data

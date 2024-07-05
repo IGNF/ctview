@@ -1,6 +1,10 @@
 import os
 
+from osgeo import gdal
+
 from ctview import utils_gdal
+
+gdal.UseExceptions()
 
 RASTER = os.path.join("data", "raster", "test_data_0000_0000_LA93_IGN69_ground.tif")
 

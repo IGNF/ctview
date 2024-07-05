@@ -10,23 +10,70 @@ io:
   input_filename: null
   input_dir: null
   output_dir: null
-  projection_epsg: 2154
+  spatial_reference: 2154
+  no_data_value: -9999
   extension: .tif
   raster_driver: "GTiff"
-
-tile_geometry:
-  tile_coord_scale: 1000
-  tile_size: 1000
+  tile_geometry:
+    tile_coord_scale: 1000  # meters
+    tile_width: 1000  # meters
 
 buffer:
-  buffer_size: 10
+  buffer_size: 100  # meters
+  output_subdir: null  # example: "tmp/buffer"
 
 density:
-  pixel_size: 1
-  no_data_value: -9999
+  pixel_size: 1  # meters
   keep_classes:
-    - [2]
-    - [3, 4, 5, 6, 17]
+    - [2]  # band 1 (red)
+    - [3, 4, 5, 6, 17]  # band 2 (green)
+
+class_map:
+  pixel_size: 0.5
+  CBI_rules:
+    - {"CBI":[5,6,17], "AGGREG": 50}
+    - {"CBI":[5,6], "AGGREG": 51}
+    - {"CBI":[5,17], "AGGREG": 52}
+    - {"CBI":[5,64], "AGGREG": 53}
+    - {"CBI":[6,17], "AGGREG": 60}
+    - {"CBI":[6,64], "AGGREG": 61}
+    - {"CBI":[66,2], "AGGREG": 160}
+    - {"CBI":[66,5], "AGGREG": 161}
+    - {"CBI":[66,17], "AGGREG": 162}
+  precedence_classes:  [61,53,64,50,51,52,161,5,60,162,17,6,67,4,3,160,2,66,9]
+  ignored_classes: [1, 65]
+  intermediate_dirs:  # for each intermediate_dirs, if null the folder is not created
+    class_binary: null  # example: tmp/binary
+  colormap:
+    - {value: 0, description: "NODATA", color: [0, 0, 0]}
+    - {value: 1, description: "Defaut", color: [150, 150, 150]}
+    - {value: 2, description: "Sol", color: [207, 150, 70]}
+    - {value: 3, description: "Vegetation basse", color: [90, 110, 40]}
+    - {value: 4, description: "Vegetation intermediaire", color: [70, 150, 60]}
+    - {value: 5, description: "Vegetation haute", color: [70, 150, 60]}
+    - {value: 6, description: "Batiment", color: [180, 20, 20]}
+    - {value: 9, description: "Eau", color: [40, 140, 140]}
+    - {value: 17, description: "Pont", color: [85, 97, 137]}
+    - {value: 64, description: "Sursol perenne", color: [255, 0, 255]}
+    - {value: 65, description: "Artefact", color: [64, 0, 128]}
+    - {value: 66, description: "Point virtuel", color: [128, 0, 64]}
+    - {value: 67, description: "DiversBatiment", color: [180, 20, 20]}
+    - {value: 50, description: "VegBatiPont", color: [85, 97, 137]}
+    - {value: 51, description: "VegBati", color: [70, 150, 60]}
+    - {value: 52, description: "VegPont", color: [80, 113, 114]}
+    - {value: 53, description: "VegSSP", color: [255, 0, 255]}
+    - {value: 60, description: "BatiPont", color: [85, 97, 137]}
+    - {value: 61, description: "BatiSSP", color: [255, 0, 255]}
+    - {value: 160, description: "VirtSol", color: [207, 150, 70]}
+    - {value: 161, description: "VirtVeget", color: [70, 150, 60]}
+    - {value: 162, description: "VirtPont", color: [85, 97, 137]}
+  dxm_filter:  # TODO: replace with dsm tags when added to the main pipeline
+    dimension: Classification
+    keep_values: [2, 3, 4, 5, 6, 9, 17, 64, 66, 67]
+  # A: classification raster before hillshade
+  # B: hillshade DSM
+  hillshade_calc: "0.95*A*(0.2+0.6*(B/255))"
+
 
 hydra:
   output_subdir: null

@@ -14,23 +14,25 @@ def create_raw_dxm(
     input_file: str,
     output_dxm: str,
     pixel_size: int,
-    dxm_interpolation: str,
-    keep_classes: List[int],
+    dxm_filter_dimension: str,
+    dxm_filter_keep_values: List[int],
     config_io: DictConfig,
 ):
-    """Create a Digital Model (DSM or DTM) with the classes listed in `keep_classes` using the produits_derives_lidar
+    """Create a Digital Model (DSM or DTM) using the filter defined with
+    dxm_filter_dimension/dxm_filter_keep_values using the produits_derives_lidar
     library
 
-    WARNING: the dtm bounds are infered from the filename inside the produits_derives_lidar library
+    WARNING: the dtm bounds are inferred from the filename inside the produits_derives_lidar library
     (dtm is not computed on the potential additional buffer)
 
     Args:
-        input_file (str): Patht o the input file
+        input_file (str): Path to the input file
         output_dxm (str): path to the output digital model raster
         pixel_size (int): pixel size of the output raster
-        dxm_interpolation (str):  interpolation method for the generated dsm/dtm
-        (see available methods in produits_derives_lidar)
-        keep_classes (List[int]): classes to keep in the generated digital model
+        dxm_filter_dimension (str): Name of the las dimension used to choose points to use for the
+        digital model generation
+        dxm_filter_keep_values (List[int]): dxm_filter_dimension values of the points to use for the
+        digital model generation
         config (DictConfig): general ctview configuration dictionary the must contain:
             "spatial_reference": #str,
             "no_data_value": #int,
@@ -39,22 +41,28 @@ def create_raw_dxm(
                 "tile_width": #int,
               }
         cf. configs/config_ctview.yaml for an example.
-        The config will be completed with pixel_size, keep_classes and dxm_interpolation
+        The config will be completed with pixel_size, dxm_filter_dimension and dxm_filter_keep_values
         to match produits_derive_lidar configuration expectations
     """
 
     # Generate config that suits for produits_derive_lidar interpolation
     pdl_config = {}
-    pdl_config["io"] = {"spatial_reference": config_io.spatial_reference}
+    spatial_ref = (
+        f"EPSG:{config_io.spatial_reference}"
+        if str(config_io.spatial_reference).isdigit()
+        else config_io.spatial_reference
+    )
+    pdl_config["io"] = {"spatial_reference": spatial_ref}
     pdl_config["tile_geometry"] = dict(config_io.tile_geometry)
     pdl_config["tile_geometry"]["pixel_size"] = pixel_size
     pdl_config["tile_geometry"]["no_data_value"] = config_io.no_data_value
-    pdl_config["interpolation"] = {"algo_name": dxm_interpolation}
-    pdl_config["filter"] = {"keep_classes": keep_classes}
+    pdl_config["filter"] = {"dimension": dxm_filter_dimension, "keep_values": dxm_filter_keep_values}
     log.debug("Config for dxm generation")
     log.debug(pdl_config)
 
-    produits_derives_lidar.ip_one_tile.interpolate(input_file=input_file, output_raster=output_dxm, config=pdl_config)
+    produits_derives_lidar.ip_one_tile.interpolate_from_config(
+        input_file=input_file, output_raster=output_dxm, config=pdl_config
+    )
 
 
 def add_dxm_hillshade_to_raster(
@@ -62,27 +70,28 @@ def add_dxm_hillshade_to_raster(
     input_pointcloud: str,
     output_raster: str,
     pixel_size: float,
-    keep_classes: List,
-    dxm_interpolation: str,
+    dxm_filter_dimension: str,
+    dxm_filter_keep_values: List[int],
     output_dxm_raw: str,
     output_dxm_hillshade: str,
     hillshade_calc: str,
     config_io: DictConfig,
 ):
-    """Add hillshade to a raster by computing a Digital Model with the classes listed in keep_classes,
+    """Add hillshade to a raster by: computing a Digital Model using the filter defined with
+    dxm_filter_dimension/dxm_filter_keep_values,
     hillshading it then mixing it with the input raster using the hillshade_calc operation in gdal_calc.
 
     WARNING: nodata value from config is ignored because it works on color Byte data (encoded on 8 bit).
-    nodata set to 0 for coherence with the case of empty map of density.
 
     Args:
         input_raster (str): Path to the raster to which we want to add a hillshade
         input_pointcloud (str): Path to the las file used to generate the hillshade
         output_raster (str): Path to the raster output
         pixel_size (float): output pixel size of the generated dsm/dtm
-        keep_classes (List): classes to keep in the generated dsm/dtm
-        dxm_interpolation (str): interpolation method for the generated dsm/dtm
-        (see available methods in produits_derives_lidar)
+        dxm_filter_dimension (str): Name of the las dimension used to choose points to use for the
+        dxm generation
+        dxm_filter_keep_values (List[int]): dxm_filter_dimension values of the points to use for the
+        dxm generation
         output_dxm_raw (str): Path to raw digital model (intermediate result)
         output_dxm_hillshade (str):  Path to hillshade model (intermediate result)
         hillshade_calc (str): Formula used by gdalcalc to mix the raster and its hillshade
@@ -94,14 +103,16 @@ def add_dxm_hillshade_to_raster(
                 "tile_width": #int,
               }
         cf. configs/config_ctview.yaml for an example ("io" subdivision)
-        The config will be completed with pixel_size, keep_classes and dxm_interpolation
+        The config will be completed with pixel_size, dxm_filter_dimension and dxm_filter_keep_values
         to match produits_derive_lidar configuration expectations
     """
     os.makedirs(os.path.dirname(output_dxm_raw), exist_ok=True)
     os.makedirs(os.path.dirname(output_dxm_hillshade), exist_ok=True)
     os.makedirs(os.path.dirname(output_raster), exist_ok=True)
 
-    create_raw_dxm(input_pointcloud, output_dxm_raw, pixel_size, dxm_interpolation, keep_classes, config_io)
+    create_raw_dxm(
+        input_pointcloud, output_dxm_raw, pixel_size, dxm_filter_dimension, dxm_filter_keep_values, config_io
+    )
     add_hillshade.add_hillshade_one_raster(input_raster=output_dxm_raw, output_raster=output_dxm_hillshade)
 
     gdal_calc.Calc(
@@ -111,7 +122,6 @@ def add_dxm_hillshade_to_raster(
         outfile=output_raster,
         allBands="A",
         overwrite=True,
-        NoDataValue=0,
     )
 
 
@@ -129,8 +139,9 @@ def create_colored_dxm_with_hillshade(
         config_dtm (DictConfig | dict): hydra configuration with the dtm parameters
         eg. {
           pixel_size: 1  # Pixel size of the output raster
-          keep_classes: [2, 66]  # List of classes to use in the elevation model
-          dxm_interpolation: pdal-tin  # Interpolation method for the elevation model
+          dxm_filter:  # Filter used to generate dtm
+              dimension: Classification
+              keep_values: [2, 66]
           color:
               cycles_DTM_colored: [1]  # List of numbers of LUT cycles for the colorisation
                                        # (one raster is generated for each value)
@@ -181,8 +192,8 @@ def create_colored_dxm_with_hillshade(
             input_las,
             raster_dtm_dxm_raw,
             config_dtm.pixel_size,
-            config_dtm.dxm_interpolation,
-            config_dtm.keep_classes,
+            config_dtm.dxm_filter.dimension,
+            config_dtm.dxm_filter.keep_values,
             config_io,
         )
 

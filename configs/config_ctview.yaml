@@ -16,46 +16,50 @@ io:
   raster_driver: GTiff
   no_data_value: -9999
   tile_geometry:
-    tile_coord_scale: 1000
-    tile_width: 1000
+    tile_coord_scale: 1000  # meters
+    tile_width: 1000  # meters
 
 buffer:
-  size: 100
+  size: 100  # meters
   output_subdir: null  # exemple: "tmp/buffer"
 
 density:
-  pixel_size: 5
-  keep_classes: [2, 66]
-  dxm_interpolation: pdal-tin
+  pixel_size: 5  # meters
+  keep_classes: [2, 66]  # 1 band with this classes
+  dxm_filter:
+    dimension: Classification
+    keep_values: ${density.keep_classes}
   lut_filename: LUT_DENSITY.txt
   output_subdir: DENS_FINAL
   hillshade_calc: "((B-1)<0)*A*(B/255) + ((B-1)>=0)*A*((B-1)/255)"
-  intermediate_dirs:
-    density_values: null  # exemple: DENS_VAL
-    density_color: null  # exemple: DENS_COLOR
-    dxm_raw: null  # exemple: DTM_DENS
-    dxm_hillshade: null  # exemple: "tmp_dtm_dens/hillshade"
+  intermediate_dirs:  # for each intermediate_dirs, if null the folder is not created
+    density_values: "tmp/DENS_VAL"  # example: DENS_VAL
+    density_color: null  # example: DENS_COLOR
+    dxm_raw: null  # example: DTM_DENS
+    dxm_hillshade: null  # example: "tmp_dtm_dens/hillshade"
 
 dtm:
-  pixel_size: 1
-  keep_classes: [2, 66]
-  dxm_interpolation: pdal-tin
+  pixel_size: 1  # meters
+  dxm_filter:  # Filter used to generate dtm
+    dimension: Classification
+    keep_values: [2, 66]  # classes used to generate dtm
   color:
-    cycles_DTM_colored: [1]
+    cycles_DTM_colored: [1]  # number of color cycles other ex: [1,2,5]
   output_subdir: "DTM_FINAL"
-  intermediate_dirs:
-    dxm_raw: null  # exemple: DTM_VAL
-    dxm_hillshade: null  # exemple: tmp_dtm/hillshade
-    folder_LUT: null  # exemple: "DTM_FINAL/LUT"
+  intermediate_dirs:  # for each intermediate_dirs, if null the folder is not created
+    dxm_raw: null  # example: DTM_VAL
+    dxm_hillshade: null  # example: tmp_dtm/hillshade
+    folder_LUT: null  # example: "DTM_FINAL/LUT"
 
 class_map:
-  pixel_size: 0.5
-  dxm_interpolation: pdal-tin
-  keep_classes: [1, 2, 3, 4, 5, 6, 9, 17, 64, 65, 66, 67, 202]
+  pixel_size: 0.5  # meters
+  dxm_filter:  # filter used to generate dsm, the dsm is used to generate hillshade
+    dimension: Classification
+    keep_values: [1, 2, 3, 4, 5, 6, 9, 17, 64, 65, 66, 67, 202]
   lut_filename: LUT_CLASS.txt
   output_subdir: CLASS_FINAL
   hillshade_calc: "254*((A*(0.5*(B/255)+0.25))>254)+(A*(0.5*(B/255)+0.25))*((A*(0.5*(B/255)+0.25))<=254)"
-  intermediate_dirs:
+  intermediate_dirs:  # for each intermediate_dirs, if null the folder is not created
     CC_raw: null  # exemple: CC_1_raw
     CC_raw_color: null  # exemple: CC_2_bcolor
     CC_fillgap: null  # exemple: CC_3_fg

@@ -5,9 +5,12 @@ from pathlib import Path
 
 import rasterio
 from hydra import compose, initialize
+from osgeo import gdal
 from pdaltools.las_add_buffer import create_las_with_buffer
 
 import ctview.map_DXM as map_DXM
+
+gdal.UseExceptions()
 
 # GENERAL
 OUTPUT_DIR = Path("tmp") / "map_DXM"
@@ -67,8 +70,8 @@ def test_create_raw_DXM_default_pixelsize():
         input_file=INPUT_FILE,
         output_dxm=raster_dxm_raw,
         pixel_size=CONFIG.dtm.pixel_size,
-        keep_classes=CONFIG.dtm.keep_classes,
-        dxm_interpolation=CONFIG.dtm.dxm_interpolation,
+        dxm_filter_dimension=CONFIG.dtm.dxm_filter.dimension,
+        dxm_filter_keep_values=CONFIG.dtm.dxm_filter.keep_values,
         config_io=CONFIG.io,
     )
 
@@ -167,8 +170,8 @@ def test_add_dxm_hillshade_to_raster_dsm_50cm():
         input_pointcloud=INPUT_FILE,
         output_raster=output_raster,
         pixel_size=0.5,
-        keep_classes=CONFIG.class_map.keep_classes,
-        dxm_interpolation=CONFIG.class_map.dxm_interpolation,
+        dxm_filter_dimension=CONFIG.dtm.dxm_filter.dimension,
+        dxm_filter_keep_values=CONFIG.dtm.dxm_filter.keep_values,
         output_dxm_raw=raster_dxm_raw,
         output_dxm_hillshade=raster_dxm_hillshade,
         hillshade_calc=CONFIG.class_map.hillshade_calc,
@@ -197,8 +200,8 @@ def test_add_dxm_hillshade_to_raster_density_5m():
         input_pointcloud=INPUT_FILE,
         output_raster=output_raster,
         pixel_size=5,
-        keep_classes=CONFIG.density.keep_classes,
-        dxm_interpolation=CONFIG.density.dxm_interpolation,
+        dxm_filter_dimension=CONFIG.dtm.dxm_filter.dimension,
+        dxm_filter_keep_values=CONFIG.dtm.dxm_filter.keep_values,
         output_dxm_raw=raster_dxm_raw,
         output_dxm_hillshade=raster_dxm_hillshade,
         hillshade_calc=CONFIG.density.hillshade_calc,

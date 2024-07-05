@@ -1,7 +1,5 @@
 from osgeo import gdal
 
-gdal.UseExceptions()
-
 
 def add_hillshade_one_raster(input_raster: str, output_raster: str):
     """Add hillshade to raster
