@@ -1,3 +1,6 @@
+# DEV
+- Add smoothing method with editable parameters in config file
+
 # v0.5.0
 - refactor map_class to several files
 - new functionalities:

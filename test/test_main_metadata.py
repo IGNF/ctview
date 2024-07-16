@@ -71,7 +71,7 @@ def test_main_modif_config():
             unique_band = raster.read(1)
             assert unique_band[0, 3] == 2  # ground here
             assert unique_band[0, 9] == 6  # building there
-            assert unique_band[0, 7] == 26  # ground and building concatenated
+            assert unique_band[0, 12] == 26  # # ground and building concatenated
 
 
 def test_main_default_config():
@@ -102,8 +102,7 @@ def test_main_default_config():
             assert band_veget_and_bridge[0, 4] == 0  # no veget point, no bridge point
         with rasterio.open(outfile_class_precedence) as raster:
             unique_band = raster.read(1)
-            print(unique_band[22, 15])
-            assert unique_band[14, 21] == 51  # High vegetation and buildings
+            assert unique_band[14, 21] == 6  # Only buildings due to smoothing
             assert unique_band[0, 1] == 2  # Only ground
             # Ground and buildings (but buildings are first in the precedence order)
             assert unique_band[9, 21] == 6
