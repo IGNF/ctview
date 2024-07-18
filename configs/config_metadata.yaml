@@ -73,6 +73,10 @@ class_map:
   # A: classification raster before hillshade
   # B: hillshade DSM
   hillshade_calc: "0.95*A*(0.2+0.6*(B/255))"
+  post_processing:
+    smoothing: # The smoothing method uses GdalSieveFilter 
+      nconnectedness: 4 # indicating that diagonal pixels are considered directly adjacent or not. 4 no, 8 yes
+      threshold : 12 # raster polygons with smaller pixel size of threshold will be merged into their largest neighboor 
 
 
 hydra:
