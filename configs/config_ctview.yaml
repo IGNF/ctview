@@ -26,30 +26,10 @@ buffer:
 density:
   pixel_size: 5  # meters
   keep_classes: [2, 66]  # 1 band with this classes
-  dxm_filter:
-    dimension: Classification
-    keep_values: ${density.keep_classes}
   lut_filename: LUT_DENSITY.txt
   output_subdir: DENS_FINAL
-  hillshade_calc: "((B-1)<0)*A*(B/255) + ((B-1)>=0)*A*((B-1)/255)"
   intermediate_dirs:  # for each intermediate_dirs, if null the folder is not created
-    density_values: "tmp/DENS_VAL"  # example: DENS_VAL
-    density_color: null  # example: DENS_COLOR
-    dxm_raw: null  # example: DTM_DENS
-    dxm_hillshade: null  # example: "tmp_dtm_dens/hillshade"
-
-dtm:
-  pixel_size: 1  # meters
-  dxm_filter:  # Filter used to generate dtm
-    dimension: Classification
-    keep_values: [2, 66]  # classes used to generate dtm
-  color:
-    cycles_DTM_colored: [1]  # number of color cycles other ex: [1,2,5]
-  output_subdir: "DTM_FINAL"
-  intermediate_dirs:  # for each intermediate_dirs, if null the folder is not created
-    dxm_raw: null  # example: DTM_VAL
-    dxm_hillshade: null  # example: tmp_dtm/hillshade
-    folder_LUT: null  # example: "DTM_FINAL/LUT"
+    density_values: null  # example: tmp/DENS_VAL
 
 class_map:
   pixel_size: 0.5  # meters
