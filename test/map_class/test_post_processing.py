@@ -9,6 +9,7 @@ from osgeo import gdal
 
 from ctview.map_class.post_processing import (
     add_color_to_raster,
+    choose_pixel_to_keep,
     fill_gaps_raster,
     smooth_class_array,
 )
@@ -147,3 +148,14 @@ def test_add_color_to_raster():
 def test_smooth_class_array(class_map_array, nconnectedness, thresehold, expected_result):
     class_map_array_smooth = smooth_class_array(class_map_array, nconnectedness, thresehold)
     assert np.array_equal(class_map_array_smooth, expected_result)
+
+
+def test_choose_pixel_to_keep():
+    class_map_raw = np.array([[1, 1, 5], [3, 4, 3], [2, 2, 3]])  # cmr
+    class_map_smooth = np.array([[6, 2, 3], [3, 4, 3], [2, 2, 3]])  # cms
+    # When cmr <=1 and cms == 6 result == 0
+    # When cmr <=1 and cms != 6 result == cms
+    # When cmr > 1              result == cmr
+    expected_result = np.array([[0, 2, 5], [3, 4, 3], [2, 2, 3]])
+    result = choose_pixel_to_keep(class_map_raw, class_map_smooth)
+    assert np.array_equal(result, expected_result)

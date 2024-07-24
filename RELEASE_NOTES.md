@@ -1,7 +1,10 @@
 # DEV
+- Metadata - post_processing:
+  - add smoothing method with editable parameters in config file 
+  - merge with condition class map smoothed and raw
 - clean up production control script:
   - remove density map with hillshade
-- Add smoothing method with editable parameters in config file
+
 
 # v0.5.0
 - refactor map_class to several files

@@ -102,7 +102,7 @@ def test_main_default_config():
             assert band_veget_and_bridge[0, 4] == 0  # no veget point, no bridge point
         with rasterio.open(outfile_class_precedence) as raster:
             unique_band = raster.read(1)
-            assert unique_band[14, 21] == 6  # Only buildings due to smoothing
+            assert unique_band[14, 21] == 51  # Only Vegetation + building with conditionned merge
             assert unique_band[0, 1] == 2  # Only ground
             # Ground and buildings (but buildings are first in the precedence order)
             assert unique_band[9, 21] == 6
