@@ -81,10 +81,31 @@ def smooth_class_array(class_map_array: np.array, nconnectedness: int, threshold
     return class_map_array
 
 
+def choose_pixel_to_keep(class_map_array_raw: np.array, class_map_array_smoothed: np.array):
+    """This method merges class map raw and smoothed with condition on certain classes
+    conditions of merge for each pixel :
+        if class_map_array_raw > 1                                               -> we keep class_map_array_raw
+        if class_map_array_raw <= 1 AND class_map_array_smoothed != 6 (building) -> we keep class_map_array_smoothed
+        if class_map_array_raw <= 1 AND class_map_array_smoothed == 6 (building) -> 0
+    Args:
+        class_map_array_raw (np.array): raster array raw
+        class_map_array_smoothed (np.array): raster array smoothed
+    Returns:
+        class_map_array_merged (np.array): merged raster array following conditions
+    """
+    class_map_array_merged = np.where(
+        class_map_array_raw > 1,
+        class_map_array_raw,
+        np.where(class_map_array_smoothed != 6, class_map_array_smoothed, 0),
+    )
+
+    return class_map_array_merged
+
+
 def post_processing(class_map_array: np.array, nconnectedness: int, threshold: int):
     """This method groups all post process operated on the class map
         - Smoothing
-        - Merge with condition (TODO)
+        - Merge with condition
 
     Args:
         class_map_array (np.array): raster array to post process
@@ -93,5 +114,6 @@ def post_processing(class_map_array: np.array, nconnectedness: int, threshold: i
     Returns:
         class_map_array_post_processed (np.array): output raster array
     """
-    class_map_array_post_processed = smooth_class_array(class_map_array, nconnectedness, threshold)
+    class_map_array_smoothed = smooth_class_array(class_map_array, nconnectedness, threshold)
+    class_map_array_post_processed = choose_pixel_to_keep(class_map_array, class_map_array_smoothed)
     return class_map_array_post_processed
