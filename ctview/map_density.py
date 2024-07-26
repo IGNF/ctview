@@ -8,7 +8,7 @@ import laspy
 import numpy as np
 from omegaconf import DictConfig
 
-from ctview import map_DXM, utils_gdal, utils_raster
+from ctview import add_color, utils_raster
 
 
 def generate_raster_of_density(
@@ -72,7 +72,7 @@ def compute_density(points: np.array, origin: Tuple[int, int], tile_width: int, 
     return density
 
 
-def create_density_raster_with_color_and_hillshade(
+def create_colored_density_raster(
     input_las: str, tilename: str, config_density: DictConfig | dict, config_io: DictConfig | dict, buffer_size: float
 ) -> str:
     """Generate density raster:
@@ -91,12 +91,8 @@ def create_density_raster_with_color_and_hillshade(
                 keep_values: [2, 66]
             lut_filename: LUT_DENSITY.txt
             output_subdir: DENS_FINAL
-            hillshade_calc: "((B-1)<0)*A*(B/255) + ((B-1)>=0)*A*((B-1)/255)"
             intermediate_dirs:
                 density_values: DENS_VAL
-                density_color: DENS_COLOR
-                dxm_raw: DTM_DENS
-                dxm_hillshade: "tmp_dtm_dens/hillshade"
             }
         config_io (DictConfig | dict): hydra configuration with the general io parameters
         eg.  {
@@ -129,13 +125,13 @@ def create_density_raster_with_color_and_hillshade(
 
     if not isinstance(config_density.keep_classes, Iterable):
         raise TypeError(
-            "In create_density_raster_with_color_and_hillshade, "
+            "In create_colored_density_raster, "
             "config_density.keep_classes is expected to be a list, "
             f"got {type(config_density.keep_classes)} instead)"
         )
     if not np.all([isinstance(item, int) for item in config_density["keep_classes"]]):
         raise TypeError(
-            "In create_density_raster_with_color_and_hillshade, "
+            "In create_colored_density_raster, "
             "config_density.keep_classes is expected to be a single level list, "
             f"got {config_density['keep_classes']} instead)"
         )
@@ -145,23 +141,10 @@ def create_density_raster_with_color_and_hillshade(
             raster_dens_values = os.path.join(out_dir, inter_dirs.density_values, f"{tilename}_DENS{ext}")
         else:
             raster_dens_values = os.path.join(tmpdir, f"{tilename}_DENS{ext}")
-        if inter_dirs.density_color:
-            raster_dens_color = os.path.join(out_dir, inter_dirs.density_color, f"{tilename}_DENS_COLOR{ext}")
-        else:
-            raster_dens_color = os.path.join(tmpdir, f"{tilename}_DENS_COLOR{ext}")
-        if inter_dirs.dxm_raw:
-            raster_density_dxm_raw = os.path.join(out_dir, inter_dirs.dxm_raw, f"{tilename}_interp{ext}")
-        else:
-            raster_density_dxm_raw = os.path.join(tmpdir, f"{tilename}_interp{ext}")
-        if inter_dirs.dxm_hillshade:
-            raster_density_dxm_hs = os.path.join(out_dir, inter_dirs.dxm_hillshade, f"{tilename}_hillshade{ext}")
-        else:
-            raster_density_dxm_hs = os.path.join(tmpdir, f"{tilename}_hillshade{ext}")
 
         raster_dens = os.path.join(out_dir, config_density.output_subdir, f"{tilename}_DENS{ext}")
 
         os.makedirs(os.path.dirname(raster_dens_values), exist_ok=True)
-        os.makedirs(os.path.dirname(raster_dens_color), exist_ok=True)
         os.makedirs(os.path.dirname(raster_dens), exist_ok=True)
 
         log.info("\nRead point cloud\n")
@@ -190,24 +173,10 @@ def create_density_raster_with_color_and_hillshade(
         )
 
         log.info("\nColorize density map\n")
-        utils_gdal.color_raster_with_LUT(
+        add_color.color_raster_with_LUT(
             input_raster=raster_dens_values,
-            output_raster=raster_dens_color,
-            LUT=os.path.join(config_io.lut_folder, config_density.lut_filename),
-        )
-
-        log.info("\nMix with hillshade from elevation model\n")
-        map_DXM.add_dxm_hillshade_to_raster(
-            input_raster=raster_dens_color,
-            input_pointcloud=input_las,
             output_raster=raster_dens,
-            pixel_size=config_density.pixel_size,
-            dxm_filter_dimension=config_density.dxm_filter.dimension,
-            dxm_filter_keep_values=config_density.dxm_filter.keep_values,
-            output_dxm_raw=raster_density_dxm_raw,
-            output_dxm_hillshade=raster_density_dxm_hs,
-            hillshade_calc=config_density.hillshade_calc,
-            config_io=config_io,
+            LUT=os.path.join(config_io.lut_folder, config_density.lut_filename),
         )
 
     return raster_dens

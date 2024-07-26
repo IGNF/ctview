@@ -1,8 +1,10 @@
 import os
 
+import numpy as np
+from osgeo import gdal, gdal_array
 from osgeo_utils import gdal_fillnodata
 
-from ctview import utils_gdal
+from ctview import add_color
 
 
 def fill_gaps_raster(in_raster: str, output_file: str, raster_driver: str):
@@ -50,7 +52,68 @@ def add_color_to_raster(in_raster: str, output_file: str, LUT: str):
     """
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
-    utils_gdal.color_raster_with_LUT(input_raster=in_raster, output_raster=output_file, LUT=LUT)
+    add_color.color_raster_with_LUT(input_raster=in_raster, output_raster=output_file, LUT=LUT)
 
     if not os.path.exists(output_file):  # if raster not create, next step with fail
         raise FileNotFoundError(f"{output_file} not found")
+
+
+def smooth_class_array(class_map_array: np.array, nconnectedness: int, threshold: int):
+    """This method uses Gdal Sieve in order to remove defects in the class map
+
+    Args:
+        class_map_array (np.array): raster array to smooth
+        nconnectednass (int): gdal sieve parameter 4 indicating that diagonal
+            pixels are not considered directly adjacent for
+            polygon membership purposes or 8 indicating they are
+        threshold (int): raster polygons with sizes smaller than this will be merged into their largest neighbour
+    Returns:
+        class_map_array (np.array): raster array smoothed
+    """
+    rows, cols = class_map_array.shape
+    driver = gdal.GetDriverByName("MEM")
+    dataset = driver.Create("", cols, rows, 1, gdal.GDT_Byte)
+    band = dataset.GetRasterBand(1)
+    gdal_array.BandWriteArray(band, class_map_array)
+    gdal.SieveFilter(band, None, band, threshold, nconnectedness)
+    class_map_array = band.ReadAsArray()
+
+    return class_map_array
+
+
+def choose_pixel_to_keep(class_map_array_raw: np.array, class_map_array_smoothed: np.array):
+    """This method merges class map raw and smoothed with condition on certain classes
+    conditions of merge for each pixel :
+        if class_map_array_raw > 1                                               -> we keep class_map_array_raw
+        if class_map_array_raw <= 1 AND class_map_array_smoothed != 6 (building) -> we keep class_map_array_smoothed
+        if class_map_array_raw <= 1 AND class_map_array_smoothed == 6 (building) -> 0
+    Args:
+        class_map_array_raw (np.array): raster array raw
+        class_map_array_smoothed (np.array): raster array smoothed
+    Returns:
+        class_map_array_merged (np.array): merged raster array following conditions
+    """
+    class_map_array_merged = np.where(
+        class_map_array_raw > 1,
+        class_map_array_raw,
+        np.where(class_map_array_smoothed != 6, class_map_array_smoothed, 0),
+    )
+
+    return class_map_array_merged
+
+
+def post_processing(class_map_array: np.array, nconnectedness: int, threshold: int):
+    """This method groups all post process operated on the class map
+        - Smoothing
+        - Merge with condition
+
+    Args:
+        class_map_array (np.array): raster array to post process
+        nconnectednass (int): smoothing parameter (option for diagonal pixels)
+        threshold (int): smoothing parameter (size of minimum pixel size of polygon)
+    Returns:
+        class_map_array_post_processed (np.array): output raster array
+    """
+    class_map_array_smoothed = smooth_class_array(class_map_array, nconnectedness, threshold)
+    class_map_array_post_processed = choose_pixel_to_keep(class_map_array, class_map_array_smoothed)
+    return class_map_array_post_processed

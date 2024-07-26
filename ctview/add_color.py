@@ -2,8 +2,9 @@ import logging as log
 import os
 from typing import List
 
+from osgeo import gdal
+
 import ctview.gen_LUT_X_cycle as gen_LUT_X_cycle
-import ctview.utils_gdal as utils_gdal
 
 
 def color_raster_dtm_hillshade_with_LUT(
@@ -73,8 +74,25 @@ def color_DTM_with_cycles(
     log.info("(2/2) Colorise raster.")
 
     # Colorisation
-    utils_gdal.color_raster_with_LUT(
+    color_raster_with_LUT(
         input_raster=raster_DTM_file,
         output_raster=raster_DTM_color_file,
         LUT=LUT,
+    )
+
+
+def color_raster_with_LUT(input_raster, output_raster, LUT):
+    """
+    Color raster with a LUT
+    input_raster : path of raster to colorise
+    output_raster : path of raster colorised
+    dim : dimension to color
+    LUT : dictionnary of color
+    """
+
+    gdal.DEMProcessing(
+        destName=output_raster,
+        srcDS=input_raster,
+        processing="color-relief",
+        colorFilename=LUT,
     )

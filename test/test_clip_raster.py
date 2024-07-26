@@ -3,8 +3,6 @@ import shutil
 
 from osgeo import gdal
 
-from ctview.clip_raster import crop_raster
-from ctview.utils_gdal import get_raster_corner_coord, transform_CornerCoord_to_Bounds
 from ctview.utils_pdal import get_bounds_from_las
 
 gdal.UseExceptions()
@@ -37,16 +35,3 @@ maxx_Expected = 770545
 minx_Expected = 770505
 maxy_Expected = 6277545
 miny_Expected = 6277505
-
-
-def test_crop_raster():
-    """Test fuction crop_raster"""
-    # Crop
-    crop_raster(
-        input_raster=IN_RASTER, output_raster=OUT_RASTER, bounds=([minx_Modif, maxx_Modif], [miny_Modif, maxy_Modif])
-    )
-    # Get bounds ie ([minx,maxx],[miny,maxy]) from the raster croped
-    CornerCoords = get_raster_corner_coord(in_raster=OUT_RASTER)  # fct tested in test_utils_gdal
-    bounds = transform_CornerCoord_to_Bounds(corner_coord=CornerCoords)  # fct tested in test_utils_gdal
-
-    assert bounds == ([minx_Expected, maxx_Expected], [miny_Expected, maxy_Expected])

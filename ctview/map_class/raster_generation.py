@@ -16,7 +16,11 @@ from ctview.map_class.classes_mapping import (
     convert_class_array_to_precedence_array,
     create_class_raster_raw_deprecated,
 )
-from ctview.map_class.post_processing import add_color_to_raster, fill_gaps_raster
+from ctview.map_class.post_processing import (
+    add_color_to_raster,
+    fill_gaps_raster,
+    post_processing,
+)
 
 
 def generate_class_raster_raw(
@@ -182,8 +186,14 @@ def generate_class_raster(
             priorities=config_class.precedence_classes,
         )
 
+        post_processed_class_map = post_processing(
+            flatten_array,
+            config_class.post_processing.smoothing.nconnectedness,
+            config_class.post_processing.smoothing.threshold,
+        )
+
         utils_raster.write_single_band_raster_to_file(
-            input_array=flatten_array,
+            input_array=post_processed_class_map,
             raster_origin=raster_origin,
             output_tif=raster_class_map,
             pixel_size=config_class.pixel_size,

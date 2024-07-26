@@ -2,10 +2,17 @@ import os
 import shutil
 from pathlib import Path
 
+import numpy as np
+import pytest
 import rasterio
 from osgeo import gdal
 
-from ctview.map_class.post_processing import add_color_to_raster, fill_gaps_raster
+from ctview.map_class.post_processing import (
+    add_color_to_raster,
+    choose_pixel_to_keep,
+    fill_gaps_raster,
+    smooth_class_array,
+)
 
 gdal.UseExceptions()
 
@@ -65,3 +72,90 @@ def test_add_color_to_raster():
         assert band_R[17, 14] == 64  # artefact (classe 65) -> color defined in LUT
         assert band_G[17, 14] == 0  # artefact (classe 65) -> color defined in LUT
         assert band_B[17, 14] == 128  # artefact (classe 65) -> color defined in LUT
+
+
+@pytest.mark.parametrize(
+    """class_map_array, nconnectedness, thresehold, expected_result""",
+    [
+        (
+            np.array(
+                [
+                    [6, 6, 2, 2],
+                    [6, 6, 2, 2],
+                    [2, 2, 6, 2],
+                    [2, 2, 2, 2],
+                ]
+            ),
+            1,
+            1,
+            (
+                np.array(
+                    [
+                        [6, 6, 2, 2],
+                        [6, 6, 2, 2],
+                        [2, 2, 6, 2],
+                        [2, 2, 2, 2],  # No smoothing with these parameters
+                    ]
+                )
+            ),
+        ),
+        (
+            np.array(
+                [
+                    [6, 6, 2, 2],
+                    [6, 6, 2, 2],
+                    [2, 2, 6, 2],
+                    [2, 2, 2, 2],
+                ]
+            ),
+            4,
+            4,
+            (
+                np.array(
+                    [
+                        [6, 6, 2, 2],
+                        [6, 6, 2, 2],
+                        [2, 2, 2, 2],
+                        [2, 2, 2, 2],  # Smoothing the only pixel 6 in pixels 2
+                    ]
+                )
+            ),
+        ),
+        (
+            np.array(
+                [
+                    [6, 6, 2, 2],
+                    [6, 6, 2, 2],
+                    [2, 2, 6, 2],
+                    [2, 2, 2, 2],
+                ]
+            ),
+            8,
+            4,
+            (
+                np.array(
+                    [
+                        [6, 6, 2, 2],
+                        [6, 6, 2, 2],
+                        [2, 2, 6, 2],
+                        [2, 2, 2, 2],  # No smoothing because nconnectedness = 8 accepts diagonal pixels into polygons
+                    ]
+                )
+            ),
+        ),
+    ],
+)
+def test_smooth_class_array(class_map_array, nconnectedness, thresehold, expected_result):
+    class_map_array_smooth = smooth_class_array(class_map_array, nconnectedness, thresehold)
+    assert np.array_equal(class_map_array_smooth, expected_result)
+
+
+def test_choose_pixel_to_keep():
+    class_map_raw = np.array([[1, 1, 5], [3, 4, 3], [2, 2, 3]])  # cmr
+    class_map_smooth = np.array([[6, 2, 3], [3, 4, 3], [2, 2, 3]])  # cms
+    # When cmr <=1 and cms == 6 result == 0
+    # When cmr <=1 and cms != 6 result == cms
+    # When cmr > 1              result == cmr
+    expected_result = np.array([[0, 2, 5], [3, 4, 3], [2, 2, 3]])
+    result = choose_pixel_to_keep(class_map_raw, class_map_smooth)
+    assert np.array_equal(result, expected_result)

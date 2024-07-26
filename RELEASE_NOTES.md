@@ -1,3 +1,11 @@
+# v0.5.1
+- Metadata - post_processing:
+  - add smoothing method with editable parameters in config file 
+  - merge with condition class map smoothed and raw
+- clean up production control script:
+  - remove density map with hillshade
+
+
 # v0.5.0
 - refactor map_class to several files
 - new functionalities:
