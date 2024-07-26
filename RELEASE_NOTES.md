@@ -1,4 +1,4 @@
-# DEV
+# v0.5.1
 - Metadata - post_processing:
   - add smoothing method with editable parameters in config file 
   - merge with condition class map smoothed and raw
