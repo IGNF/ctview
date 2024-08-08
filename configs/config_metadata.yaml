@@ -68,15 +68,15 @@ class_map:
     - {value: 161, description: "VirtVeget", color: [70, 150, 60]}
     - {value: 162, description: "VirtPont", color: [85, 97, 137]}
   dxm_filter:  # TODO: replace with dsm tags when added to the main pipeline
-    dimension: Classification
-    keep_values: [2, 3, 4, 5, 6, 9, 17, 64, 66, 67]
+    dimension: dsm_marker
+    keep_values: [1]
   # A: classification raster before hillshade
   # B: hillshade DSM
   hillshade_calc: "0.95*A*(0.2+0.6*(B/255))"
   post_processing:
-    smoothing: # The smoothing method uses GdalSieveFilter 
+    smoothing: # The smoothing method uses GdalSieveFilter
       nconnectedness: 4 # indicating that diagonal pixels are considered directly adjacent or not. 4 no, 8 yes
-      threshold : 12 # raster polygons with smaller pixel size of threshold will be merged into their largest neighboor 
+      threshold : 12 # raster polygons with smaller pixel size of threshold will be merged into their largest neighboor
 
 
 hydra:

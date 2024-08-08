@@ -1,6 +1,9 @@
+# dev
+- metadata config: use dsm_marker dimension to select points for DSM hillshade (+ adapt test data)
+
 # v0.5.1
 - Metadata - post_processing:
-  - add smoothing method with editable parameters in config file 
+  - add smoothing method with editable parameters in config file
   - merge with condition class map smoothed and raw
 - clean up production control script:
   - remove density map with hillshade
