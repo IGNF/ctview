@@ -1,4 +1,7 @@
 # dev
+- ctview_control:
+  - use same method for classification map as metadata (solves issues on partial tiles)
+  - remove dead code related to old classification map
 - metadata config: use dsm_marker dimension to select points for DSM hillshade (+ adapt test data)
 
 # v0.5.1

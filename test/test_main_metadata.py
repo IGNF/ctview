@@ -41,7 +41,7 @@ def test_main_modif_config():
                 f"io.output_dir={output_dir} ",
                 "io.tile_geometry.tile_coord_scale=10",
                 "io.tile_geometry.tile_width=50",
-                "buffer.buffer_size=10",
+                "buffer.size=10",
                 "buffer.output_subdir=tmp/buffer",
                 f"density.pixel_size={pixel_size}",
                 "density.keep_classes=[[2],[1],[66]]",
@@ -78,7 +78,7 @@ def test_main_default_config():
     output_dir = OUTPUT_DIR / "main_default_config"
     outfile_density = output_dir / "density" / "test_data_77050_627755_LA93_IGN69_buildings_density.tif"
     outfile_class_precedence = output_dir / "class" / "test_data_77050_627755_LA93_IGN69_buildings_class.tif"
-    outfile_class_pretty = output_dir / "class_pretty" / "test_data_77050_627755_LA93_IGN69_buildings_class_pretty.tif"
+    outfile_class_pretty = output_dir / "class_pretty" / "test_data_77050_627755_LA93_IGN69_buildings.tif"
 
     with initialize(version_base="1.2", config_path="../configs"):
         cfg = compose(
@@ -89,7 +89,7 @@ def test_main_default_config():
                 f"io.output_dir={output_dir} ",
                 "io.tile_geometry.tile_coord_scale=10",
                 "io.tile_geometry.tile_width=50",
-                "buffer.buffer_size=10",
+                "buffer.size=10",
             ],
         )
     main(cfg)
