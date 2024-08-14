@@ -123,7 +123,7 @@ def test_generate_raster_of_density_single_list():
 
 def test_create_colored_density_raster_default():
     input_dir = Path("data") / "las" / "ground"
-    input_filename = "test_data_77055_627755_LA93_IGN69.las"
+    input_filename = "test_data_77055_627755_LA93_IGN69.laz"
     input_tilename = os.path.splitext(input_filename)[0]
     tile_width = 50
     tile_coord_scale = 10
@@ -161,7 +161,7 @@ def test_create_colored_density_raster_default():
 
 def test_create_colored_density_raster_with_intermediate_files():
     input_dir = Path("data") / "las" / "ground"
-    input_filename = "test_data_77055_627755_LA93_IGN69.las"
+    input_filename = "test_data_77055_627755_LA93_IGN69.laz"
     input_tilename = os.path.splitext(input_filename)[0]
     tile_width = 50
     tile_coord_scale = 10
@@ -193,7 +193,7 @@ def test_create_colored_density_raster_with_intermediate_files():
 
 def test_create_colored_density_raster_multiple_layers():
     input_dir = Path("data") / "las" / "ground"
-    input_filename = "test_data_77055_627755_LA93_IGN69.las"
+    input_filename = "test_data_77055_627755_LA93_IGN69.laz"
     input_tilename = os.path.splitext(input_filename)[0]
     tile_width = 50
     tile_coord_scale = 10

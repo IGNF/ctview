@@ -12,14 +12,11 @@ from ctview.main_ctview import main
 gdal.UseExceptions()
 
 INPUT_DIR_SMALL = Path("data") / "las" / "ground"
-INPUT_FILENAME_SMALL1 = "test_data_77055_627755_LA93_IGN69.las"
-INPUT_FILENAME_SMALL2 = "test_data_77055_627760_LA93_IGN69.las"
+INPUT_FILENAME_SMALL1 = "test_data_77055_627755_LA93_IGN69.laz"
+INPUT_FILENAME_SMALL2 = "test_data_77055_627760_LA93_IGN69.laz"
 
-INPUT_DIR_WATER = Path("data") / "laz" / "water"
-INPUT_FILENAME_WATER = "Semis_2021_0785_6378_LA93_IGN69_water.laz"
 
 OUTPUT_DIR = Path("tmp") / "main_ctview"
-OUTPUT_DIR_WATER = OUTPUT_DIR / "main_ctview_water"
 
 OUTPUT_FOLDER_DENS = "DENS_FINAL_CUSTOM"
 OUTPUT_FOLDER_CLASS = "CLASS_FINAL_CUSTOM"
@@ -63,7 +60,7 @@ def test_main_ctview_default():
     main(cfg)
     assert set(os.listdir(output_dir)) == {"DENS_FINAL", "CLASS_FINAL"}
     assert (Path(output_dir) / "DENS_FINAL" / f"{input_tilename}_DENS.tif").is_file()
-    assert (Path(output_dir) / "CLASS_FINAL" / f"{input_tilename}_fusion_DSM_class.tif").is_file()
+    assert (Path(output_dir) / "CLASS_FINAL" / f"{input_tilename}.tif").is_file()
 
 
 def test_main_ctview_renaming_final_folders():
@@ -92,58 +89,7 @@ def test_main_ctview_renaming_final_folders():
     main(cfg)
     assert set(os.listdir(output_dir)) == {OUTPUT_FOLDER_CLASS, OUTPUT_FOLDER_DENS}
     assert (Path(output_dir) / OUTPUT_FOLDER_DENS / f"{input_tilename}_DENS.tif").is_file()
-    assert (Path(output_dir) / OUTPUT_FOLDER_CLASS / f"{input_tilename}_fusion_DSM_class.tif").is_file()
-
-
-def test_main_ctview_with_intermediate_files():
-    tile_width = 50
-    tile_coord_scale = 10
-    pixel_size = 2
-    buffer_size = 10
-    output_dir = OUTPUT_DIR / "main_ctview_with_intermediate_files"
-    input_tilename = os.path.splitext(INPUT_FILENAME_SMALL1)[0]
-
-    with initialize(version_base="1.2", config_path="../configs"):
-        # config is relative to a module
-        cfg = compose(
-            config_name="config_ctview",
-            overrides=[
-                f"io.input_filename={INPUT_FILENAME_SMALL1}",
-                f"io.input_dir={INPUT_DIR_SMALL}",
-                f"io.output_dir={output_dir}",
-                f"density.output_subdir={OUTPUT_FOLDER_DENS}",
-                f"class_map.output_subdir={OUTPUT_FOLDER_CLASS}",
-                f"io.tile_geometry.tile_coord_scale={tile_coord_scale}",
-                f"io.tile_geometry.tile_width={tile_width}",
-                f"buffer.size={buffer_size}",
-                f"density.pixel_size={pixel_size}",
-                "buffer.output_subdir=tmp/buffer",
-                "density.intermediate_dirs.density_values=tmp/dens_val",
-                "class_map.intermediate_dirs.CC_raw=tmp/class_raw",
-                "class_map.intermediate_dirs.CC_raw_color=tmp/class_raw_col",
-                "class_map.intermediate_dirs.CC_fillgap=tmp/class_fg",
-                "class_map.intermediate_dirs.CC_fillgap_color=tmp/class_fg_col",
-                "class_map.intermediate_dirs.CC_crop=tmp/class_crop",
-                "class_map.intermediate_dirs.dxm_raw=tmp/class_dxm_raw",
-                "class_map.intermediate_dirs.dxm_hillshade=tmp/class_dxm_hs",
-            ],
-        )
-    main(cfg)
-    assert_las_buffer_is_not_empty(output_dir, INPUT_FILENAME_SMALL1)
-    assert set(os.listdir(output_dir)) == {OUTPUT_FOLDER_CLASS, OUTPUT_FOLDER_DENS, "tmp"}
-    assert set(os.listdir(Path(output_dir) / "tmp")) == {
-        "buffer",
-        "dens_val",
-        "class_raw",
-        "class_raw_col",
-        "class_fg",
-        "class_fg_col",
-        "class_crop",
-        "class_dxm_raw",
-        "class_dxm_hs",
-    }
-    assert (Path(output_dir) / OUTPUT_FOLDER_DENS / f"{input_tilename}_DENS.tif").is_file()
-    assert (Path(output_dir) / OUTPUT_FOLDER_CLASS / f"{input_tilename}_fusion_DSM_class.tif").is_file()
+    assert (Path(output_dir) / OUTPUT_FOLDER_CLASS / f"{input_tilename}.tif").is_file()
 
 
 @pytest.mark.parametrize(

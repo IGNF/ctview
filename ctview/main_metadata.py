@@ -25,7 +25,7 @@ def main(config: DictConfig):
     epsg = config.io.spatial_reference
     tile_coord_scale = config.io.tile_geometry.tile_coord_scale
     tile_width = config.io.tile_geometry.tile_width
-    buffer_size = config.buffer.buffer_size
+    buffer_size = config.buffer.size
 
     # Verify args are ok
     if in_las is None or in_dir is None:

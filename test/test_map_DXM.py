@@ -206,7 +206,7 @@ def test_add_dxm_hillshade_to_raster_dsm_50cm():
 
 def test_create_colored_dxm_with_hillshade():
     input_dir = Path("data") / "las" / "ground"
-    input_filename = "test_data_77055_627755_LA93_IGN69.las"
+    input_filename = "test_data_77055_627755_LA93_IGN69.laz"
     input_tilename = os.path.splitext(input_filename)[0]
     tile_width = 50
     tile_coord_scale = 10

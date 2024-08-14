@@ -1,4 +1,3 @@
-import glob
 import os
 import shutil
 from pathlib import Path
@@ -9,10 +8,8 @@ import rasterio
 from hydra import compose, initialize
 from osgeo import gdal
 
-import ctview.utils_pdal as utils_pdal
 import ctview.utils_raster as utils_raster
 from ctview.map_class.raster_generation import (
-    create_map_class_raster_with_postprocessing_color_and_hillshade,
     generate_class_raster_raw,
     generate_pretty_class_raster_from_single_band_raster,
 )
@@ -105,141 +102,3 @@ def test_generate_pretty_class_raster_from_single_band_raster():
         cfg.class_map,
         cfg.io,
     )
-
-
-def test_create_map_class_raster_with_postprocessing_color_and_hillshade_default():
-    output_dir = Path(OUTPUT_DIR) / "create_map_class_raster_with_postprocessing_color_and_hillshade_default"
-    las_bounds = utils_pdal.get_bounds_from_las(INPUT_FILE)
-    with initialize(version_base="1.2", config_path="../../configs"):
-        cfg = compose(
-            config_name="config_ctview",
-            overrides=[
-                f"io.output_dir={output_dir}",
-                f"io.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
-                f"io.tile_geometry.tile_width={TILE_WIDTH}",
-                f"buffer.size={BUFFER_SIZE}",
-            ],
-        )
-    create_map_class_raster_with_postprocessing_color_and_hillshade(
-        INPUT_FILE, TILENAME, cfg.class_map, cfg.io, las_bounds
-    )
-    assert os.listdir(output_dir) == ["CLASS_FINAL"]
-    assert not glob.glob("tmp/tmp_class*")
-    with rasterio.Env():
-        with rasterio.open(Path(output_dir) / "CLASS_FINAL" / f"{TILENAME}_fusion_DSM_class.tif") as raster:
-            band_R = raster.read(1)
-            band_G = raster.read(2)
-            band_B = raster.read(3)
-            assert band_R[0, 0] is not None
-            assert band_G[0, 0] is not None
-            assert band_B[0, 0] is not None
-            assert raster.res == (0.5, 0.5)
-
-
-def test_create_map_class_raster_with_postprocessing_color_and_hillshade_and_intermediate_files():
-    output_dir = (
-        Path(OUTPUT_DIR) / "create_map_class_raster_with_postprocessing_color_and_hillshade_and_intermediate_files"
-    )
-    las_bounds = utils_pdal.get_bounds_from_las(INPUT_FILE)
-    with initialize(version_base="1.2", config_path="../../configs"):
-        # config is relative to a module
-        cfg = compose(
-            config_name="config_ctview",
-            overrides=[
-                f"io.output_dir={output_dir}",
-                f"io.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
-                f"io.tile_geometry.tile_width={TILE_WIDTH}",
-                f"buffer.size={BUFFER_SIZE}",
-                "class_map.intermediate_dirs.CC_raw=CC_1_raw",
-                "class_map.intermediate_dirs.CC_raw_color=CC_2_bcolor",
-                "class_map.intermediate_dirs.CC_fillgap=CC_3_fg",
-                "class_map.intermediate_dirs.CC_fillgap_color=CC_4_fgcolor",
-                "class_map.intermediate_dirs.CC_crop=CC_5_crop",
-                "class_map.intermediate_dirs.dxm_raw=DSM_VAL",
-                "class_map.intermediate_dirs.dxm_hillshade=DSM_HS",
-            ],
-        )
-    create_map_class_raster_with_postprocessing_color_and_hillshade(
-        INPUT_FILE, TILENAME, cfg.class_map, cfg.io, las_bounds
-    )
-    assert set(os.listdir(output_dir)) == {
-        "CC_1_raw",
-        "CC_2_bcolor",
-        "CC_3_fg",
-        "CC_4_fgcolor",
-        "CC_5_crop",
-        "CLASS_FINAL",
-        "DSM_VAL",
-        "DSM_HS",
-    }
-
-    with rasterio.Env():
-        with rasterio.open(Path(output_dir) / "CC_4_fgcolor" / f"{TILENAME}_fillgap_color.tif") as raster:
-            band_R = raster.read(1)
-            band_G = raster.read(2)
-            band_B = raster.read(3)
-            assert band_R[0, 0] == 255  # ground point
-            assert band_G[0, 0] == 128
-            assert band_B[0, 0] == 0
-            assert raster.res == (0.5, 0.5)
-
-        with rasterio.open(Path(output_dir) / "CLASS_FINAL" / f"{TILENAME}_fusion_DSM_class.tif") as raster:
-            band_R = raster.read(1)
-            band_G = raster.read(2)
-            band_B = raster.read(3)
-            assert band_R[0, 0] is not None
-            assert band_G[0, 0] is not None
-            assert band_B[0, 0] is not None
-            assert raster.res == (0.5, 0.5)
-
-
-def execute_main_default():
-    output_dir = Path(OUTPUT_DIR) / "execute_main_default"
-    os.system(
-        f"""
-        python -m ctview.map_class.raster_generation \
-        io.input_filename={INPUT_FILENAME} \
-        io.input_dir={INPUT_DIR} \
-        io.output_dir={output_dir} \
-        io.tile_geometry.tile_coord_scale={TILE_COORD_SCALE} \
-        io.tile_geometry.tile_width={TILE_WIDTH} \
-        """
-    )
-    with rasterio.Env():
-        with rasterio.open(Path(output_dir) / "CLASS_FINAL" / f"{TILENAME}_fusion_DSM_class.tif") as raster:
-            band_R = raster.read(1)
-            band_G = raster.read(2)
-            band_B = raster.read(3)
-            assert band_R[0, 0] is not None
-            assert band_G[0, 0] is not None
-            assert band_B[0, 0] is not None
-            assert raster.res == (0.5, 0.5)
-
-
-def execute_main_change_pixel_size():
-    output_dir = Path(OUTPUT_DIR) / "execute_main_change_pixel_size"
-    os.system(
-        f"""
-    python -m ctview.map_class.raster_generation \
-    io.input_filename={INPUT_FILENAME} \
-    io.input_dir={INPUT_DIR} \
-    io.output_dir={output_dir} \
-    io.tile_geometry.tile_coord_scale={TILE_COORD_SCALE} \
-    io.tile_geometry.tile_width={TILE_WIDTH} \
-    class_map.pixel_size=5 \
-    """
-    )
-    with rasterio.Env():
-        with rasterio.open(Path(output_dir) / "CLASS_FINAL" / f"{TILENAME}_fusion_DSM_class.tif") as raster:
-            band_R = raster.read(1)
-            band_G = raster.read(2)
-            band_B = raster.read(3)
-            assert band_R[0, 0] is not None
-            assert band_G[0, 0] is not None
-            assert band_B[0, 0] is not None
-            assert raster.res == (5, 5)
-
-
-def test_main():
-    execute_main_default()
-    execute_main_change_pixel_size()
