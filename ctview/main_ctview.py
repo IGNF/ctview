@@ -34,12 +34,6 @@ def main(config: DictConfig):
 
     os.makedirs(out_dir, exist_ok=True)
 
-    # ## ACTIVATE IF NECESSARY
-    # log.warning("#########")
-    # log.warning("ATTENTION : modification LAS/LAZ file with function utils_pcd.repare_file")
-    # log.warning("#########")
-    # utils_pcd.repare_files(las_liste, in_dir)
-    # time.sleep(2)
     tilename = os.path.splitext(initial_las_filename)[0]
     initial_las_file = os.path.join(in_dir, initial_las_filename)
 

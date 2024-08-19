@@ -1,16 +1,4 @@
-import logging as log
-import os
-
 import numpy as np
-
-
-def repare_files(las_liste: str, input_dir):
-    for filename in las_liste:
-        f = open(os.path.join(input_dir, filename), "rb+")
-        f.seek(6)
-        f.write(bytes([17, 0, 0, 0]))
-        f.close()
-        log.info(f"fichier {filename} repare")
 
 
 def get_pointcloud_origin(points: np.array, tile_width: int = 1000, buffer_size: float = 0):
