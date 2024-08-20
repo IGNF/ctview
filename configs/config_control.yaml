@@ -11,7 +11,6 @@ io:
   input_dir: null
   output_dir: null
   spatial_reference: EPSG:2154
-  lut_folder: LUT
   extension: .tif
   raster_driver: GTiff
   no_data_value: -9999
@@ -43,7 +42,8 @@ density:
     density_values: null  # example: tmp/DENS_VAL
 
 class_map:
-  output_subdir: "CLASS_FINAL"
+  output_class_subdir: null  # Single band class map with colormap as metadata
+  output_class_pretty_subdir: "CLASS_FINAL" # 3-bands colored class map
   pixel_size: 0.5  # meters
   CBI_rules: []  # No precedence
   precedence_classes: [1, 2, 3, 4, 5, 6, 9, 17, 64, 65, 66, 67, 202]  # default order with no precedence (to be updated)

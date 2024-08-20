@@ -158,7 +158,6 @@ def create_colored_dxm_with_hillshade(
             input_dir: null
             output_dir: null
             spatial_reference: EPSG:2154
-            lut_folder: LUT
             extension: .tif
             raster_driver: GTiff
             no_data_value: -9999

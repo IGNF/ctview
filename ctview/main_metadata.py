@@ -19,16 +19,12 @@ from ctview import utils_raster
 def main(config: DictConfig):
     log.basicConfig(level=log.INFO, format="%(message)s")
 
-    in_las = config.io.input_filename
+    initial_las_filename = config.io.input_filename
     in_dir = config.io.input_dir
     out_dir = config.io.output_dir
-    epsg = config.io.spatial_reference
-    tile_coord_scale = config.io.tile_geometry.tile_coord_scale
-    tile_width = config.io.tile_geometry.tile_width
-    buffer_size = config.buffer.size
 
     # Verify args are ok
-    if in_las is None or in_dir is None:
+    if initial_las_filename is None or in_dir is None:
         raise RuntimeError(
             "In input you have to give a las and a directory. For more info run the same command by adding --help"
         )
@@ -41,25 +37,31 @@ def main(config: DictConfig):
     os.makedirs(out_dir_class, exist_ok=True)
     os.makedirs(out_dir_class_pretty, exist_ok=True)
 
-    input_las = os.path.join(in_dir, in_las)
-    tilename, _ = os.path.splitext(in_las)
+    input_las = os.path.join(in_dir, initial_las_filename)
+    tilename, _ = os.path.splitext(initial_las_filename)
 
-    with tempfile.TemporaryDirectory(prefix="tmp_buffer", dir="tmp") as tmpdir:
+    with (
+        tempfile.TemporaryDirectory(prefix="tmp_buffer", dir="tmp") as tmpdir_buffer,
+        tempfile.TemporaryDirectory(prefix="tmp_class_raw", dir="tmp") as tmpdir_class,
+    ):
+        # Buffer
+        log.info(f"\nStep 1: Create buffered las file with buffer = {config.buffer.size}")
         if config.buffer.output_subdir:
-            las_with_buffer = Path(out_dir) / config.buffer.output_subdir / in_las
+            las_with_buffer = Path(out_dir) / config.buffer.output_subdir / initial_las_filename
         else:
-            las_with_buffer = Path(tmpdir) / in_las
+            las_with_buffer = Path(tmpdir_buffer) / initial_las_filename
         las_with_buffer.parent.mkdir(parents=True, exist_ok=True)
 
         # Buffer
+        epsg = config.io.spatial_reference
         create_las_with_buffer(
             input_dir=in_dir,
             tile_filename=input_las,
             output_filename=str(las_with_buffer),
-            buffer_width=buffer_size,
-            spatial_ref=f"EPSG:{epsg}",
-            tile_width=tile_width,
-            tile_coord_scale=tile_coord_scale,
+            buffer_width=config.buffer.size,
+            spatial_ref=f"EPSG:{epsg}" if str(epsg).isdigit() else epsg,
+            tile_width=config.io.tile_geometry.tile_width,
+            tile_coord_scale=config.io.tile_geometry.tile_coord_scale,
         )
 
         # Read las
@@ -68,37 +70,49 @@ def main(config: DictConfig):
         classifs = np.copy(las.classification)
 
         # Map density
+        log.info("\nStep 2: Generate a density map")
         map_density.create_density_raster_from_config(
             str(las_with_buffer), tilename, config.density, config.io, config.buffer.size
         )
 
-        # Class map
+        # Map classes
+        log.info("\nStep 3: Generate a classification map")
+
+        if config.class_map.output_class_subdir:
+            output_class_dir = Path(out_dir) / config.class_map.output_class_subdir
+        else:
+            output_class_dir = Path(tmpdir_class)
+        output_class_dir.mkdir(parents=True, exist_ok=True)
+
         class_map_raster_origin = utils_raster.compute_raster_origin(
             input_points=points_np,
-            tile_width=tile_width,
+            tile_width=config.io.tile_geometry.tile_width,
             pixel_size=config.class_map.pixel_size,
-            buffer_size=buffer_size,
+            buffer_size=config.buffer.size,
         )
 
         class_raster_path = map_class.generate_class_raster(
             input_points=points_np,
             input_classifs=classifs,
             tilename=tilename,
-            output_dir=out_dir_class,
+            output_dir=output_class_dir,
             config_class=config.class_map,
             config_io=config.io,
             config_geometry=config.io.tile_geometry,
             raster_origin=class_map_raster_origin,
         )
 
-        map_class.generate_pretty_class_raster_from_single_band_raster(
-            input_raster=class_raster_path,
-            input_las=las_with_buffer,
-            tilename=tilename,
-            output_dir=out_dir_class_pretty,
-            config_class=config.class_map,
-            config_io=config.io,
-        )
+        if config.class_map.output_class_pretty_subdir:
+            output_class_pretty_subdir = Path(out_dir) / config.class_map.output_class_pretty_subdir
+            os.makedirs(output_class_pretty_subdir, exist_ok=True)
+            map_class.generate_pretty_class_raster_from_single_band_raster(
+                input_raster=class_raster_path,
+                input_las=las_with_buffer,
+                tilename=tilename,
+                output_dir=output_class_pretty_subdir,
+                config_class=config.class_map,
+                config_io=config.io,
+            )
 
 
 if __name__ == "__main__":
