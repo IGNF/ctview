@@ -15,8 +15,7 @@ import ctview.map_density as map_density
 from ctview import utils_raster
 
 
-@hydra.main(config_path="../configs/", config_name="config_control.yaml", version_base="1.2")
-def main(config: DictConfig):
+def main_ctview(config: DictConfig):
     log.basicConfig(level=log.INFO, format="%(message)s")
 
     initial_las_filename = config.io.input_filename
@@ -109,6 +108,11 @@ def main(config: DictConfig):
                 config_class=config.class_map,
                 config_io=config.io,
             )
+
+
+@hydra.main(config_path="../configs/", config_name="config_control.yaml", version_base="1.2")
+def main(config: DictConfig):
+    main_ctview(config)
 
 
 if __name__ == "__main__":
