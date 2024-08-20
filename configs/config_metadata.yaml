@@ -23,10 +23,12 @@ buffer:
   output_subdir: null  # example: "tmp/buffer"
 
 density:
+  output_subdir: density
   pixel_size: 1  # meters
   keep_classes:
     - [2]  # band 1 (red)
     - [3, 4, 5, 6, 17]  # band 2 (green)
+  colorize: False
 
 class_map:
   pixel_size: 0.5

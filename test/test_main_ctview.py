@@ -59,7 +59,7 @@ def test_main_ctview_default():
         )
     main(cfg)
     assert set(os.listdir(output_dir)) == {"DENS_FINAL", "CLASS_FINAL"}
-    assert (Path(output_dir) / "DENS_FINAL" / f"{input_tilename}_DENS.tif").is_file()
+    assert (Path(output_dir) / "DENS_FINAL" / f"{input_tilename}_density.tif").is_file()
     assert (Path(output_dir) / "CLASS_FINAL" / f"{input_tilename}.tif").is_file()
 
 
@@ -88,7 +88,7 @@ def test_main_ctview_renaming_final_folders():
         )
     main(cfg)
     assert set(os.listdir(output_dir)) == {OUTPUT_FOLDER_CLASS, OUTPUT_FOLDER_DENS}
-    assert (Path(output_dir) / OUTPUT_FOLDER_DENS / f"{input_tilename}_DENS.tif").is_file()
+    assert (Path(output_dir) / OUTPUT_FOLDER_DENS / f"{input_tilename}_density.tif").is_file()
     assert (Path(output_dir) / OUTPUT_FOLDER_CLASS / f"{input_tilename}.tif").is_file()
 
 

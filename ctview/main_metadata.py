@@ -36,10 +36,8 @@ def main(config: DictConfig):
         raise RuntimeError("No output directory. For more info run the same command by adding --help")
     # Create folders
     os.makedirs(out_dir, exist_ok=True)
-    out_dir_density = Path(out_dir) / "density"
     out_dir_class = Path(out_dir) / "class"
     out_dir_class_pretty = Path(out_dir) / "class_pretty"
-    os.makedirs(out_dir_density, exist_ok=True)
     os.makedirs(out_dir_class, exist_ok=True)
     os.makedirs(out_dir_class_pretty, exist_ok=True)
 
@@ -63,32 +61,15 @@ def main(config: DictConfig):
             tile_width=tile_width,
             tile_coord_scale=tile_coord_scale,
         )
-        filename_density = f"{tilename}_density.tif"
-        output_tif_density = os.path.join(out_dir_density, filename_density)
 
         # Read las
         las = laspy.read(las_with_buffer)
         points_np = np.vstack((las.x, las.y, las.z)).transpose()
         classifs = np.copy(las.classification)
 
-        density_raster_origin = utils_raster.compute_raster_origin(
-            input_points=points_np,
-            tile_width=tile_width,
-            pixel_size=config.density.pixel_size,
-            buffer_size=buffer_size,
-        )
-
-        # Density
-        map_density.generate_raster_of_density(
-            input_points=points_np,
-            input_classifs=classifs,
-            output_tif=output_tif_density,
-            epsg=epsg,
-            raster_origin=density_raster_origin,
-            classes_by_layer=config.density.keep_classes,
-            tile_width=tile_width,
-            pixel_size=config.density.pixel_size,
-            raster_driver=config.io.raster_driver,
+        # Map density
+        map_density.create_density_raster_from_config(
+            str(las_with_buffer), tilename, config.density, config.io, config.buffer.size
         )
 
         # Class map

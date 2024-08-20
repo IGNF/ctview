@@ -68,7 +68,7 @@ def main(config: DictConfig):
 
         # Map density (density colorized)
         log.info("\nStep 2: Generate a colorized density map")
-        map_density.create_colored_density_raster(
+        map_density.create_density_raster_from_config(
             str(las_with_buffer), tilename, config.density, config.io, config.buffer.size
         )
 

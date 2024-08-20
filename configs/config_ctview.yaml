@@ -25,7 +25,9 @@ buffer:
 
 density:
   pixel_size: 5  # meters
-  keep_classes: [2, 66]  # 1 band with this classes
+  keep_classes:
+    - [2, 66]  # 1 band with this classes
+  colorize: True
   colormap:
   - {value: 0, color: [0, 0, 0]}
   - {value: 1, color: [20, 25, 255]}
