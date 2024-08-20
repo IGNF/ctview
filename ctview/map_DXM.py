@@ -40,7 +40,7 @@ def create_raw_dxm(
                 "tile_coord_scale": #int,
                 "tile_width": #int,
               }
-        cf. configs/config_ctview.yaml for an example.
+        cf. configs/config_control.yaml for an example.
         The config will be completed with pixel_size, dxm_filter_dimension and dxm_filter_keep_values
         to match produits_derive_lidar configuration expectations
     """
@@ -102,7 +102,7 @@ def add_dxm_hillshade_to_raster(
                 "tile_coord_scale": #int,
                 "tile_width": #int,
               }
-        cf. configs/config_ctview.yaml for an example ("io" subdivision)
+        cf. configs/config_control.yaml for an example ("io" subdivision)
         The config will be completed with pixel_size, dxm_filter_dimension and dxm_filter_keep_values
         to match produits_derive_lidar configuration expectations
     """

@@ -85,7 +85,7 @@ def test_generate_pretty_class_raster_from_single_band_raster():
 
     with initialize(version_base="1.2", config_path="../../configs"):
         cfg = compose(
-            config_name="config_ctview",
+            config_name="config_control",
             overrides=[
                 f"io.output_dir={output_dir}",
                 f"io.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",

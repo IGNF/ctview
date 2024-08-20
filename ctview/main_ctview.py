@@ -15,7 +15,7 @@ import ctview.map_density as map_density
 from ctview import utils_raster
 
 
-@hydra.main(config_path="../configs/", config_name="config_ctview.yaml", version_base="1.2")
+@hydra.main(config_path="../configs/", config_name="config_control.yaml", version_base="1.2")
 def main(config: DictConfig):
     log.basicConfig(level=log.INFO, format="%(message)s")
 

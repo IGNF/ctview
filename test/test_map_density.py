@@ -134,7 +134,7 @@ def test_create_density_raster_from_config_default():
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
-            config_name="config_ctview",
+            config_name="config_control",
             overrides=[
                 f"io.input_filename={input_filename}",
                 f"io.input_dir={input_dir}",
@@ -172,7 +172,7 @@ def test_create_density_raster_from_config_with_intermediate_files():
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
-            config_name="config_ctview",
+            config_name="config_control",
             overrides=[
                 f"io.input_filename={input_filename}",
                 f"io.input_dir={input_dir}",
@@ -204,7 +204,7 @@ def test_create_density_raster_from_config_multiple_layers():
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
-            config_name="config_ctview",
+            config_name="config_control",
             overrides=[
                 f"io.input_filename={input_filename}",
                 f"io.input_dir={input_dir}",
@@ -247,7 +247,7 @@ def test_create_density_raster_from_config_colorize_multiple_layers():
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
-            config_name="config_ctview",
+            config_name="config_control",
             overrides=[
                 f"io.input_filename={input_filename}",
                 f"io.input_dir={input_dir}",
@@ -279,7 +279,7 @@ def test_create_density_raster_from_config_empty():
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
-            config_name="config_ctview",
+            config_name="config_control",
             overrides=[
                 f"io.input_filename={input_filename_water}",
                 f"io.input_dir={input_dir_water}",
@@ -315,7 +315,7 @@ def test_create_density_raster_from_config_no_colorization():
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
-            config_name="config_ctview",
+            config_name="config_control",
             overrides=[
                 f"io.input_filename={input_filename}",
                 f"io.input_dir={input_dir}",

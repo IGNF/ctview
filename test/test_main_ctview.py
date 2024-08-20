@@ -46,7 +46,7 @@ def test_main_ctview_default():
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
-            config_name="config_ctview",
+            config_name="config_control",
             overrides=[
                 f"io.input_filename={INPUT_FILENAME_SMALL1}",
                 f"io.input_dir={INPUT_DIR_SMALL}",
@@ -73,7 +73,7 @@ def test_main_ctview_renaming_final_folders():
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
-            config_name="config_ctview",
+            config_name="config_control",
             overrides=[
                 f"io.input_filename={INPUT_FILENAME_SMALL1}",
                 f"io.input_dir={INPUT_DIR_SMALL}",
@@ -103,7 +103,7 @@ def test_main_ctview_2_files(input_dir, input_filename, output_dir, expected_nb_
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
-            config_name="config_ctview",
+            config_name="config_control",
             overrides=[
                 f"io.input_filename={input_filename}",
                 f"io.input_dir={input_dir}",
