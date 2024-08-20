@@ -5,9 +5,9 @@ from collections.abc import Iterable
 
 import numpy as np
 from omegaconf import DictConfig
-from osgeo import gdal
 
 from ctview import map_DXM, utils_raster
+from ctview.add_color import convert_raster_with_color_metadata_to_rgb
 from ctview.map_class.classes_mapping import (
     check_and_list_original_classes_to_keep,
     compute_binary_class,
@@ -233,9 +233,8 @@ def generate_pretty_class_raster_from_single_band_raster(
         dxm_raw_tmp_file = os.path.join(tmpdir, f"{tilename}_dxm_raw{ext}")
         dxm_hillshade_tmp_file = os.path.join(tmpdir, f"{tilename}_dxm_hillshade{ext}")
 
-        ds = gdal.Open(input_raster)
-        ds = gdal.Translate(colored_tmp_file, ds, rgbExpand="rgb")  # Use colors in metadata
-        ds = None  # close file
+        convert_raster_with_color_metadata_to_rgb(input_raster, colored_tmp_file)
+
         output_raster = os.path.join(output_dir, f"{tilename}{ext}")
         map_DXM.add_dxm_hillshade_to_raster(
             input_raster=colored_tmp_file,

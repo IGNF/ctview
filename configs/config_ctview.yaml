@@ -26,7 +26,16 @@ buffer:
 density:
   pixel_size: 5  # meters
   keep_classes: [2, 66]  # 1 band with this classes
-  lut_filename: LUT_DENSITY.txt
+  colormap:
+  - {value: 0, color: [0, 0, 0]}
+  - {value: 1, color: [20, 25, 255]}
+  - {value: 2, color: [215, 25, 255]}
+  - {value: 5, color: [215, 25, 28]}
+  - {value: 6, color: [253, 173, 97]}
+  - {value: 8, color: [255, 255, 192]}
+  - {value: 9, color: [166, 217, 106]}
+  - {value: 10, color: [26, 150, 65]}
+  - {value: 300, color: [26, 150, 65]}
   output_subdir: DENS_FINAL
   intermediate_dirs:  # for each intermediate_dirs, if null the folder is not created
     density_values: null  # example: tmp/DENS_VAL

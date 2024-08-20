@@ -173,10 +173,10 @@ def create_colored_density_raster(
         )
 
         log.info("\nColorize density map\n")
-        add_color.color_raster_with_LUT(
+        add_color.color_raster_with_interpolation(
             input_raster=raster_dens_values,
             output_raster=raster_dens,
-            LUT=os.path.join(config_io.lut_folder, config_density.lut_filename),
+            colormap=config_density.colormap,
         )
 
     return raster_dens

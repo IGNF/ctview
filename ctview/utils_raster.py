@@ -4,9 +4,9 @@ from typing import Dict, List
 
 import numpy as np
 import rasterio
-from osgeo import gdal
 
 import ctview.utils_pcd as utils_pcd
+from ctview.add_color import add_colors_as_metadata
 
 
 def generate_raster_raw(
@@ -141,27 +141,9 @@ def write_single_band_raster_to_file(
         ) as out_file:
             out_file.write(input_array.astype(rasterio.uint8), 1)
 
-    # Add colors and descriptions
     if colormap:
         check_colormap_fits_raster_data(colormap, input_array)
-        ds = gdal.Open(output_tif)
-        band = ds.GetRasterBand(1)
-        colors = gdal.ColorTable()
-        #  set default values for all existing values in the colormap
-        # (add 1 as the value xx is at the [xx + 1]th position in a list starting at 0)
-        category_names_list = [""] * (max([c["value"] for c in colormap]) + 1)
-
-        for category in colormap:
-            colors.SetColorEntry(category["value"], tuple(category["color"]))
-            category_names_list[category["value"]] = category["description"]
-
-        band.SetColorTable(colors)
-        band.SetColorInterpretation(gdal.GCI_PaletteIndex)
-        band.SetCategoryNames(category_names_list)
-
-        # close gdal dataset (cf. https://gis.stackexchange.com/questions/80366/why-close-a-dataset-in-gdal-python)
-        band = None
-        ds = None
+        add_colors_as_metadata(output_tif, colormap)
 
     log.debug(f"Saved to {output_tif}")
 
