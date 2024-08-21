@@ -131,7 +131,7 @@ def color_raster_with_interpolation(input_raster: str, output_raster: str, color
         )
 
 
-def add_colors_as_metadata(tif_file: str, colormap: List[Dict]):
+def add_colors_as_metadata(input_raster: str, colormap: List[Dict]):
     """Add metadata to the input tif file that correspond to the color map dictionary
     - a Gdal Attribute Table that contains colors and descriptions only for the defined
     categories, and that is readable by QGIS
@@ -140,7 +140,7 @@ def add_colors_as_metadata(tif_file: str, colormap: List[Dict]):
     (defaults to black for all undefined categories, or generate a color ramp when asked)
 
     Args:
-        tif_file (str): Path to the file to which to add metadata
+        input_raster (str): Path to the file to which to add metadata
         colormap (List[Dict]): color map list of dictionaries.
         This list should contain a dictionary for each entry with keys/values like:
          {"value": 3, "description": "Vegetation basse", "color": [0, 255, 0] # RGB}
@@ -150,7 +150,7 @@ def add_colors_as_metadata(tif_file: str, colormap: List[Dict]):
     # Add colors and descriptions to a Raster Attribute Table to read with QGIS
     # with a pretty legend
 
-    ds = gdal.Open(tif_file)
+    ds = gdal.Open(input_raster)
     band = ds.GetRasterBand(1)
     rat = gdal.RasterAttributeTable()
     rat.CreateColumn("Name", gdalconst.GFT_String, gdalconst.GFU_Name)
