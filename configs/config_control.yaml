@@ -57,7 +57,7 @@ class_map:
   - {value: 3, description: "Vegetation basse", color: [0, 255, 0]}
   - {value: 4, description: "Vegetation intermediaire", color: [0, 255, 0]}
   - {value: 5, description: "Vegetation haute", color: [0, 255, 0]}
-  - {value: 6, description: "Batiment", color: [0, 0, 255]}
+  - {value: 6, description: "Batiment", color: [255, 0, 0]}
   - {value: 9, description: "Eau", color: [0, 255, 255]}
   - {value: 17, description: "Pont", color: [255, 255, 0]}
   - {value: 64, description: "Sursol perenne", color: [128, 0, 64]}
