@@ -11,7 +11,6 @@ io:
   input_dir: null
   output_dir: null
   spatial_reference: EPSG:2154
-  lut_folder: LUT
   extension: .tif
   raster_driver: GTiff
   no_data_value: -9999
@@ -25,14 +24,26 @@ buffer:
 
 density:
   pixel_size: 5  # meters
-  keep_classes: [2, 66]  # 1 band with this classes
-  lut_filename: LUT_DENSITY.txt
+  keep_classes:
+    - [2, 66]  # 1 band with this classes
+  colorize: True
+  colormap:
+  - {value: 0, color: [0, 0, 0]}
+  - {value: 1, color: [20, 25, 255]}
+  - {value: 2, color: [215, 25, 255]}
+  - {value: 5, color: [215, 25, 28]}
+  - {value: 6, color: [253, 173, 97]}
+  - {value: 8, color: [255, 255, 192]}
+  - {value: 9, color: [166, 217, 106]}
+  - {value: 10, color: [26, 150, 65]}
+  - {value: 300, color: [26, 150, 65]}
   output_subdir: DENS_FINAL
   intermediate_dirs:  # for each intermediate_dirs, if null the folder is not created
     density_values: null  # example: tmp/DENS_VAL
 
 class_map:
-  output_subdir: "CLASS_FINAL"
+  output_class_subdir: null  # Single band class map with colormap as metadata
+  output_class_pretty_subdir: "CLASS_FINAL" # 3-bands colored class map
   pixel_size: 0.5  # meters
   CBI_rules: []  # No precedence
   precedence_classes: [1, 2, 3, 4, 5, 6, 9, 17, 64, 65, 66, 67, 202]  # default order with no precedence (to be updated)
@@ -46,7 +57,7 @@ class_map:
   - {value: 3, description: "Vegetation basse", color: [0, 255, 0]}
   - {value: 4, description: "Vegetation intermediaire", color: [0, 255, 0]}
   - {value: 5, description: "Vegetation haute", color: [0, 255, 0]}
-  - {value: 6, description: "Batiment", color: [0, 0, 255]}
+  - {value: 6, description: "Batiment", color: [255, 0, 0]}
   - {value: 9, description: "Eau", color: [0, 255, 255]}
   - {value: 17, description: "Pont", color: [255, 255, 0]}
   - {value: 64, description: "Sursol perenne", color: [128, 0, 64]}

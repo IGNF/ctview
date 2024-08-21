@@ -121,7 +121,7 @@ def test_generate_raster_of_density_single_list():
         )
 
 
-def test_create_colored_density_raster_default():
+def test_create_density_raster_from_config_default():
     input_dir = Path("data") / "las" / "ground"
     input_filename = "test_data_77055_627755_LA93_IGN69.laz"
     input_tilename = os.path.splitext(input_filename)[0]
@@ -134,7 +134,7 @@ def test_create_colored_density_raster_default():
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
-            config_name="config_ctview",
+            config_name="config_control",
             overrides=[
                 f"io.input_filename={input_filename}",
                 f"io.input_dir={input_dir}",
@@ -145,12 +145,12 @@ def test_create_colored_density_raster_default():
                 f"density.pixel_size={pixel_size}",
             ],
         )
-    map_density.create_colored_density_raster(
+    map_density.create_density_raster_from_config(
         os.path.join(input_dir, input_filename), input_tilename, cfg.density, cfg.io, cfg.buffer.size
     )
     assert os.listdir(output_dir) == ["DENS_FINAL"]
     with rasterio.Env():
-        with rasterio.open(Path(output_dir) / "DENS_FINAL" / f"{input_tilename}_DENS.tif") as raster:
+        with rasterio.open(Path(output_dir) / "DENS_FINAL" / f"{input_tilename}_density.tif") as raster:
             data = raster.read()
             assert data.shape[0] == 3
             assert data.shape[1] == tile_width / pixel_size
@@ -159,7 +159,7 @@ def test_create_colored_density_raster_default():
                 assert np.any(data[ii, :, :])
 
 
-def test_create_colored_density_raster_with_intermediate_files():
+def test_create_density_raster_from_config_with_intermediate_files():
     input_dir = Path("data") / "las" / "ground"
     input_filename = "test_data_77055_627755_LA93_IGN69.laz"
     input_tilename = os.path.splitext(input_filename)[0]
@@ -167,12 +167,12 @@ def test_create_colored_density_raster_with_intermediate_files():
     tile_coord_scale = 10
     pixel_size = 2
     buffer_size = 10
-    output_dir = OUTPUT_DIR / "create_colored_density_raster_and_intermediate"
+    output_dir = OUTPUT_DIR / "create_density_raster_from_config_and_intermediate"
     input_tilename = os.path.splitext(input_filename)[0]
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
-            config_name="config_ctview",
+            config_name="config_control",
             overrides=[
                 f"io.input_filename={input_filename}",
                 f"io.input_dir={input_dir}",
@@ -184,14 +184,14 @@ def test_create_colored_density_raster_with_intermediate_files():
                 "density.intermediate_dirs.density_values=DENS_VAL",
             ],
         )
-    map_density.create_colored_density_raster(
+    map_density.create_density_raster_from_config(
         os.path.join(input_dir, input_filename), input_tilename, cfg.density, cfg.io, cfg.buffer.size
     )
     for folder in ["DENS_FINAL", "DENS_VAL"]:
         assert len(os.listdir(os.path.join(output_dir, folder))) == 1
 
 
-def test_create_colored_density_raster_multiple_layers():
+def test_create_density_raster_from_config_multiple_layers():
     input_dir = Path("data") / "las" / "ground"
     input_filename = "test_data_77055_627755_LA93_IGN69.laz"
     input_tilename = os.path.splitext(input_filename)[0]
@@ -199,12 +199,55 @@ def test_create_colored_density_raster_multiple_layers():
     tile_coord_scale = 10
     pixel_size = 2
     buffer_size = 10
-    output_dir = OUTPUT_DIR / "create_colored_density_raster"
+    output_dir = OUTPUT_DIR / "create_colored_density_raster_multiple_layers"
     input_tilename = os.path.splitext(input_filename)[0]
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
-            config_name="config_ctview",
+            config_name="config_control",
+            overrides=[
+                f"io.input_filename={input_filename}",
+                f"io.input_dir={input_dir}",
+                f"io.output_dir={output_dir}",
+                f"io.tile_geometry.tile_coord_scale={tile_coord_scale}",
+                f"io.tile_geometry.tile_width={tile_width}",
+                f"buffer.size={buffer_size}",
+                "density.colorize=False",
+                f"density.pixel_size={pixel_size}",
+                "density.colorize=False",
+                "density.keep_classes=[[2], [2]]",
+            ],
+        )
+    map_density.create_density_raster_from_config(
+        os.path.join(input_dir, input_filename), input_tilename, cfg.density, cfg.io, cfg.buffer.size
+    )
+    assert os.listdir(output_dir) == ["DENS_FINAL"]
+    with rasterio.Env():
+        with rasterio.open(Path(output_dir) / "DENS_FINAL" / f"{input_tilename}_density.tif") as raster:
+            data = raster.read()
+            assert data.shape[0] == 2
+            assert data.shape[1] == tile_width / pixel_size
+            assert data.shape[2] == tile_width / pixel_size
+            for ii in range(2):
+                assert np.any(data[ii, :, :])
+            # the 2 bands have the same keep_classes value, so the output should be the same
+            assert np.all(data[0, :, :] == data[1, :, :])
+
+
+def test_create_density_raster_from_config_colorize_multiple_layers():
+    input_dir = Path("data") / "las" / "ground"
+    input_filename = "test_data_77055_627755_LA93_IGN69.laz"
+    input_tilename = os.path.splitext(input_filename)[0]
+    tile_width = 50
+    tile_coord_scale = 10
+    pixel_size = 2
+    buffer_size = 10
+    output_dir = OUTPUT_DIR / "create_density_raster_from_config"
+    input_tilename = os.path.splitext(input_filename)[0]
+    with initialize(version_base="1.2", config_path="../configs"):
+        # config is relative to a module
+        cfg = compose(
+            config_name="config_control",
             overrides=[
                 f"io.input_filename={input_filename}",
                 f"io.input_dir={input_dir}",
@@ -213,16 +256,16 @@ def test_create_colored_density_raster_multiple_layers():
                 f"io.tile_geometry.tile_width={tile_width}",
                 f"buffer.size={buffer_size}",
                 f"density.pixel_size={pixel_size}",
-                "density.keep_classes=[[1, 2]]",
+                "density.keep_classes=[[1, 2], [3, 4]]",
             ],
         )
-    with pytest.raises(TypeError):
-        map_density.create_colored_density_raster(
+    with pytest.raises(ValueError):
+        map_density.create_density_raster_from_config(
             os.path.join(input_dir, input_filename), input_tilename, cfg.density, cfg.io, cfg.buffer.size
         )
 
 
-def test_create_colored_density_raster_empty():
+def test_create_density_raster_from_config_empty():
     """Test that the create_colored_density_raster function
     creates a black tif when there is no points with the requested classes"""
     input_dir_water = Path("data") / "laz" / "water"
@@ -231,12 +274,12 @@ def test_create_colored_density_raster_empty():
     tile_coord_scale = 1000
     buffer_size = 10
     pixel_size = 1
-    output_dir = OUTPUT_DIR / "create_colored_density_raster_empty"
+    output_dir = OUTPUT_DIR / "create_density_raster_from_config_empty"
     input_tilename = os.path.splitext(input_filename_water)[0]
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
-            config_name="config_ctview",
+            config_name="config_control",
             overrides=[
                 f"io.input_filename={input_filename_water}",
                 f"io.input_dir={input_dir_water}",
@@ -247,13 +290,51 @@ def test_create_colored_density_raster_empty():
                 f"density.pixel_size={pixel_size}",
             ],
         )
-    map_density.create_colored_density_raster(
+    map_density.create_density_raster_from_config(
         os.path.join(input_dir_water, input_filename_water), input_tilename, cfg.density, cfg.io, cfg.buffer.size
     )
     with rasterio.Env():
-        with rasterio.open(Path(output_dir) / "DENS_FINAL" / f"{input_tilename}_DENS.tif") as raster:
+        with rasterio.open(Path(output_dir) / "DENS_FINAL" / f"{input_tilename}_density.tif") as raster:
             data = raster.read()
             assert data.shape[0] == 3
             assert data.shape[1] == tile_width / pixel_size
             assert data.shape[2] == tile_width / pixel_size
             assert np.all(data == 0)  # no points implies a 0 value (cf. LUT_DENSITY.txt)
+
+
+def test_create_density_raster_from_config_no_colorization():
+    input_dir = Path("data") / "las" / "ground"
+    input_filename = "test_data_77055_627755_LA93_IGN69.laz"
+    input_tilename = os.path.splitext(input_filename)[0]
+    tile_width = 50
+    tile_coord_scale = 10
+    pixel_size = 2
+    buffer_size = 10
+    output_dir = OUTPUT_DIR / "create_colored_density_raster_no_colorization"
+    input_tilename = os.path.splitext(input_filename)[0]
+    with initialize(version_base="1.2", config_path="../configs"):
+        # config is relative to a module
+        cfg = compose(
+            config_name="config_control",
+            overrides=[
+                f"io.input_filename={input_filename}",
+                f"io.input_dir={input_dir}",
+                f"io.output_dir={output_dir}",
+                f"io.tile_geometry.tile_coord_scale={tile_coord_scale}",
+                f"io.tile_geometry.tile_width={tile_width}",
+                f"buffer.size={buffer_size}",
+                "density.colorize=False",
+                f"density.pixel_size={pixel_size}",
+            ],
+        )
+    map_density.create_density_raster_from_config(
+        os.path.join(input_dir, input_filename), input_tilename, cfg.density, cfg.io, cfg.buffer.size
+    )
+    assert os.listdir(output_dir) == ["DENS_FINAL"]
+    with rasterio.Env():
+        with rasterio.open(Path(output_dir) / "DENS_FINAL" / f"{input_tilename}_density.tif") as raster:
+            data = raster.read()
+            assert data.shape[0] == 1
+            assert data.shape[1] == tile_width / pixel_size
+            assert data.shape[2] == tile_width / pixel_size
+            assert np.any(data[0, :, :])

@@ -72,7 +72,7 @@ def compute_density(points: np.array, origin: Tuple[int, int], tile_width: int, 
     return density
 
 
-def create_colored_density_raster(
+def create_density_raster_from_config(
     input_las: str, tilename: str, config_density: DictConfig | dict, config_io: DictConfig | dict, buffer_size: float
 ) -> str:
     """Generate density raster:
@@ -100,7 +100,6 @@ def create_colored_density_raster(
             input_dir: null
             output_dir: null
             spatial_reference: EPSG:2154
-            lut_folder: LUT
             extension: .tif
             raster_driver: GTiff
             no_data_value: -9999
@@ -120,7 +119,7 @@ def create_colored_density_raster(
 
     log.info("\nCreate density maps")
     out_dir = config_io.output_dir
-    inter_dirs = config_density.intermediate_dirs
+    inter_dirs = config_density.get("intermediate_dirs", "")
     ext = config_io.extension
 
     if not isinstance(config_density.keep_classes, Iterable):
@@ -129,20 +128,30 @@ def create_colored_density_raster(
             "config_density.keep_classes is expected to be a list, "
             f"got {type(config_density.keep_classes)} instead)"
         )
-    if not np.all([isinstance(item, int) for item in config_density["keep_classes"]]):
+    if not np.all([isinstance(item, Iterable) for item in config_density["keep_classes"]]):
         raise TypeError(
             "In create_colored_density_raster, "
-            "config_density.keep_classes is expected to be a single level list, "
+            "config_density.keep_classes is expected to be a list of lists "
+            "(with the classes to keep on each band of the output raster), "
+            f"got {config_density['keep_classes']} instead)"
+        )
+    if config_density["colorize"] and (len(config_density["keep_classes"]) != 1):
+        raise ValueError(
+            "In create_colored_density_raster, config_density['keep_classes'] should describe only 1 band"
+            "if colorize = True,  "
             f"got {config_density['keep_classes']} instead)"
         )
 
     with tempfile.TemporaryDirectory(prefix="tmp_density", dir="tmp") as tmpdir:
-        if inter_dirs.density_values:
-            raster_dens_values = os.path.join(out_dir, inter_dirs.density_values, f"{tilename}_DENS{ext}")
-        else:
-            raster_dens_values = os.path.join(tmpdir, f"{tilename}_DENS{ext}")
+        raster_dens = os.path.join(out_dir, config_density.output_subdir, f"{tilename}_density{ext}")
 
-        raster_dens = os.path.join(out_dir, config_density.output_subdir, f"{tilename}_DENS{ext}")
+        if config_density["colorize"]:
+            if inter_dirs and inter_dirs.density_values:
+                raster_dens_values = os.path.join(out_dir, inter_dirs.density_values, f"{tilename}_density{ext}")
+            else:
+                raster_dens_values = os.path.join(tmpdir, f"{tilename}_density{ext}")
+        else:
+            raster_dens_values = raster_dens
 
         os.makedirs(os.path.dirname(raster_dens_values), exist_ok=True)
         os.makedirs(os.path.dirname(raster_dens), exist_ok=True)
@@ -159,24 +168,26 @@ def create_colored_density_raster(
             pixel_size=config_density.pixel_size,
             buffer_size=buffer_size,
         )
+
         generate_raster_of_density(
             input_points=points_np,
             input_classifs=classifs,
             output_tif=raster_dens_values,
             epsg=config_io.spatial_reference,
             raster_origin=raster_origin,
-            classes_by_layer=[config_density.keep_classes],
+            classes_by_layer=config_density.keep_classes,
             tile_width=config_io.tile_geometry.tile_width,
             pixel_size=config_density.pixel_size,
             no_data_value=config_io.no_data_value,
             raster_driver=config_io.raster_driver,
         )
 
-        log.info("\nColorize density map\n")
-        add_color.color_raster_with_LUT(
-            input_raster=raster_dens_values,
-            output_raster=raster_dens,
-            LUT=os.path.join(config_io.lut_folder, config_density.lut_filename),
-        )
+        if config_density["colorize"]:
+            log.info("\nColorize density map\n")
+            add_color.color_raster_with_interpolation(
+                input_raster=raster_dens_values,
+                output_raster=raster_dens,
+                colormap=config_density.colormap,
+            )
 
     return raster_dens

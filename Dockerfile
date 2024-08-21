@@ -5,7 +5,7 @@ USER root
 RUN rm -f /etc/apt/sources.list.d/*.list
 # install required libs
 RUN apt-get update && apt-get install -y \
-        && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /ctView
 
@@ -22,7 +22,6 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 COPY ctview ctview
 COPY data data
 COPY configs configs
-COPY LUT LUT
 COPY test test
 
 RUN mkdir tmp

@@ -1,8 +1,18 @@
 # dev
-- ctview_control:
-  - use same method for classification map as metadata (solves issues on partial tiles)
-  - remove dead code related to old classification map
-- metadata config: use dsm_marker dimension to select points for DSM hillshade (+ adapt test data)
+Breaking changes:
+  - replace config_ctview by config_control
+  - harmonize config_control and config_metadata
+
+Refactor code to use the same main function for metadata and control (initial ctview usage)
+Now, you can either use:
+  - main_ctview.py to run ctview with any configuration file
+  - main_control.py to run ctview with the config_control.yml config file (which can still be overriden by command line arguments)
+  - main_metadata.py to run ctview with the config_metadata.yml config file (which can still be overriden by command line arguments)
+
+- remove dead code related to old classification map
+- config:
+  - use dsm_marker dimension to select points for DSM hillshade (+ adapt test data)
+  - provide density color map through the config file
 
 # v0.5.1
 - Metadata - post_processing:
