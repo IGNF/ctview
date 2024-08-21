@@ -1,25 +1,30 @@
 # dev
-Breaking changes:
+
+- Breaking changes:
   - replace config_ctview by config_control
   - harmonize config_control and config_metadata
 
-Refactor code to use the same main function for metadata and control (initial ctview usage)
-Now, you can either use:
+- Refactor code to use the same main function for metadata and control (initial ctview usage).
+  Now, you can either use:
   - main_ctview.py to run ctview with any configuration file
   - main_control.py to run ctview with the config_control.yml config file (which can still be overriden by command line arguments)
   - main_metadata.py to run ctview with the config_metadata.yml config file (which can still be overriden by command line arguments)
+
 
 - remove dead code related to old classification map
 - config:
   - use dsm_marker dimension to select points for DSM hillshade (+ adapt test data)
   - provide density color map through the config file
+- Update documentation
 
 # v0.5.1
+- Breaking changes: clean up production control script:
+  - remove density map with hillshade
+  - remove dtm generation from control main script (but keep methods to perform it in code)
+
 - Metadata - post_processing:
   - add smoothing method with editable parameters in config file
   - merge with condition class map smoothed and raw
-- clean up production control script:
-  - remove density map with hillshade
 
 
 # v0.5.0
