@@ -4,11 +4,11 @@ from pathlib import Path
 
 import laspy
 import numpy as np
+import pdaltools.pcd_info as pcd_info
 import pytest
 import rasterio
 from osgeo import gdal
 
-import ctview.utils_pcd as utils_pcd
 import ctview.utils_pdal as utils_pdal
 import ctview.utils_raster as utils_raster
 from ctview.map_class.classes_mapping import (
@@ -46,7 +46,7 @@ def setup_module(module):  # run before the first test
 
 
 def test_compute_binary_class():
-    origin_x, origin_y = utils_pcd.get_pointcloud_origin(points=INPUT_POINTS, tile_width=50)
+    origin_x, origin_y = pcd_info.get_pointcloud_origin_from_tile_width(points=INPUT_POINTS, tile_width=50)
 
     binary_class = compute_binary_class(points=INPUT_POINTS, origin=(origin_x, origin_y), tile_width=50, pixel_size=2)
 

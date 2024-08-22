@@ -16,6 +16,7 @@
   - use dsm_marker dimension to select points for DSM hillshade (+ adapt test data)
   - provide density color map through the config file
 - Update documentation
+- Move code into ign-pdal-tools (get_pointcloud_origin)
 
 # v0.5.1
 - Breaking changes: clean up production control script:

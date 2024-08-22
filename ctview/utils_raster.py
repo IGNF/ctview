@@ -3,9 +3,9 @@ from collections.abc import Iterable
 from typing import Dict, List
 
 import numpy as np
+import pdaltools.pcd_info as pcd_info
 import rasterio
 
-import ctview.utils_pcd as utils_pcd
 from ctview.add_color import add_colors_as_metadata
 
 
@@ -97,7 +97,7 @@ def compute_raster_origin(input_points: np.array, tile_width: int, pixel_size: i
     buffer_size (float, optional): size of the buffer that has been added to the input points.
     (used to detect the raster corners) Defaults to 0.
     """
-    pcd_origin_x, pcd_origin_y = utils_pcd.get_pointcloud_origin(input_points, tile_width, buffer_size)
+    pcd_origin_x, pcd_origin_y = pcd_info.get_pointcloud_origin_from_tile_width(input_points, tile_width, buffer_size)
 
     raster_origin = (pcd_origin_x - pixel_size / 2, pcd_origin_y + pixel_size / 2)
 
