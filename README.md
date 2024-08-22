@@ -15,7 +15,7 @@ Ils peuvent être (ou non) colorisés et ombragés (ou non) grâce à un modèle
 
 - OCS Lidar, composée d'une OCS "brute" colorisée par classe fusionnée avec un MNS à 50cm de résolution
 - raster de densité colorisé fusionné avec un MNT à 5m de résolution
-- Déprécié (non accessible directement depuis le script main mais les fonctions permettant de le calculer sont toujours dans la base de code) : MNT ombragé colorisé à 1m de résolution avec nombre de cycles variable
+- Déprécié (non accessible directement depuis le script main mais les fonctions permettant de le calculer sont toujours dans la base de code) : MNT ombragé colorisé à 1m de résolution avec un nombre de cycles variable
 
 
 ## Vues par défaut pour le cas d'usage métadonnées
@@ -29,10 +29,9 @@ Ils peuvent être (ou non) colorisés et ombragés (ou non) grâce à un modèle
 CtView est développé sous linux et fonctionne sous linux et sous windows.
 CtView s'utilise en ligne de commande. Les commandes doivent être lancées à la racine (dans le dossier `ctView`).
 
-CtView doit être utilisé dans le logiciel LidarExpress pour un usage à grande échelle (batch de fichiers lidar).
+CtView peut s'utiliser en standalone, mais uniquement sur un fichier.
+Pour un usage sur un dossier entier, il faut passer par LidarExpress, qui gère la distribution des calculs
 
-CtView peut aussi s'utiliser en standalone, mais uniquement sur un fichier.
-Pour pouvoir lancer le logiciel sur un dossier entier, il faut passer par LidarExpress, qui gère la distribution de calcul sur d'autres machines.
 
 # Installation
 
@@ -75,26 +74,26 @@ Ces commandes permettent de générer les vues détaillées ci-après.
 ## Configuration
 
 Les fichiers de configuration utilisés par défaut pour la génération des vues de contrôle
-et pour la génération des métadonnées sont dans le dossier `configs`. Ils contiennent des commetnaires expliquant chacun des paramètres comme base pour créer une configuration sur-mesure.
+et pour la génération des métadonnées sont dans le dossier `configs`. Ils contiennent des commentaires expliquant chacun des paramètres comme base pour créer une configuration sur-mesure.
 
 Les différents paramètres sont commentés dans les fichiers d'exemple.
 
 Les différentes parties sont les suivantes :
-- `io` contient les paramètres généraux d'entrées et sorties de ctview (chemins des fichiers, extension de la sortie, géométrie des dalles)
+- `io` contient les paramètres généraux d'entrées et sorties de ctview (chemins des fichiers, extension de la sortie, géométrie des dalles) ;
 - `buffer` contient les paramètres à appliquer pour ajouter un buffer de calcul au fichier
-las d'entrée (pour éviter les effets de bords en limite de dalle)
+las d'entrée (pour éviter les effets de bords en limite de dalle) ;
 - `density` contient les paramètres pour générer la carte de densité. C'est ici qu'on peut
-choisir les classes représentées sur chaque bande (`keep_classes`), de la coloriser ou non (paramètre `colorize`), quelle colormap appliquer (`colormap`)
--`color_map` contient les paramètres pour générer des cartes de classes (OCS).
-  - `output_class_subdir` permet de définir si la carte de classes monobande est enregistrée, et si oui dans quel dossier.
+choisir les classes représentées sur chaque bande (`keep_classes`), de la coloriser ou non (paramètre `colorize`), quelle colormap appliquer (`colormap`) ;
+-`color_map` contient les paramètres pour générer des cartes de classes (OCS) :
+  - `output_class_subdir` permet de définir si la carte de classes monobande est enregistrée, et si oui dans quel dossier ;
   - `output_class_pretty_subdir` permet de définir si la carte de classes colorisée et ombragée
-  est enregistrée, et si oui dans quel dossier.
-  - `colormap` permet de choisir la colorisation et la légende de chaque classe
-  - `CBI_rules` permet de définir des règles de combinaisons de classes
+  est enregistrée, et si oui dans quel dossier;
+  - `colormap` permet de choisir la colorisation et la légende de chaque classe ;
+  - `CBI_rules` permet de définir des règles de combinaisons de classes ;
   - `precedence_classes` permet de définir quelle classe est enregistrée en cas de conflit (la
-  classe qui apparait le plus tôt dans la liste est conservée)
+  classe qui apparait le plus tôt dans la liste est conservée) ;
   - `post_processing` permet de définir les traitements à appliquer sur la carte de classe pour
-  la rendre plus propre
+  la rendre plus propre.
 
 
 ## Choix des colorisations (déprécié)

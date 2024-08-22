@@ -69,7 +69,7 @@ class_map:
                       # choisir null pour chaque résultat intermédiaire qu'on ne veut pas enregistrer
     class_binary: null  # sous-dossier dans lequel enregistrer les cartes de classes binaires (une bande par classe)
                         # exemple: tmp/binary
-  colormap: # Colorisation et légende pour chaque classe
+  colormap:  # Colorisation et légende pour chaque classe
     - {value: 0, description: "NODATA", color: [0, 0, 0]}
     - {value: 1, description: "Defaut", color: [150, 150, 150]}
     - {value: 2, description: "Sol", color: [207, 150, 70]}
@@ -109,9 +109,9 @@ class_map:
       apply: true # Booléen: si true, on applique ce traitement
       nconnectedness: 4 # Paramètre nConnectedness de GdalSieveFilter: (pixels à considérer comme adjacents pour le filtre
                         # 4: les pixels en diagonale ne sont pas considérés adjacents
-                        # 8 mes pixels en diagonale sont considérés comme adjacents)
-      threshold : 12 # Paramètre nSizeThreshold de GdalSieveFilter: les polyones avec une taille en pixels inférieure
-                     # à threshold wont être fusionnés avec leur plus grand voisin
+                        # 8 les pixels en diagonale sont considérés comme adjacents)
+      threshold : 12 # Paramètre nSizeThreshold de GdalSieveFilter: les polygones avec une taille en pixels inférieure
+                     # à threshold vont être fusionnés avec leur plus grand voisin
 
   hillshade_calc: "0.95*A*(0.2+0.6*(B/255))"  # Expression pour le calcul de l'ombrage de la carte de classe
                                               # A: raster de classification avant l'ombrage
