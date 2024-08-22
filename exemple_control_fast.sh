@@ -7,11 +7,10 @@
 
 rm -r $./tmp/main_test_0/
 
-python -m ctview.main_ctview \
+python -m ctview.main_control \
 io.input_filename=test_data_770500_6277550_LA93_IGN69_ground.las \
 io.input_dir=./data/las/ \
 io.output_dir=./tmp/main_test_0/ \
-dtm.color.cycles_DTM_colored=[1,3,7,12] \
 io.tile_geometry.tile_coord_scale=1 \
 io.tile_geometry.tile_width=50 \
 buffer.size=10

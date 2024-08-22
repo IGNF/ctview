@@ -10,31 +10,43 @@ io:
   input_filename: null
   input_dir: null
   output_dir: null
-  spatial_reference: 2154
+  spatial_reference: 2154  # Peut être donné au format 2154 ou EPSG:2154
   no_data_value: -9999
-  extension: .tif
+  extension: .tif  # Extension du fichier de sortie
   raster_driver: "GTiff"
   tile_geometry:
-    tile_coord_scale: 1000  # meters
-    tile_width: 1000  # meters
+    tile_coord_scale: 1000  # en mètres, échelle à laquelle sont données les coordonnées
+    # dans le nom de fichier las (utilisé pour trouver les dalles voisines)
+    tile_width: 1000  # en mètres, taille d'une dalle (en général les dalles sont kilométriques)
 
 buffer:
-  size: 100  # meters
-  output_subdir: null  # example: "tmp/buffer"
+  size: 100  # en mètres, taille du buffer à ajouter pour le calcul à partir des dalles voisines
+  output_subdir: null  # Chemin vers le dossier de sortie des dalles avec un buffer (utilisé pour du debug)
+                       # (exemple: "tmp/buffer"). utiliser le mot clef null pour ne pas enregistrer ces
+                       # fichiers
 
 density:
-  pixel_size: 1  # meters
-  keep_classes:
+  pixel_size: 1  # en mètres, taille de pixel pour la carte de densité
+  keep_classes:  # Liste des classes pour lesquelles la densité est calculée pour chaque bande.
     - [2]  # band 1 (red)
     - [3, 4, 5, 6, 17]  # band 2 (green)
-  colorize: False
-  output_subdir: density
+  colorize: False  # Booléen: si true, la carte de densité est colorisée avec la colormap décrite dans
+                   # `density.colormap`. Dans ce cas, keep_classes ne doit contenir qu'une seule bande
+  output_subdir: density  # sous-dossier dans lequel est enregistrée la carte de densité
 
 class_map:
-  output_class_subdir: "class"  # Single band class map with colormap as metadata
-  output_class_pretty_subdir: "class_pretty" # 3-bands colored class map
-  pixel_size: 0.5
-  CBI_rules:
+  output_class_subdir: "class"  # sous-dossier dans lequel est enregistrée la carte de densité
+                                # monobande avec comme valeurs les identifiants de classes, et
+                                # avec une carte de classes en métadonnées pour l'affichage dans
+                                # les SIG
+                                # utiliser null pour ne pas enregistrer cette sortie
+  output_class_pretty_subdir: "class_pretty"  # sous-dossier dans lequel est enregistrée la carte de densité
+                                              # colorisée (3 bandes RGB) et ombragée
+  pixel_size: 0.5  # en mètres, taile de pixel pour la carte de classes
+  CBI_rules:  # liste de règles de combinaisons de classes
+              # "CBI" contient les classes à aggréger, "AGGREG" la valeur de la classe résultante.
+              # par exemple pour {"CBI":[5,6,17], "AGGREG": 50}, si les classes 5, 6 et 17 sont présentes
+              # dans le même pixel, ce pixel prendra la valeur 50
     - {"CBI":[5,6,17], "AGGREG": 50}
     - {"CBI":[5,6], "AGGREG": 51}
     - {"CBI":[5,17], "AGGREG": 52}
@@ -45,10 +57,19 @@ class_map:
     - {"CBI":[66,5], "AGGREG": 161}
     - {"CBI":[66,17], "AGGREG": 162}
   precedence_classes:  [61,53,64,50,51,52,161,5,60,162,17,6,67,4,3,160,2,66,9]
-  ignored_classes: [1, 65]
-  intermediate_dirs:  # for each intermediate_dirs, if null the folder is not created
-    class_binary: null  # example: tmp/binary
-  colormap:
+    # liste de préséance des classes: si après application des règles de combinaison, plusieurs classes
+    # sont encore présentes dans le même pixel, c'est la classe qui apparait le plus tôt dans cette
+    # liste qui est conservée
+  ignored_classes: [1, 65] # liste des classes à ignorer. Ces classes ne sont pas représentées dans la
+                           # carte de classes.
+                           # Pour éviter des oublis, si une classe est présente dans les calculs mais
+                           # n'est ni dans `precedence_classes`, ni dans `ignored_classes`, une erreur
+                           # est levée
+  intermediate_dirs:  # dossier de résultats intermédiaires (utilisé pour du debug)
+                      # choisir null pour chaque résultat intermédiaire qu'on ne veut pas enregistrer
+    class_binary: null  # sous-dossier dans lequel enregistrer les cartes de classes binaires (une bande par classe)
+                        # exemple: tmp/binary
+  colormap:  # Colorisation et légende pour chaque classe
     - {value: 0, description: "NODATA", color: [0, 0, 0]}
     - {value: 1, description: "Defaut", color: [150, 150, 150]}
     - {value: 2, description: "Sol", color: [207, 150, 70]}
@@ -71,21 +92,30 @@ class_map:
     - {value: 160, description: "VirtSol", color: [207, 150, 70]}
     - {value: 161, description: "VirtVeget", color: [70, 150, 60]}
     - {value: 162, description: "VirtPont", color: [85, 97, 137]}
-  dxm_filter:
+  dxm_filter:  # Paramètres pour le calcul du MNS (utilisé pour l'ombrage), dimension à filtrer et
+               # valeur à garder, par défaut on utilise la dimension créée dans la phase de preprocessing
+               # des produits dérivés
     dimension: dsm_marker
     keep_values: [1]
-  post_processing:
-    fillnodata:
-      apply: false
-      max_distance: 2
-      smoothing_iterations: 0
-    smoothing: # The smoothing method uses GdalSieveFilter
-      apply: true
-      nconnectedness: 4 # indicating that diagonal pixels are considered directly adjacent or not. 4 no, 8 yes
-      threshold : 12 # raster polygons with smaller pixel size of threshold will be merged into their largest neighbor
-  # A: classification raster before hillshade
-  # B: hillshade DSM
-  hillshade_calc: "0.95*A*(0.2+0.6*(B/255))"
+  post_processing:  # Traitements à appliquer à la carte de classe
+    fillnodata:  # Filtre gdal.FillNodata. Voir la doc de gdal pour plus de précision sur les différents paramètres
+      apply: false  # Booléen: si true, on applique ce traitement
+      max_distance: 2  # paramètre maxSearchDist (distance maximale où l'algo va chercher des valeurs à interpoler)
+      smoothing_iterations: 0  # paramètre smoothingIterations (Le nombre d'itérations de filtre moyennant avec un noyau 3x3
+                               # à appliquer après l'interpolation pour limiter les artefacts)
+    smoothing: # Le traitement smoothing utilise le filtre GdalSieveFilter puis fusionne le résultat
+               # avec la carte non filtrée pour ne pas agrandir les bâtiments là où il n'y avait pas de données
+              # intialement (voir la fonction `choose_pixel_to_keep` pour plus de détails)
+      apply: true # Booléen: si true, on applique ce traitement
+      nconnectedness: 4 # Paramètre nConnectedness de GdalSieveFilter: (pixels à considérer comme adjacents pour le filtre
+                        # 4: les pixels en diagonale ne sont pas considérés adjacents
+                        # 8 les pixels en diagonale sont considérés comme adjacents)
+      threshold : 12 # Paramètre nSizeThreshold de GdalSieveFilter: les polygones avec une taille en pixels inférieure
+                     # à threshold vont être fusionnés avec leur plus grand voisin
+
+  hillshade_calc: "0.95*A*(0.2+0.6*(B/255))"  # Expression pour le calcul de l'ombrage de la carte de classe
+                                              # A: raster de classification avant l'ombrage
+                                              # B: MNS à utiliser pour l'ombrage
 
 hydra:
   output_subdir: null
