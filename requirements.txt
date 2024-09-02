@@ -1,2 +1,2 @@
 ign-mnx==1.1.0
-ign-pdal-tools==1.7.*
+ign-pdal-tools==1.7.3

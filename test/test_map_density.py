@@ -4,13 +4,13 @@ from pathlib import Path
 
 import laspy
 import numpy as np
+import pdaltools.pcd_info as pcd_info
 import pytest
 import rasterio
 from hydra import compose, initialize
 from osgeo import gdal
 
 import ctview.map_density as map_density
-import ctview.utils_pcd as utils_pcd
 import ctview.utils_raster as utils_raster
 
 gdal.UseExceptions()
@@ -37,7 +37,7 @@ def setup_module():
 
 
 def test_compute_density():
-    origin_x, origin_y = utils_pcd.get_pointcloud_origin(points=INPUT_POINTS, tile_width=50)
+    origin_x, origin_y = pcd_info.get_pointcloud_origin_from_tile_width(points=INPUT_POINTS, tile_width=50)
 
     density = map_density.compute_density(INPUT_POINTS, (origin_x, origin_y), 50, 2)
 
