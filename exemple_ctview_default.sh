@@ -1,6 +1,8 @@
 # Les paramètres par défaut fonctionnent avec des dalles kilométriques dont les noms contiennent
 # les coordonnées en km, un buffer de 100m et un unique cycle de colorisation.
 
+#!/bin/bash
+
 if [ -r ./tmp/exemple_ctview_default/ ] ; then
    rm -r ./tmp/exemple_ctview_default/
 fi

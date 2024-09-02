@@ -1,5 +1,5 @@
 # Test fonctionnel / exemple d'utilisation du script de création des métadonnées
-
+#!/bin/bash
 
 python -m ctview.main_metadata \
 io.input_filename="test_data_77050_627755_LA93_IGN69_buildings.laz" \
