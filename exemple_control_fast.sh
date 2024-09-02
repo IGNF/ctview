@@ -5,7 +5,9 @@
 # Le buffer choisi vaut 10m => buffer.size=10.
 # Il y a 4 colorisations différentes avec respectivement 1,3,7 et 12 cycles => cycles_DTM_colored=[1,3,7,12].
 
-rm -r $./tmp/exemple_control_fast/
+if [ -r $./tmp/exemple_control_fast/ ] ; then
+    rm -r $./tmp/exemple_control_fast/
+fi
 
 python -m ctview.main_control \
 io.input_filename=test_data_770500_6277550_LA93_IGN69_ground.las \
