@@ -5,3 +5,5 @@ data/labo
 # tif metadata file used in tests
 !data/raster/class_precedence/test_data_77050_627755_LA93_IGN69_buildings_class.tif.aux.xml
 tmp/
+.idea/
+*.log
