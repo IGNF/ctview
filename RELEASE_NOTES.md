@@ -1,15 +1,14 @@
-# dev
-
+# v1.0.0
 - Breaking changes:
-  - replace config_ctview by config_control
-  - harmonize config_control and config_metadata
+  - rename config_ctview as config_control (to prevent convusion between ctview usages)
+  - harmonize config_control and config_metadata (now the parameters are the same, only their values
+varies between control and metadata use cases)
 
 - Refactor code to use the same main function for metadata and control (initial ctview usage).
   Now, you can either use:
   - main_ctview.py to run ctview with any configuration file
   - main_control.py to run ctview with the config_control.yml config file (which can still be overriden by command line arguments)
   - main_metadata.py to run ctview with the config_metadata.yml config file (which can still be overriden by command line arguments)
-
 
 - remove dead code related to old classification map
 - config:
