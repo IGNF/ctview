@@ -1,5 +1,4 @@
-# dev
-
+# v1.0.0
 - Breaking changes:
   - replace config_ctview by config_control
   - harmonize config_control and config_metadata
@@ -9,7 +8,6 @@
   - main_ctview.py to run ctview with any configuration file
   - main_control.py to run ctview with the config_control.yml config file (which can still be overriden by command line arguments)
   - main_metadata.py to run ctview with the config_metadata.yml config file (which can still be overriden by command line arguments)
-
 
 - remove dead code related to old classification map
 - config:
