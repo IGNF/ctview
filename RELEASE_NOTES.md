@@ -1,7 +1,8 @@
 # v1.0.0
 - Breaking changes:
-  - replace config_ctview by config_control
-  - harmonize config_control and config_metadata
+  - rename config_ctview as config_control (to prevent convusion between ctview usages)
+  - harmonize config_control and config_metadata (now the parameters are the same, only their values
+varies between control and metadata use cases)
 
 - Refactor code to use the same main function for metadata and control (initial ctview usage).
   Now, you can either use:
