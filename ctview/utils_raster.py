@@ -3,10 +3,10 @@ from collections.abc import Iterable
 from typing import Dict, List
 
 import numpy as np
+import pdaltools.pcd_info as pcd_info
 import rasterio
-from osgeo import gdal
 
-import ctview.utils_pcd as utils_pcd
+from ctview.add_color import add_colors_as_metadata
 
 
 def generate_raster_raw(
@@ -97,7 +97,7 @@ def compute_raster_origin(input_points: np.array, tile_width: int, pixel_size: i
     buffer_size (float, optional): size of the buffer that has been added to the input points.
     (used to detect the raster corners) Defaults to 0.
     """
-    pcd_origin_x, pcd_origin_y = utils_pcd.get_pointcloud_origin(input_points, tile_width, buffer_size)
+    pcd_origin_x, pcd_origin_y = pcd_info.get_pointcloud_origin_from_tile_width(input_points, tile_width, buffer_size)
 
     raster_origin = (pcd_origin_x - pixel_size / 2, pcd_origin_y + pixel_size / 2)
 
@@ -141,27 +141,9 @@ def write_single_band_raster_to_file(
         ) as out_file:
             out_file.write(input_array.astype(rasterio.uint8), 1)
 
-    # Add colors and descriptions
     if colormap:
         check_colormap_fits_raster_data(colormap, input_array)
-        ds = gdal.Open(output_tif)
-        band = ds.GetRasterBand(1)
-        colors = gdal.ColorTable()
-        #  set default values for all existing values in the colormap
-        # (add 1 as the value xx is at the [xx + 1]th position in a list starting at 0)
-        category_names_list = [""] * (max([c["value"] for c in colormap]) + 1)
-
-        for category in colormap:
-            colors.SetColorEntry(category["value"], tuple(category["color"]))
-            category_names_list[category["value"]] = category["description"]
-
-        band.SetColorTable(colors)
-        band.SetColorInterpretation(gdal.GCI_PaletteIndex)
-        band.SetCategoryNames(category_names_list)
-
-        # close gdal dataset (cf. https://gis.stackexchange.com/questions/80366/why-close-a-dataset-in-gdal-python)
-        band = None
-        ds = None
+        add_colors_as_metadata(output_tif, colormap)
 
     log.debug(f"Saved to {output_tif}")
 

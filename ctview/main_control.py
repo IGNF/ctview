@@ -5,7 +5,7 @@ from osgeo import gdal
 from ctview.main_ctview import main_ctview
 
 
-@hydra.main(config_path="../configs/", config_name="config_metadata.yaml", version_base="1.2")
+@hydra.main(config_path="../configs/", config_name="config_control.yaml", version_base="1.2")
 def main(config: DictConfig):
     main_ctview(config)
 

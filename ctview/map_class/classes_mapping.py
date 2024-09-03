@@ -1,9 +1,6 @@
-import os
 from typing import Tuple
 
 import numpy as np
-
-from ctview import utils_pdal
 
 
 def compute_binary_class(points: np.array, origin: Tuple[int, int], tile_width: int, pixel_size: float):
@@ -116,31 +113,3 @@ def check_and_list_original_classes_to_keep(
                     raise ValueError(f"La classe {r} n'est pas dans les préséances")
 
     return list(class_by_layer)
-
-
-def create_class_raster_raw_deprecated(  # Old method from ctview, to change with new colorization
-    in_points: np.ndarray, output_file: str, res: int, raster_driver: str, no_data_value: float
-):
-    """Create raw raster of classes.
-
-    Args:
-        input_points (np.array): Points of the input las (as read with a pdal.readers.las)
-        output_file (str): full path to the output raster
-        res (int): pixel size of the output raster
-        raster_driver (str): One of GDAL raster drivers formats
-        (cf. https://gdal.org/drivers/raster/index.html#raster-drivers)
-        no_data_value (float): Value of pixel if contains no data
-    Raises:
-        FileNotFoundError: if the output raster has not been created
-    """
-    os.makedirs(os.path.dirname(output_file), exist_ok=True)
-    utils_pdal.write_raster_class(
-        input_points=in_points,
-        output_raster=output_file,
-        res=res,
-        raster_driver=raster_driver,
-        no_data_value=no_data_value,
-    )
-
-    if not os.path.exists(output_file):  # if raster not create, next step with fail
-        raise FileNotFoundError(f"{output_file} not found")

@@ -4,26 +4,27 @@ import tempfile
 from pathlib import Path
 
 import hydra
+import laspy
+import numpy as np
 from omegaconf import DictConfig
 from osgeo import gdal
 from pdaltools.las_add_buffer import create_las_with_buffer
 
 import ctview.map_class.raster_generation as map_class
 import ctview.map_density as map_density
-import ctview.utils_pdal as utils_pdal
+from ctview import utils_raster
 
 
-@hydra.main(config_path="../configs/", config_name="config_ctview.yaml", version_base="1.2")
-def main(config: DictConfig):
+def main_ctview(config: DictConfig):
     log.basicConfig(level=log.INFO, format="%(message)s")
 
     initial_las_filename = config.io.input_filename
     tilename = os.path.splitext(initial_las_filename)[0]
 
-    # Check input/output files and folders
     in_dir = config.io.input_dir
     out_dir = config.io.output_dir
 
+    # Check input/output files and folders
     if initial_las_filename is None or in_dir is None or out_dir is None:
         raise RuntimeError(
             """In input you have to give a las, an input directory and an output directory.
@@ -32,27 +33,22 @@ def main(config: DictConfig):
 
     os.makedirs(out_dir, exist_ok=True)
 
-    # ## ACTIVATE IF NECESSARY
-    # log.warning("#########")
-    # log.warning("ATTENTION : modification LAS/LAZ file with function utils_pcd.repare_file")
-    # log.warning("#########")
-    # utils_pcd.repare_files(las_liste, in_dir)
-    # time.sleep(2)
     tilename = os.path.splitext(initial_las_filename)[0]
     initial_las_file = os.path.join(in_dir, initial_las_filename)
-    bounds_las = utils_pdal.get_bounds_from_las(initial_las_file)  # get boundaries
 
-    # BUFFER
-    log.info(f"\nStep 1: Create buffered las file with buffer = {config.buffer.size}")
-    epsg = config.io.spatial_reference
-
-    with tempfile.TemporaryDirectory(prefix="tmp_buffer", dir="tmp") as tmpdir:
+    with (
+        tempfile.TemporaryDirectory(prefix="tmp_buffer", dir="tmp") as tmpdir_buffer,
+        tempfile.TemporaryDirectory(prefix="tmp_class_raw", dir="tmp") as tmpdir_class,
+    ):
+        # Buffer
+        log.info(f"\nStep 1: Create buffered las file with buffer = {config.buffer.size}")
         if config.buffer.output_subdir:
             las_with_buffer = Path(out_dir) / config.buffer.output_subdir / initial_las_filename
         else:
-            las_with_buffer = Path(tmpdir) / initial_las_filename
+            las_with_buffer = Path(tmpdir_buffer) / initial_las_filename
         las_with_buffer.parent.mkdir(parents=True, exist_ok=True)
 
+        epsg = config.io.spatial_reference
         create_las_with_buffer(
             input_dir=str(in_dir),
             tile_filename=initial_las_file,
@@ -63,21 +59,60 @@ def main(config: DictConfig):
             tile_coord_scale=config.io.tile_geometry.tile_coord_scale,
         )
 
-        # Map density (density colorized)
-        log.info("\nStep 2: Generate a colorized density map")
-        map_density.create_colored_density_raster(
+        # Read las
+        las = laspy.read(las_with_buffer)
+        points_np = np.vstack((las.x, las.y, las.z)).transpose()
+        classifs = np.copy(las.classification)
+
+        # Map density
+        log.info("\nStep 2: Generate a density map")
+        map_density.create_density_raster_from_config(
             str(las_with_buffer), tilename, config.density, config.io, config.buffer.size
         )
 
-        # Map class (class colorized + DSM with hillshade)
-        log.info("\nStep 4: Generate a classification map with hillshade and color")
-        map_class.create_map_class_raster_with_postprocessing_color_and_hillshade(
-            input_las=str(las_with_buffer),
+        # Map classes
+        log.info("\nStep 3: Generate a classification map")
+
+        if config.class_map.output_class_subdir:
+            output_class_dir = Path(out_dir) / config.class_map.output_class_subdir
+        else:
+            output_class_dir = Path(tmpdir_class)
+        output_class_dir.mkdir(parents=True, exist_ok=True)
+
+        class_map_raster_origin = utils_raster.compute_raster_origin(
+            input_points=points_np,
+            tile_width=config.io.tile_geometry.tile_width,
+            pixel_size=config.class_map.pixel_size,
+            buffer_size=config.buffer.size,
+        )
+
+        class_raster_path = map_class.generate_class_raster(
+            input_points=points_np,
+            input_classifs=classifs,
             tilename=tilename,
+            output_dir=output_class_dir,
             config_class=config.class_map,
             config_io=config.io,
-            output_bounds=bounds_las,
+            config_geometry=config.io.tile_geometry,
+            raster_origin=class_map_raster_origin,
         )
+
+        if config.class_map.output_class_pretty_subdir:
+            output_class_pretty_subdir = Path(out_dir) / config.class_map.output_class_pretty_subdir
+            os.makedirs(output_class_pretty_subdir, exist_ok=True)
+            map_class.generate_pretty_class_raster_from_single_band_raster(
+                input_raster=class_raster_path,
+                input_las=las_with_buffer,
+                tilename=tilename,
+                output_dir=output_class_pretty_subdir,
+                config_class=config.class_map,
+                config_io=config.io,
+            )
+
+
+@hydra.main(config_path="../configs/", config_name="config_control.yaml", version_base="1.2")
+def main(config: DictConfig):
+    main_ctview(config)
 
 
 if __name__ == "__main__":

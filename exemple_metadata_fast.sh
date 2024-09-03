@@ -1,9 +1,16 @@
-# Test fonctionnel / exemple d'utilisation
+#!/bin/bash
+
+# Test fonctionnel / exemple d'utilisation du script de création des métadonnées
+
+if [ -r ./tmp/exemple_metadata_fast ] ; then
+   rm -r ./tmp/exemple_metadata_fast/
+fi
+
 python -m ctview.main_metadata \
-io.input_filename="test_data_77055_627755_LA93_IGN69.las" \
-io.input_dir="./data/las/ground" \
-io.output_dir=./tmp/main_metadata_functional \
+io.input_filename="test_data_77050_627755_LA93_IGN69_buildings.laz" \
+io.input_dir="./data/las/classee/" \
+io.output_dir=./tmp/exemple_metadata_fast \
 io.tile_geometry.tile_coord_scale=10 \
 io.tile_geometry.tile_width=50 \
-buffer.buffer_size=10 \
+buffer.size=10 \
 density.pixel_size=2

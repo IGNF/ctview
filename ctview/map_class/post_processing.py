@@ -1,61 +1,26 @@
-import os
+from typing import Dict
 
 import numpy as np
 from osgeo import gdal, gdal_array
-from osgeo_utils import gdal_fillnodata
-
-from ctview import add_color
 
 
-def fill_gaps_raster(in_raster: str, output_file: str, raster_driver: str):
-    """Fill gaps on a raster using gdal.
-
-    Args:
-        in_raster (str): path to the raster to fill
-        output_file (str): full path to the output raster
-        raster_driver (str): One of GDAL raster drivers formats
-        (cf. https://gdal.org/drivers/raster/index.html#raster-drivers)
-
-    Raises:
-        FileNotFoundError: if the output raster has not been created
-    """
-
-    os.makedirs(os.path.dirname(output_file), exist_ok=True)
-
-    gdal_fillnodata.gdal_fillnodata(
-        src_filename=in_raster,
-        band_number=2,
-        dst_filename=output_file,
-        driver_name=raster_driver,
-        creation_options=None,
-        quiet=True,
-        mask="default",
-        max_distance=2,
-        smoothing_iterations=0,
-        options=None,
+def fill_nodata_in_array(input_array: np.array, max_distance: float = 2.0, smoothing_iterations: int = 0):
+    rows, cols = input_array.shape
+    driver = gdal.GetDriverByName("MEM")
+    dataset = driver.Create("", cols, rows, 1, gdal.GDT_Byte)
+    band = dataset.GetRasterBand(1)
+    band.SetNoDataValue(0)  # Set no datavalue to 0 as data are stored as bytes. Required to fill no-data values
+    gdal_array.BandWriteArray(band, input_array)
+    gdal.FillNodata(
+        band,
+        None,
+        maxSearchDist=max_distance,
+        smoothingIterations=smoothing_iterations,
+        options=["INTERPOLATION=nearest"],  # as data are classification values
     )
+    output_array = band.ReadAsArray()
 
-    if not os.path.exists(output_file):  # if raster not create, next step with fail
-        raise FileNotFoundError(f"{output_file} not found")
-
-
-def add_color_to_raster(in_raster: str, output_file: str, LUT: str):
-    """Color a raster using method gdal DEMProcessing with a specific LUT.
-
-    Args:
-        in_raster (str): path to the input raster (to be colored)
-        output_file (str): full path to the output raster
-        LUT (str): path to the LUT used to color the raster
-
-    Raises:
-        FileNotFoundError: if the output raster has not been created
-    """
-    os.makedirs(os.path.dirname(output_file), exist_ok=True)
-
-    add_color.color_raster_with_LUT(input_raster=in_raster, output_raster=output_file, LUT=LUT)
-
-    if not os.path.exists(output_file):  # if raster not create, next step with fail
-        raise FileNotFoundError(f"{output_file} not found")
+    return output_array
 
 
 def smooth_class_array(class_map_array: np.array, nconnectedness: int, threshold: int):
@@ -102,8 +67,8 @@ def choose_pixel_to_keep(class_map_array_raw: np.array, class_map_array_smoothed
     return class_map_array_merged
 
 
-def post_processing(class_map_array: np.array, nconnectedness: int, threshold: int):
-    """This method groups all post process operated on the class map
+def smoothing_with_fusion(class_map_array: np.array, nconnectedness: int, threshold: int):
+    """This method groups post processing operated on the class map to smooth it
         - Smoothing
         - Merge with condition
 
@@ -117,3 +82,45 @@ def post_processing(class_map_array: np.array, nconnectedness: int, threshold: i
     class_map_array_smoothed = smooth_class_array(class_map_array, nconnectedness, threshold)
     class_map_array_post_processed = choose_pixel_to_keep(class_map_array, class_map_array_smoothed)
     return class_map_array_post_processed
+
+
+def post_processing(input_array, pp_config: Dict):
+    """Apply post processing to array (expected to be a class array)
+    according to a configuration dictionary
+
+    - potentially apply gdal FillNoData
+    - potentially apply smoothing + fusion with the raw array to keep smoothed buildings
+
+
+    The config dictionary should be like:
+
+    fillnodata:
+      apply: true
+      max_distance: 2
+      smoothing_iterations: 0
+    smoothing: # The smoothing method uses GdalSieveFilter
+      apply: true
+      nconnectedness: 4 # indicating that diagonal pixels are considered directly adjacent or not. 4 no, 8 yes
+      threshold : 12 # rast
+
+
+    Args:
+        input_array (_type_): _description_
+        pp_config (Dict): _description_
+    """
+
+    if pp_config["fillnodata"]["apply"]:
+        input_array = fill_nodata_in_array(
+            input_array,
+            max_distance=pp_config["fillnodata"]["max_distance"],
+            smoothing_iterations=pp_config["fillnodata"]["smoothing_iterations"],
+        )
+
+    if pp_config["smoothing"]["apply"]:
+        input_array = smoothing_with_fusion(
+            input_array,
+            nconnectedness=pp_config["smoothing"]["nconnectedness"],
+            threshold=pp_config["smoothing"]["threshold"],
+        )
+
+    return input_array

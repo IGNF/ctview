@@ -4,11 +4,11 @@ from pathlib import Path
 
 import laspy
 import numpy as np
+import pdaltools.pcd_info as pcd_info
 import pytest
 import rasterio
 from osgeo import gdal
 
-import ctview.utils_pcd as utils_pcd
 import ctview.utils_pdal as utils_pdal
 import ctview.utils_raster as utils_raster
 from ctview.map_class.classes_mapping import (
@@ -17,7 +17,6 @@ from ctview.map_class.classes_mapping import (
     check_and_list_original_classes_to_keep,
     compute_binary_class,
     convert_class_array_to_precedence_array,
-    create_class_raster_raw_deprecated,
 )
 from ctview.map_class.raster_generation import generate_class_raster_raw
 
@@ -47,7 +46,7 @@ def setup_module(module):  # run before the first test
 
 
 def test_compute_binary_class():
-    origin_x, origin_y = utils_pcd.get_pointcloud_origin(points=INPUT_POINTS, tile_width=50)
+    origin_x, origin_y = pcd_info.get_pointcloud_origin_from_tile_width(points=INPUT_POINTS, tile_width=50)
 
     binary_class = compute_binary_class(points=INPUT_POINTS, origin=(origin_x, origin_y), tile_width=50, pixel_size=2)
 
@@ -183,45 +182,3 @@ def test_generate_class_raster_flatten():
             assert unique_band[0, 3] == 2
             assert unique_band[0, 9] == 0
             assert unique_band[8, 15] == 1
-
-
-def test_create_class_raster_raw_deprecated():
-    output_file = Path(OUTPUT_DIR) / "create_class_raster_raw" / f"{TILENAME}.tif"
-    create_class_raster_raw_deprecated(
-        in_points=IN_POINTS, output_file=str(output_file), res=1, raster_driver=RASTER_DRIVER, no_data_value=-9999.0
-    )
-    with rasterio.open(output_file) as raster:
-        band_min = raster.read(1)
-        band_max = raster.read(2)
-        band_mean = raster.read(3)
-        band_idw = raster.read(4)
-        band_count = raster.read(5)
-        band_stdev = raster.read(6)
-
-        assert band_min[6, 17] == -9999.0
-        assert band_max[6, 17] == -9999.0
-        assert band_mean[6, 17] == -9999.0
-        assert band_idw[6, 17] == -9999.0
-        assert band_count[6, 17] == 0  # pixel with 0 point
-        assert band_stdev[6, 17] == -9999.0
-
-        assert band_min[0, 8] == -9999.0
-        assert band_max[0, 8] == -9999.0
-        assert band_mean[0, 8] == -9999.0
-        assert band_idw[0, 8] == -9999.0
-        assert band_count[0, 8] == 0  # pixel with 0 point
-        assert band_stdev[0, 8] == -9999.0
-
-        assert band_min[0, 10] == 2
-        assert band_max[0, 10] == 2
-        assert band_mean[0, 10] == 2
-        assert band_idw[0, 10] == 2
-        assert band_count[0, 10] == 1  # pixel with one single point (class 2)
-        assert band_stdev[0, 10] == 0
-
-        assert band_min[17, 14] == 1
-        assert band_max[17, 14] == 65
-        assert round(band_mean[17, 14], 4) == 2.9375
-        assert round(band_idw[17, 14], 4) == 4.6058
-        assert band_count[17, 14] == 64  # pixel with 64 points and at least class 1 and 65
-        assert round(band_stdev[17, 14], 4) == 7.8220

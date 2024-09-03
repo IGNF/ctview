@@ -32,7 +32,7 @@ INPUT_FILE = os.path.join(INPUT_DIR_LAZ, INPUT_FILENAME)
 with initialize(version_base="1.2", config_path="../configs"):
     # config is relative to a module
     CONFIG = compose(
-        config_name="config_ctview",
+        config_name="config_control",
         overrides=[
             f"io.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
             f"io.tile_geometry.tile_width={TILE_WIDTH}",
@@ -95,7 +95,7 @@ def test_create_colored_dxm_with_hillshade_dtm_1m_default():
     output_dir = os.path.join(OUTPUT_DIR, "create_colored_dxm_with_hillshade_dtm_1m_default")
     with initialize(version_base="1.2", config_path="../configs"):
         cfg = compose(
-            config_name="config_ctview",
+            config_name="config_control",
             overrides=[
                 f"io.output_dir={output_dir}",
                 f"io.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
@@ -136,7 +136,7 @@ def test_create_colored_dxm_with_hillshade_dtm_1m_and_intermediate_files():
     output_dir = os.path.join(OUTPUT_DIR, "create_colored_dxm_with_hillshade_dtm_1m_and_intermediate_files")
     with initialize(version_base="1.2", config_path="../configs"):
         cfg = compose(
-            config_name="config_ctview",
+            config_name="config_control",
             overrides=[
                 f"io.output_dir={output_dir}",
                 f"io.tile_geometry.tile_coord_scale={TILE_COORD_SCALE}",
@@ -206,7 +206,7 @@ def test_add_dxm_hillshade_to_raster_dsm_50cm():
 
 def test_create_colored_dxm_with_hillshade():
     input_dir = Path("data") / "las" / "ground"
-    input_filename = "test_data_77055_627755_LA93_IGN69.las"
+    input_filename = "test_data_77055_627755_LA93_IGN69.laz"
     input_tilename = os.path.splitext(input_filename)[0]
     tile_width = 50
     tile_coord_scale = 10
@@ -217,7 +217,7 @@ def test_create_colored_dxm_with_hillshade():
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
-            config_name="config_ctview",
+            config_name="config_control",
             overrides=[
                 f"io.input_filename={input_filename}",
                 f"io.input_dir={input_dir}",
