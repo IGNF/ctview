@@ -26,6 +26,8 @@ buffer:
                        # fichiers
 
 density:
+  output_subdir: DENS_FINAL  # sous-dossier dans lequel est enregistrée la carte de densité
+                             # utiliser null pour ne pas calculer la carte de densité
   pixel_size: 5  # en mètres, taille de pixel pour la carte de densité
   keep_classes:  # Liste des classes pour lesquelles la densité est calculée pour chaque bande.
     - [2, 66]  # 1 band with this classes
@@ -40,7 +42,6 @@ density:
   - {value: 9, color: [166, 217, 106]}
   - {value: 10, color: [26, 150, 65]}
   - {value: 300, color: [26, 150, 65]}
-  output_subdir: DENS_FINAL  # sous-dossier dans lequel est enregistrée la carte de densité
   intermediate_dirs:  # dossier de résultats intermédiaires (utilisé pour du debug)
                       # choisir null pour chaque résultat intermédiaire qu'on ne veut pas enregistrer
     density_values: null  # sous dossier dans lequel enregistrer la carte avant colorisation si "colorize"=True
@@ -48,12 +49,13 @@ density:
 
 class_map:
   output_class_subdir: null  # sous-dossier dans lequel est enregistrée la carte de densité
-                                # monobande avec comme valeurs les identifiants de classes, et
-                                # avec une carte de classes en métadonnées pour l'affichage dans
-                                # les SIG
-                                # utiliser null pour ne pas enregistrer cette sortie
+                             # monobande avec comme valeurs les identifiants de classes, et
+                             # avec une carte de classes en métadonnées pour l'affichage dans
+                             # les SIG
+                             # utiliser null pour ne pas enregistrer cette sortie
   output_class_pretty_subdir: "CLASS_FINAL"  # sous-dossier dans lequel est enregistrée la carte de densité
-                                              # colorisée (3 bandes RGB) et ombragée
+                                             # colorisée (3 bandes RGB) et ombragée
+                                             # utiliser null pour ne pas calculer cette sortie
   pixel_size: 0.5   # en mètres, taile de pixel pour la carte de classes
   CBI_rules: []  # liste de règles de combinaisons de classes, voir config_metadata.yml pour un exemple
   precedence_classes: [1, 2, 3, 4, 5, 6, 9, 17, 64, 65, 66, 67, 202]
