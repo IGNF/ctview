@@ -7,6 +7,7 @@ import numpy as np
 import rasterio
 from hydra import compose, initialize
 from osgeo import gdal
+from pdaltools.las_info import get_tile_origin_using_header_info
 
 import ctview.utils_raster as utils_raster
 from ctview.map_class.raster_generation import (
@@ -25,7 +26,8 @@ LAS = laspy.read(INPUT_FILE)
 INPUT_POINTS = np.vstack((LAS.x, LAS.y, LAS.z)).transpose()
 INPUT_CLASSIFS = np.copy(LAS.classification)
 EPSG = 2154
-RASTER_ORIGIN = utils_raster.compute_raster_origin(input_points=INPUT_POINTS, tile_width=50, pixel_size=1)
+TILE_ORIGIN = get_tile_origin_using_header_info(INPUT_FILE, tile_width=50)
+RASTER_ORIGIN = utils_raster.compute_raster_origin(TILE_ORIGIN, pixel_size=1)
 RASTER_DRIVER = "GTiff"
 
 TILE_COORD_SCALE = 10

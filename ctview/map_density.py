@@ -73,7 +73,11 @@ def compute_density(points: np.array, origin: Tuple[int, int], tile_width: int, 
 
 
 def create_density_raster_from_config(
-    input_las: str, tilename: str, config_density: DictConfig | dict, config_io: DictConfig | dict, buffer_size: float
+    input_las: str,
+    tile_origin: Tuple[int, int],
+    tilename: str,
+    config_density: DictConfig | dict,
+    config_io: DictConfig | dict,
 ) -> str:
     """Generate density raster:
     * colored with lut provided in config_density
@@ -81,6 +85,7 @@ def create_density_raster_from_config(
 
     Args:
         input_las (str): path to the input las file
+        tile_origin (Tuple[int, int]): origin (top left corner) of the tile
         tilename (str): tilename used to generate the output filename
         config_density (DictConfig | dict): hydra configuration with the density parameters
         eg.  {
@@ -107,8 +112,6 @@ def create_density_raster_from_config(
                 tile_coord_scale: 1000
                 tile_width: 1000
             }
-        buffer_size (float): size of the buffer that has been added to the las file
-        (used to create a raster without buffer)
 
     Raises:
         TypeError: if config_density.keep_classes does not have the correct type
@@ -163,10 +166,8 @@ def create_density_raster_from_config(
 
         log.info("\nCreate density map (values)\n")
         raster_origin = utils_raster.compute_raster_origin(
-            input_points=points_np,
-            tile_width=config_io.tile_geometry.tile_width,
+            tile_origin,
             pixel_size=config_density.pixel_size,
-            buffer_size=buffer_size,
         )
 
         generate_raster_of_density(

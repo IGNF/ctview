@@ -9,6 +9,7 @@ import pytest
 import rasterio
 from hydra import compose, initialize
 from osgeo import gdal
+from pdaltools.las_info import get_tile_origin_using_header_info
 
 import ctview.map_density as map_density
 import ctview.utils_raster as utils_raster
@@ -25,7 +26,8 @@ INPUT_LAS_50m = Path(INPUT_DIR) / INPUT_FILENAME_50M
 LAS = laspy.read(INPUT_LAS_50m)
 INPUT_POINTS = np.vstack((LAS.x, LAS.y, LAS.z)).transpose()
 INPUT_CLASSIFS = np.copy(LAS.classification)
-RASTER_ORIGIN = utils_raster.compute_raster_origin(input_points=INPUT_POINTS, tile_width=50, pixel_size=2)
+TILE_ORIGIN = get_tile_origin_using_header_info(INPUT_LAS_50m, tile_width=50)
+RASTER_ORIGIN = utils_raster.compute_raster_origin(TILE_ORIGIN, pixel_size=2)
 
 
 def setup_module():
@@ -130,7 +132,7 @@ def test_create_density_raster_from_config_default():
     pixel_size = 2
     buffer_size = 10
     output_dir = OUTPUT_DIR / "create_colored_density_raster_default"
-    input_tilename = os.path.splitext(input_filename)[0]
+    tile_origin = get_tile_origin_using_header_info(input_dir / input_filename, tile_width=tile_width)
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
@@ -146,7 +148,7 @@ def test_create_density_raster_from_config_default():
             ],
         )
     map_density.create_density_raster_from_config(
-        os.path.join(input_dir, input_filename), input_tilename, cfg.density, cfg.io, cfg.buffer.size
+        os.path.join(input_dir, input_filename), tile_origin, input_tilename, cfg.density, cfg.io
     )
     assert os.listdir(output_dir) == ["DENS_FINAL"]
     with rasterio.Env():
@@ -168,7 +170,7 @@ def test_create_density_raster_from_config_with_intermediate_files():
     pixel_size = 2
     buffer_size = 10
     output_dir = OUTPUT_DIR / "create_density_raster_from_config_and_intermediate"
-    input_tilename = os.path.splitext(input_filename)[0]
+    tile_origin = get_tile_origin_using_header_info(input_dir / input_filename, tile_width=tile_width)
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
@@ -185,7 +187,11 @@ def test_create_density_raster_from_config_with_intermediate_files():
             ],
         )
     map_density.create_density_raster_from_config(
-        os.path.join(input_dir, input_filename), input_tilename, cfg.density, cfg.io, cfg.buffer.size
+        os.path.join(input_dir, input_filename),
+        tile_origin,
+        input_tilename,
+        cfg.density,
+        cfg.io,
     )
     for folder in ["DENS_FINAL", "DENS_VAL"]:
         assert len(os.listdir(os.path.join(output_dir, folder))) == 1
@@ -200,7 +206,7 @@ def test_create_density_raster_from_config_multiple_layers():
     pixel_size = 2
     buffer_size = 10
     output_dir = OUTPUT_DIR / "create_colored_density_raster_multiple_layers"
-    input_tilename = os.path.splitext(input_filename)[0]
+    tile_origin = get_tile_origin_using_header_info(input_dir / input_filename, tile_width=tile_width)
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
@@ -219,7 +225,7 @@ def test_create_density_raster_from_config_multiple_layers():
             ],
         )
     map_density.create_density_raster_from_config(
-        os.path.join(input_dir, input_filename), input_tilename, cfg.density, cfg.io, cfg.buffer.size
+        os.path.join(input_dir, input_filename), tile_origin, input_tilename, cfg.density, cfg.io
     )
     assert os.listdir(output_dir) == ["DENS_FINAL"]
     with rasterio.Env():
@@ -243,7 +249,7 @@ def test_create_density_raster_from_config_colorize_multiple_layers():
     pixel_size = 2
     buffer_size = 10
     output_dir = OUTPUT_DIR / "create_density_raster_from_config"
-    input_tilename = os.path.splitext(input_filename)[0]
+    tile_origin = get_tile_origin_using_header_info(input_dir / input_filename, tile_width=tile_width)
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
@@ -261,7 +267,7 @@ def test_create_density_raster_from_config_colorize_multiple_layers():
         )
     with pytest.raises(ValueError):
         map_density.create_density_raster_from_config(
-            os.path.join(input_dir, input_filename), input_tilename, cfg.density, cfg.io, cfg.buffer.size
+            os.path.join(input_dir, input_filename), tile_origin, input_tilename, cfg.density, cfg.io
         )
 
 
@@ -276,6 +282,7 @@ def test_create_density_raster_from_config_empty():
     pixel_size = 1
     output_dir = OUTPUT_DIR / "create_density_raster_from_config_empty"
     input_tilename = os.path.splitext(input_filename_water)[0]
+    tile_origin = get_tile_origin_using_header_info(input_dir_water / input_filename_water, tile_width=tile_width)
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
@@ -291,7 +298,7 @@ def test_create_density_raster_from_config_empty():
             ],
         )
     map_density.create_density_raster_from_config(
-        os.path.join(input_dir_water, input_filename_water), input_tilename, cfg.density, cfg.io, cfg.buffer.size
+        os.path.join(input_dir_water, input_filename_water), tile_origin, input_tilename, cfg.density, cfg.io
     )
     with rasterio.Env():
         with rasterio.open(Path(output_dir) / "DENS_FINAL" / f"{input_tilename}_density.tif") as raster:
@@ -311,7 +318,7 @@ def test_create_density_raster_from_config_no_colorization():
     pixel_size = 2
     buffer_size = 10
     output_dir = OUTPUT_DIR / "create_colored_density_raster_no_colorization"
-    input_tilename = os.path.splitext(input_filename)[0]
+    tile_origin = get_tile_origin_using_header_info(input_dir / input_filename, tile_width=tile_width)
     with initialize(version_base="1.2", config_path="../configs"):
         # config is relative to a module
         cfg = compose(
@@ -328,7 +335,7 @@ def test_create_density_raster_from_config_no_colorization():
             ],
         )
     map_density.create_density_raster_from_config(
-        os.path.join(input_dir, input_filename), input_tilename, cfg.density, cfg.io, cfg.buffer.size
+        os.path.join(input_dir, input_filename), tile_origin, input_tilename, cfg.density, cfg.io
     )
     assert os.listdir(output_dir) == ["DENS_FINAL"]
     with rasterio.Env():
