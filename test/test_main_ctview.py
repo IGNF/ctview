@@ -196,6 +196,57 @@ def test_main_modif_config():
             assert unique_band[0, 12] == 26  # # ground and building concatenated
 
 
+def test_main_ctview_skip_density():
+    tile_width = 50
+    tile_coord_scale = 10
+    buffer_size = 10
+    output_dir = OUTPUT_DIR / "main_ctview_skip_density"
+    input_tilename = os.path.splitext(INPUT_FILENAME_SMALL1)[0]
+    with initialize(version_base="1.2", config_path="../configs"):
+        # config is relative to a module
+        cfg = compose(
+            config_name="config_control",
+            overrides=[
+                f"io.input_filename={INPUT_FILENAME_SMALL1}",
+                f"io.input_dir={INPUT_DIR_SMALL}",
+                f"io.output_dir={output_dir}",
+                f"io.tile_geometry.tile_coord_scale={tile_coord_scale}",
+                f"io.tile_geometry.tile_width={tile_width}",
+                f"buffer.size={buffer_size}",
+                "density.output_subdir=null",
+            ],
+        )
+    main(cfg)
+    assert set(os.listdir(output_dir)) == {"CLASS_FINAL"}
+    assert (Path(output_dir) / "CLASS_FINAL" / f"{input_tilename}.tif").is_file()
+
+
+def test_main_ctview_skip_class_map():
+    tile_width = 50
+    tile_coord_scale = 10
+    buffer_size = 10
+    output_dir = OUTPUT_DIR / "main_ctview_skip_class_map"
+    input_tilename = os.path.splitext(INPUT_FILENAME_SMALL1)[0]
+    with initialize(version_base="1.2", config_path="../configs"):
+        # config is relative to a module
+        cfg = compose(
+            config_name="config_control",
+            overrides=[
+                f"io.input_filename={INPUT_FILENAME_SMALL1}",
+                f"io.input_dir={INPUT_DIR_SMALL}",
+                f"io.output_dir={output_dir}",
+                f"io.tile_geometry.tile_coord_scale={tile_coord_scale}",
+                f"io.tile_geometry.tile_width={tile_width}",
+                f"buffer.size={buffer_size}",
+                "class_map.output_class_subdir=null",
+                "class_map.output_class_pretty_subdir=null",
+            ],
+        )
+    main(cfg)
+    assert set(os.listdir(output_dir)) == {"DENS_FINAL"}
+    assert (Path(output_dir) / "DENS_FINAL" / f"{input_tilename}_density.tif").is_file()
+
+
 def test_main_ctview_class_raw_only():
     tile_width = 50
     tile_coord_scale = 10

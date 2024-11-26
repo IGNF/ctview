@@ -64,50 +64,57 @@ def main_ctview(config: DictConfig):
         points_np = np.vstack((las.x, las.y, las.z)).transpose()
         classifs = np.copy(las.classification)
 
-        # Map density
-        log.info("\nStep 2: Generate a density map")
-        map_density.create_density_raster_from_config(
-            str(las_with_buffer), tilename, config.density, config.io, config.buffer.size
-        )
-
-        # Map classes
-        log.info("\nStep 3: Generate a classification map")
-
-        if config.class_map.output_class_subdir:
-            output_class_dir = Path(out_dir) / config.class_map.output_class_subdir
+        if config.density.output_subdir:
+            # Map density
+            log.info("\nStep 2: Generate a density map")
+            map_density.create_density_raster_from_config(
+                str(las_with_buffer), tilename, config.density, config.io, config.buffer.size
+            )
         else:
-            output_class_dir = Path(tmpdir_class)
-        output_class_dir.mkdir(parents=True, exist_ok=True)
+            log.info("\nStep 2: Skip density map")
 
-        class_map_raster_origin = utils_raster.compute_raster_origin(
-            input_points=points_np,
-            tile_width=config.io.tile_geometry.tile_width,
-            pixel_size=config.class_map.pixel_size,
-            buffer_size=config.buffer.size,
-        )
+        if config.class_map.output_class_subdir or config.class_map.output_class_pretty_subdir:
+            # Map classes
+            log.info("\nStep 3: Generate a classification map")
 
-        class_raster_path = map_class.generate_class_raster(
-            input_points=points_np,
-            input_classifs=classifs,
-            tilename=tilename,
-            output_dir=output_class_dir,
-            config_class=config.class_map,
-            config_io=config.io,
-            config_geometry=config.io.tile_geometry,
-            raster_origin=class_map_raster_origin,
-        )
+            if config.class_map.output_class_subdir:
+                output_class_dir = Path(out_dir) / config.class_map.output_class_subdir
+            else:
+                output_class_dir = Path(tmpdir_class)
+            output_class_dir.mkdir(parents=True, exist_ok=True)
 
-        if config.class_map.output_class_pretty_subdir:
-            output_class_pretty_subdir = Path(out_dir) / config.class_map.output_class_pretty_subdir
-            os.makedirs(output_class_pretty_subdir, exist_ok=True)
-            map_class.generate_pretty_class_raster_from_single_band_raster(
-                input_raster=class_raster_path,
-                input_las=las_with_buffer,
+            class_map_raster_origin = utils_raster.compute_raster_origin(
+                input_points=points_np,
+                tile_width=config.io.tile_geometry.tile_width,
+                pixel_size=config.class_map.pixel_size,
+                buffer_size=config.buffer.size,
+            )
+
+            class_raster_path = map_class.generate_class_raster(
+                input_points=points_np,
+                input_classifs=classifs,
                 tilename=tilename,
-                output_dir=output_class_pretty_subdir,
+                output_dir=output_class_dir,
                 config_class=config.class_map,
                 config_io=config.io,
+                config_geometry=config.io.tile_geometry,
+                raster_origin=class_map_raster_origin,
             )
+
+            if config.class_map.output_class_pretty_subdir:
+                output_class_pretty_subdir = Path(out_dir) / config.class_map.output_class_pretty_subdir
+                os.makedirs(output_class_pretty_subdir, exist_ok=True)
+                map_class.generate_pretty_class_raster_from_single_band_raster(
+                    input_raster=class_raster_path,
+                    input_las=las_with_buffer,
+                    tilename=tilename,
+                    output_dir=output_class_pretty_subdir,
+                    config_class=config.class_map,
+                    config_io=config.io,
+                )
+
+        else:
+            log.info("\nStep 3: Skip classification map")
 
 
 @hydra.main(config_path="../configs/", config_name="config_control.yaml", version_base="1.2")
