@@ -1,4 +1,4 @@
-# dev
+# v1.0.1
 - Fix tile origin detection on tiles that are thinner than the buffer size
 - Make density and class map computation optional by setting the corresponding output sub-dirs to "null"
 
