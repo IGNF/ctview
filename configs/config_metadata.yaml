@@ -26,13 +26,14 @@ buffer:
                        # fichiers
 
 density:
+  output_subdir: density  # sous-dossier dans lequel est enregistrée la carte de densité
+                             # utiliser null pour ne pas calculer la carte de densité
   pixel_size: 1  # en mètres, taille de pixel pour la carte de densité
   keep_classes:  # Liste des classes pour lesquelles la densité est calculée pour chaque bande.
     - [2]  # band 1 (red)
     - [3, 4, 5, 6, 17]  # band 2 (green)
   colorize: False  # Booléen: si true, la carte de densité est colorisée avec la colormap décrite dans
                    # `density.colormap`. Dans ce cas, keep_classes ne doit contenir qu'une seule bande
-  output_subdir: density  # sous-dossier dans lequel est enregistrée la carte de densité
 
 class_map:
   output_class_subdir: "class"  # sous-dossier dans lequel est enregistrée la carte de densité
@@ -42,6 +43,7 @@ class_map:
                                 # utiliser null pour ne pas enregistrer cette sortie
   output_class_pretty_subdir: "class_pretty"  # sous-dossier dans lequel est enregistrée la carte de densité
                                               # colorisée (3 bandes RGB) et ombragée
+                                              # utiliser null pour ne pas calculer cette sortie
   pixel_size: 0.5  # en mètres, taile de pixel pour la carte de classes
   CBI_rules:  # liste de règles de combinaisons de classes
               # "CBI" contient les classes à aggréger, "AGGREG" la valeur de la classe résultante.
