@@ -9,6 +9,7 @@ import numpy as np
 from omegaconf import DictConfig
 from osgeo import gdal
 from pdaltools.las_add_buffer import create_las_with_buffer
+from pdaltools.las_info import get_tile_origin_using_header_info
 
 import ctview.map_class.raster_generation as map_class
 import ctview.map_density as map_density
@@ -40,6 +41,11 @@ def main_ctview(config: DictConfig):
         tempfile.TemporaryDirectory(prefix="tmp_buffer", dir="tmp") as tmpdir_buffer,
         tempfile.TemporaryDirectory(prefix="tmp_class_raw", dir="tmp") as tmpdir_class,
     ):
+        # Get pointcloud origin from the las file metadata
+        tile_origin = get_tile_origin_using_header_info(
+            initial_las_file, tile_width=config.io.tile_geometry.tile_width
+        )
+
         # Buffer
         log.info(f"\nStep 1: Create buffered las file with buffer = {config.buffer.size}")
         if config.buffer.output_subdir:
@@ -68,8 +74,9 @@ def main_ctview(config: DictConfig):
             # Map density
             log.info("\nStep 2: Generate a density map")
             map_density.create_density_raster_from_config(
-                str(las_with_buffer), tilename, config.density, config.io, config.buffer.size
+                str(las_with_buffer), tile_origin, tilename, config.density, config.io
             )
+
         else:
             log.info("\nStep 2: Skip density map")
 
@@ -84,10 +91,8 @@ def main_ctview(config: DictConfig):
             output_class_dir.mkdir(parents=True, exist_ok=True)
 
             class_map_raster_origin = utils_raster.compute_raster_origin(
-                input_points=points_np,
-                tile_width=config.io.tile_geometry.tile_width,
+                tile_origin,
                 pixel_size=config.class_map.pixel_size,
-                buffer_size=config.buffer.size,
             )
 
             class_raster_path = map_class.generate_class_raster(

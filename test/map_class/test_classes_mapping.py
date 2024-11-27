@@ -8,6 +8,7 @@ import pdaltools.pcd_info as pcd_info
 import pytest
 import rasterio
 from osgeo import gdal
+from pdaltools.las_info import get_tile_origin_using_header_info
 
 import ctview.utils_pdal as utils_pdal
 import ctview.utils_raster as utils_raster
@@ -32,7 +33,8 @@ LAS = laspy.read(INPUT_FILE)
 INPUT_POINTS = np.vstack((LAS.x, LAS.y, LAS.z)).transpose()
 INPUT_CLASSIFS = np.copy(LAS.classification)
 EPSG = 2154
-RASTER_ORIGIN = utils_raster.compute_raster_origin(input_points=INPUT_POINTS, tile_width=50, pixel_size=1)
+TILE_ORIGIN = get_tile_origin_using_header_info(INPUT_FILE, tile_width=50)
+RASTER_ORIGIN = utils_raster.compute_raster_origin(TILE_ORIGIN, pixel_size=1)
 RASTER_DRIVER = "GTiff"
 
 
