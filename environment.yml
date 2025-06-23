@@ -5,8 +5,8 @@ channels:
 dependencies:
   - python=3.11.*
   - pip
-  - conda-forge:pdal==2.7.*
-  - conda-forge:python-pdal==3.4.*
+  - conda-forge:pdal>=2.8
+  - conda-forge:python-pdal>=3.4
   - gdal>=3.9  # To get the "nearest" interpolation option for FillNoData
   - laspy
   - numpy
@@ -23,5 +23,5 @@ dependencies:
   - ipython
 
   - pip:
-    - --extra-index-url=https://nexus.ign.fr/repository/pypi-lidarhd-hosted/simple
-    - -r requirements.txt
+    - ign-las-digital-models==2.0.0  # after name change
+    - ign-pdal-tools>=1.11.1

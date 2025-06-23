@@ -96,7 +96,7 @@ class_map:
     - {value: 162, description: "VirtPont", color: [85, 97, 137]}
   dxm_filter:  # Paramètres pour le calcul du MNS (utilisé pour l'ombrage), dimension à filtrer et
                # valeur à garder, par défaut on utilise la dimension créée dans la phase de preprocessing
-               # des produits dérivés
+               # de las_digital_models
     dimension: dsm_marker
     keep_values: [1]
   post_processing:  # Traitements à appliquer à la carte de classe
