@@ -3,7 +3,7 @@ import os
 import tempfile
 from typing import List
 
-import produits_derives_lidar.ip_one_tile
+import las_digital_models.ip_one_tile
 from omegaconf import DictConfig
 from osgeo_utils import gdal_calc
 
@@ -19,10 +19,10 @@ def create_raw_dxm(
     config_io: DictConfig,
 ):
     """Create a Digital Model (DSM or DTM) using the filter defined with
-    dxm_filter_dimension/dxm_filter_keep_values using the produits_derives_lidar
+    dxm_filter_dimension/dxm_filter_keep_values using the las_digital_models
     library
 
-    WARNING: the dtm bounds are inferred from the filename inside the produits_derives_lidar library
+    WARNING: the dtm bounds are inferred from the filename inside the las_digital_models library
     (dtm is not computed on the potential additional buffer)
 
     Args:
@@ -42,10 +42,10 @@ def create_raw_dxm(
               }
         cf. configs/config_control.yaml for an example.
         The config will be completed with pixel_size, dxm_filter_dimension and dxm_filter_keep_values
-        to match produits_derive_lidar configuration expectations
+        to match las_digital_models configuration expectations
     """
 
-    # Generate config that suits for produits_derive_lidar interpolation
+    # Generate config that suits for las_digital_models interpolation
     pdl_config = {}
     spatial_ref = (
         f"EPSG:{config_io.spatial_reference}"
@@ -60,7 +60,7 @@ def create_raw_dxm(
     log.debug("Config for dxm generation")
     log.debug(pdl_config)
 
-    produits_derives_lidar.ip_one_tile.interpolate_from_config(
+    las_digital_models.ip_one_tile.interpolate_from_config(
         input_file=input_file, output_raster=output_dxm, config=pdl_config
     )
 
@@ -104,7 +104,7 @@ def add_dxm_hillshade_to_raster(
               }
         cf. configs/config_control.yaml for an example ("io" subdivision)
         The config will be completed with pixel_size, dxm_filter_dimension and dxm_filter_keep_values
-        to match produits_derive_lidar configuration expectations
+        to match las_digital_models configuration expectations
     """
     os.makedirs(os.path.dirname(output_dxm_raw), exist_ok=True)
     os.makedirs(os.path.dirname(output_dxm_hillshade), exist_ok=True)
