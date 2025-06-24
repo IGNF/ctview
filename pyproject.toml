@@ -2,14 +2,14 @@
 name = "ctview"
 dynamic = ["version"]
 
-description = "créer différentes vues opérateurs pour du contrôle de classification de nuages de points."
+description = "Generate thematic maps (image views) to easily visualize the content of a point cloud (classification maps, density maps, ...)"
 readme = "README.md"
 
 authors = [
-    { name = "Elliot Luçon", email = "elliot.lucon@ign.fr" },
-    { name = "Yoann Apel", email = "yoann.apel@ign.fr" },
-    { name = "Guillaume Liégard", email = "guillaume.liegard@ign.fr" },
-    { name = "Léa Vauchier", email = "lea.vauchier@ign.fr" },
+  { name = "Elliot Luçon", email = "elliot.lucon@ign.fr" },
+  { name = "Yoann Apel", email = "yoann.apel@ign.fr" },
+  { name = "Guillaume Liégard", email = "guillaume.liegard@ign.fr" },
+  { name = "Léa Vauchier", email = "lea.vauchier@ign.fr" },
 ]
 
 [tool.black]

@@ -1,3 +1,9 @@
+# Makefile to manage main tasks
+# cf. https://blog.ianpreston.ca/conda/python/bash/2020/05/13/conda_envs.html#makefile
+
+# Oneshell means I can run multiple lines in a recipe in the same shell, so I don't have to
+# chain commands together with semicolon
+.ONESHELL:
 
 install:
 	mamba env update -n ctview -f environment.yml
@@ -6,27 +12,27 @@ install-precommit:
 	pre-commit install
 
 testing:
-	./ci/test.sh
+	python -m pytest -s ./test -v
 
 ##############################
 # Docker
 ##############################
 
-PROJECT_NAME=lidar_hd/ct_view
+REGISTRY=ghcr.io
+NAMESPACE=ignf
+IMAGE_NAME=ctview
 VERSION=`python -m ctview._version`
-REGISTRY=docker-registry.ign.fr
+FULL_IMAGE_NAME=${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${VERSION}
 
 docker-build:
-	docker build -t ${PROJECT_NAME}:${VERSION} -f Dockerfile .
+	docker build -t ${IMAGE_NAME}:${VERSION} -f Dockerfile .
 
 docker-test:
-	docker run --rm -it ${PROJECT_NAME}:${VERSION} python -m pytest -s
+	docker run --rm ${IMAGE_NAME}:${VERSION} python -m pytest -s -m "not functional_test"
 
 docker-remove:
-	docker rmi -f `docker images | grep ${PROJECT_NAME} | tr -s ' ' | cut -d ' ' -f 3`
-	docker rmi -f `docker images -f "dangling=true" -q`
+	docker rmi -f `docker images | grep ${IMAGE_NAME}:${VERSION} | tr -s ' ' | cut -d ' ' -f 3`
 
 docker-deploy:
-	docker login docker-registry.ign.fr -u svc_lidarhd
-	docker tag ${PROJECT_NAME}:${VERSION} ${REGISTRY}/${PROJECT_NAME}:${VERSION}
-	docker push ${REGISTRY}/${PROJECT_NAME}:${VERSION}
+	docker tag ${IMAGE_NAME}:${VERSION} ${FULL_IMAGE_NAME}
+	docker push ${FULL_IMAGE_NAME}
