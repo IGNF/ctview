@@ -1,6 +1,33 @@
 # CtView
 
-Ce logiciel permet de créer différents rasters représentant les données contenues dans un nuage de points. Il a été initiallement développé pour les usages suivants :
+# English version (short)
+
+## Overview
+CtView is a tool based on pdal/gdal that generates misc thematic maps (raster views) from las/laz files.
+
+Its initial goal was to create
+- operator views for pointcloud classification control
+- raster metadata (density and classification maps)
+
+The currently implemented rasters are:
+- density map
+- classification map: in case of a pixel that contains several classes, classification values can be combined in combination classes (provided as parameters), and a priority list is used to choose the class to display among the remaining classes
+
+Rasters can be (or not) colorized or shadowed using a digital surface/terrain model.
+
+## Usage
+
+- Ctview has been developed using Linux Ubuntu and tested under linux and windows
+- CtView should be used as a command line tool (commands must be executed from ctview's root folder)
+- It is intended to run on a single file (to use it on a folder, an external loop is required)
+- The configuration is handled via yaml files with [hydra](https://hydra.cc/docs/intro/)
+- A few commands for installation and tests are provided in a [Makefile](Makefile) in the root folder
+- conda is used for environment building, pytest for testing
+- The entry point of the code is [ctview/main_ctview.py](ctview/main_ctview.py)
+
+# Version française (plus complète)
+
+Ce logiciel permet de créer différents rasters représentant les données contenues dans un nuage de points. Il a été initialement développé pour les usages suivants :
 - Créer des vues opérateurs pour du contrôle de classification de nuages de points.
 - Créer des métadonnées associées au nuage de points (carte de densité et cartes de classes)
 
@@ -133,10 +160,4 @@ exemple_control_fast.sh
 
 ```
 exemple_metadata_fast.sh
-```
-
-# POC Aymeric metadata carte de classe
-
-```
-/var/data/store-echange/SV3D/Aymeric/RDI/DEMO_Raster_Class
 ```
